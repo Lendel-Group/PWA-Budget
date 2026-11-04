@@ -3,6 +3,7 @@ import type { Account, Category } from '../../db/schema'
 import { isFilterActive, type HistoryFilter, type PeriodPreset, type TypeFilter } from '../../domain/history'
 import { cn } from '../../lib/cn'
 import { inputClass } from '../ui/form'
+import { SegmentedControl } from '../ui/SegmentedControl'
 
 export type PeriodChoice = PeriodPreset | 'custom'
 
@@ -46,24 +47,15 @@ export function HistoryFilters({ filter, period, accounts, categories, today, on
 
   return (
     <div className="space-y-2">
-      <div className="flex rounded-xl bg-zinc-900 p-1" role="radiogroup" aria-label="Тип операции">
-        {TYPES.map((t) => (
-          <button
-            key={t.value}
-            type="button"
-            role="radio"
-            aria-checked={filter.type === t.value}
-            // Категории привязаны к типу: при смене типа выбранная категория сбрасывается
-            onClick={() => onFilter({ type: t.value, categoryId: '' })}
-            className={cn(
-              'min-h-11 flex-1 rounded-lg px-1 text-sm font-medium',
-              filter.type === t.value ? 'bg-zinc-700 text-white' : 'text-zinc-400',
-            )}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
+      <SegmentedControl
+        label="Тип операции"
+        options={TYPES}
+        value={filter.type}
+        // Категории привязаны к типу: при смене типа выбранная категория сбрасывается
+        onChange={(type) => onFilter({ type, categoryId: '' })}
+        className="p-1"
+        itemClassName="px-1 text-sm"
+      />
 
       <div className="grid grid-cols-2 gap-2">
         <select aria-label="Счёт" className={select} value={filter.accountId} onChange={(e) => onFilter({ accountId: e.target.value })}>

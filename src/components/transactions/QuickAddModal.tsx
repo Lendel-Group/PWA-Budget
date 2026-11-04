@@ -9,6 +9,7 @@ import { formatMoney } from '../../lib/format'
 import { CategoryIcon } from '../../lib/icons'
 import type { NewTransaction } from '../../domain/finance'
 import { Dialog } from '../ui/Dialog'
+import { SegmentedControl } from '../ui/SegmentedControl'
 import { useToast } from '../../lib/toastContext'
 import { savedMessage } from '../../lib/savedMessage'
 import { addTransaction, updateTransaction } from '../../services/transactionService'
@@ -168,23 +169,14 @@ function QuickAddForm({ editing, onClose }: { editing?: Transaction; onClose: ()
             {editing.debtId ? 'Платёж по долгу' : 'Пополнение цели'}
           </p>
         ) : (
-        <div className="flex flex-1 rounded-xl bg-zinc-900 p-0.5" role="tablist">
-          {TYPES.map((t) => (
-            <button
-              key={t.value}
-              type="button"
-              role="tab"
-              aria-selected={type === t.value}
-              onClick={() => { setType(t.value); setCategoryId(undefined) }}
-              className={cn(
-                'min-h-11 flex-1 rounded-lg text-sm font-medium',
-                type === t.value ? 'bg-zinc-700 text-white' : 'text-zinc-400',
-              )}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
+          <SegmentedControl
+            label="Тип операции"
+            options={TYPES}
+            value={type}
+            onChange={(v) => { setType(v); setCategoryId(undefined) }}
+            className="flex-1 p-0.5"
+            itemClassName="text-sm"
+          />
         )}
         <button type="button" aria-label="Закрыть" onClick={onClose} className="grid size-11 place-items-center rounded-xl bg-zinc-900">
           <X className="size-5" aria-hidden />
