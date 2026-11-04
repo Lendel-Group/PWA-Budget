@@ -49,25 +49,39 @@ export interface CategoryInput {
   isExcludedFromNoSpend?: boolean
 }
 
+export type CategoryField = 'name' | 'icon' | 'color'
+
 /**
- * Проверка названия, иконки и цвета категории. Название — непустое, до 30 символов, уникальное
- * (без учёта регистра) среди категорий того же типа, включая скрытые; `selfId` — редактируемая категория.
+ * Ошибки по полям формы категории. Название — непустое, до 30 символов, уникальное (без учёта регистра)
+ * среди категорий того же типа, включая скрытые; `selfId` — редактируемая категория.
  */
+export function categoryFieldErrors(
+  input: CategoryInput,
+  existing: readonly Pick<Category, 'id' | 'name' | 'type' | 'isArchived'>[],
+  selfId?: string,
+): Partial<Record<CategoryField, string>> {
+  const errors: Partial<Record<CategoryField, string>> = {}
+  const name = input.name.trim()
+  if (!name) errors.name = 'Укажите название категории'
+  else if (name.length > CATEGORY_NAME_MAX) errors.name = `Название не длиннее ${CATEGORY_NAME_MAX} символов`
+  else {
+    const same = existing.find(
+      (c) => c.id !== selfId && c.type === input.type && c.name.trim().toLowerCase() === name.toLowerCase(),
+    )
+    if (same) errors.name = same.isArchived ? 'Категория с таким названием есть среди скрытых' : 'Категория с таким названием уже есть'
+  }
+  if (!input.icon) errors.icon = 'Выберите иконку'
+  if (!/^#[0-9a-f]{6}$/i.test(input.color)) errors.color = 'Выберите цвет'
+  return errors
+}
+
+/** Первая ошибка (название, иконка, цвет) или undefined. */
 export function validateCategoryInput(
   input: CategoryInput,
   existing: readonly Pick<Category, 'id' | 'name' | 'type' | 'isArchived'>[],
   selfId?: string,
 ): string | undefined {
-  const name = input.name.trim()
-  if (!name) return 'Укажите название категории'
-  if (name.length > CATEGORY_NAME_MAX) return `Название не длиннее ${CATEGORY_NAME_MAX} символов`
-  if (!input.icon) return 'Выберите иконку'
-  if (!/^#[0-9a-f]{6}$/i.test(input.color)) return 'Выберите цвет'
-  const same = existing.find(
-    (c) => c.id !== selfId && c.type === input.type && c.name.trim().toLowerCase() === name.toLowerCase(),
-  )
-  if (same) return same.isArchived ? 'Категория с таким названием есть среди скрытых' : 'Категория с таким названием уже есть'
-  return undefined
+  return Object.values(categoryFieldErrors(input, existing, selfId))[0]
 }
 
 /**

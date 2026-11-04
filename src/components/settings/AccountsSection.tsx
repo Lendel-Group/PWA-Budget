@@ -1,13 +1,17 @@
 import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Archive, ArchiveRestore, Plus } from 'lucide-react'
+import { FormField, SubmitButton } from '../ui/FormField'
 import { Field, Sheet } from '../ui/Sheet'
-import { inputClass, primaryButton, toNumber } from '../ui/form'
+import { inputClass, toNumber } from '../ui/form'
 import { db, type Account } from '../../db/schema'
-import { ACCOUNT_TYPE_LABELS } from '../../domain/accounts'
+import { ACCOUNT_TYPE_LABELS, accountFieldErrors, type AccountField } from '../../domain/accounts'
 import { cn } from '../../lib/cn'
 import { formatMoney } from '../../lib/format'
+import { useFormValidation } from '../../lib/useFormValidation'
 import { createAccount, setAccountArchived } from '../../services/accountService'
+
+const ACCOUNT_FIELD_LABELS: Record<AccountField, string> = { name: 'название', initialBalance: 'остаток' }
 
 function AddAccountSheet({ onClose }: { onClose: () => void }) {
   const [name, setName] = useState('')
@@ -15,10 +19,12 @@ function AddAccountSheet({ onClose }: { onClose: () => void }) {
   const [currency, setCurrency] = useState<Account['currency']>('KZT')
   const [balance, setBalance] = useState('')
   const [error, setError] = useState<string>()
+  const input = { name, type, currency, initialBalance: balance.trim() === '' ? 0 : toNumber(balance) }
+  const v = useFormValidation(accountFieldErrors(input))
 
   async function submit() {
     try {
-      await createAccount({ name, type, currency, initialBalance: balance.trim() === '' ? 0 : toNumber(balance) })
+      await createAccount(input)
       onClose()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Не удалось создать счёт')
@@ -27,7 +33,9 @@ function AddAccountSheet({ onClose }: { onClose: () => void }) {
 
   return (
     <Sheet title="Новый счёт" onClose={onClose}>
-      <Field label="Название"><input className={inputClass} value={name} onChange={(e) => setName(e.target.value)} placeholder="Kaspi Gold" /></Field>
+      <FormField label="Название" {...v.field('name')}>
+        {(a11y) => <input {...a11y} data-autofocus className={inputClass} value={name} onChange={(e) => setName(e.target.value)} placeholder="Kaspi Gold" />}
+      </FormField>
       <div className="grid grid-cols-2 gap-3">
         <Field label="Тип">
           <select className={inputClass} value={type} onChange={(e) => setType(e.target.value as Account['type'])}>
@@ -40,9 +48,11 @@ function AddAccountSheet({ onClose }: { onClose: () => void }) {
           </select>
         </Field>
       </div>
-      <Field label="Начальный остаток"><input className={inputClass} inputMode="decimal" value={balance} onChange={(e) => setBalance(e.target.value)} placeholder="0" /></Field>
+      <FormField label="Начальный остаток" {...v.field('initialBalance')}>
+        {(a11y) => <input {...a11y} className={inputClass} inputMode="decimal" value={balance} onChange={(e) => setBalance(e.target.value)} placeholder="0" />}
+      </FormField>
       {error && <p role="alert" className="text-sm text-danger">{error}</p>}
-      <button type="button" className={primaryButton} onClick={submit}>Создать счёт</button>
+      <SubmitButton missing={v.invalid.map((k) => ACCOUNT_FIELD_LABELS[k])} onClick={submit}>Создать счёт</SubmitButton>
     </Sheet>
   )
 }

@@ -37,21 +37,39 @@ export function calculateGoalPlan(goal: FinancialGoal, today: string): GoalPlan 
 export interface DebtInput { name: string; totalAmount: number; remainingAmount: number; monthlyPayment: number; dueDay: number; interestRate?: number }
 export interface GoalInput { title: string; targetAmount: number; targetDate: string }
 
-/** Возвращает текст ошибки или undefined. */
-export function validateDebtInput(d: DebtInput): string | undefined {
-  if (!d.name.trim()) return 'Укажите название'
-  if (!(d.totalAmount > 0)) return 'Сумма долга должна быть больше нуля'
-  if (!(d.remainingAmount > 0) || d.remainingAmount > d.totalAmount) return 'Остаток должен быть больше нуля и не больше суммы долга'
-  if (!(d.monthlyPayment > 0)) return 'Укажите обязательный платёж'
-  if (!Number.isInteger(d.dueDay) || d.dueDay < 1 || d.dueDay > 31) return 'День платежа — от 1 до 31'
-  if (d.interestRate !== undefined && !(d.interestRate >= 0)) return 'Ставка не может быть отрицательной'
-  return undefined
+export type DebtField = 'name' | 'totalAmount' | 'remainingAmount' | 'monthlyPayment' | 'dueDay' | 'interestRate'
+export type GoalField = 'title' | 'targetAmount' | 'targetDate'
+
+/** Ошибки по полям формы долга (нет ключа — поле в порядке); порядок ключей — порядок проверок. */
+export function debtFieldErrors(d: DebtInput): Partial<Record<DebtField, string>> {
+  const errors: Partial<Record<DebtField, string>> = {}
+  if (!d.name.trim()) errors.name = 'Укажите название'
+  if (!(d.totalAmount > 0)) errors.totalAmount = 'Сумма долга должна быть больше нуля'
+  if (!(d.remainingAmount > 0) || d.remainingAmount > d.totalAmount) errors.remainingAmount = 'Остаток должен быть больше нуля и не больше суммы долга'
+  if (!(d.monthlyPayment > 0)) errors.monthlyPayment = 'Укажите обязательный платёж'
+  if (!Number.isInteger(d.dueDay) || d.dueDay < 1 || d.dueDay > 31) errors.dueDay = 'День платежа — от 1 до 31'
+  if (d.interestRate !== undefined && !(d.interestRate >= 0)) errors.interestRate = 'Ставка не может быть отрицательной'
+  return errors
 }
 
-export function validateGoalInput(g: GoalInput, today: string): string | undefined {
-  if (!g.title.trim()) return 'Укажите название'
-  if (!(g.targetAmount > 0)) return 'Целевая сумма должна быть больше нуля'
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(g.targetDate) || g.targetDate < today) return 'Выберите дату не раньше сегодняшней'
+/** Первая ошибка или undefined. */
+export const validateDebtInput = (d: DebtInput): string | undefined => Object.values(debtFieldErrors(d))[0]
+
+/** Ошибки по полям формы цели. */
+export function goalFieldErrors(g: GoalInput, today: string): Partial<Record<GoalField, string>> {
+  const errors: Partial<Record<GoalField, string>> = {}
+  if (!g.title.trim()) errors.title = 'Укажите название'
+  if (!(g.targetAmount > 0)) errors.targetAmount = 'Целевая сумма должна быть больше нуля'
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(g.targetDate) || g.targetDate < today) errors.targetDate = 'Выберите дату не раньше сегодняшней'
+  return errors
+}
+
+export const validateGoalInput = (g: GoalInput, today: string): string | undefined => Object.values(goalFieldErrors(g, today))[0]
+
+/** Сумма пополнения или платежа: больше нуля, а для платежа по долгу — не больше остатка (`max`). */
+export function amountFieldError(amount: number, max?: number): string | undefined {
+  if (!(amount > 0)) return 'Сумма должна быть больше нуля'
+  if (max !== undefined && amount > max) return 'Платёж больше остатка долга'
   return undefined
 }
 

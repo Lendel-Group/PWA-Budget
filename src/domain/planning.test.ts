@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import type { Account, FinancialGoal, Transaction } from '../db/schema'
 import {
-  buildCalendar, calculateGoalPlan, daysBetween, getFirstTrackedDate, isCalendarDayInteractive, nextCalendarDate,
-  nextDueDate, validateDebtInput, validateGoalInput, type DebtInput,
+  amountFieldError, buildCalendar, calculateGoalPlan, daysBetween, debtFieldErrors, getFirstTrackedDate, goalFieldErrors,
+  isCalendarDayInteractive, nextCalendarDate, nextDueDate, validateDebtInput, validateGoalInput, type DebtInput,
 } from './planning'
 
 describe('daysBetween / nextDueDate', () => {
@@ -156,5 +156,42 @@ describe('nextCalendarDate', () => {
   it('другие клавиши — undefined', () => {
     expect(go('2026-11-05', 'Enter')).toBeUndefined()
     expect(go('2026-11-05', 'a')).toBeUndefined()
+  })
+})
+
+describe('debtFieldErrors', () => {
+  const ok: DebtInput = { name: 'Кредит', totalAmount: 1000, remainingAmount: 800, monthlyPayment: 100, dueDay: 15 }
+  it('корректный долг — без ошибок', () => expect(debtFieldErrors(ok)).toEqual({}))
+  it('ошибки по полям, все сразу, в порядке проверок', () => {
+    const e = debtFieldErrors({ name: '', totalAmount: NaN, remainingAmount: NaN, monthlyPayment: 0, dueDay: 40, interestRate: -1 })
+    expect(Object.keys(e)).toEqual(['name', 'totalAmount', 'remainingAmount', 'monthlyPayment', 'dueDay', 'interestRate'])
+  })
+  it('остаток больше суммы — ошибка у остатка, а не у суммы', () => {
+    expect(Object.keys(debtFieldErrors({ ...ok, remainingAmount: 2000 }))).toEqual(['remainingAmount'])
+  })
+  it('validateDebtInput возвращает первую из них', () => {
+    expect(validateDebtInput({ ...ok, name: '', dueDay: 99 })).toBe('Укажите название')
+  })
+})
+
+describe('goalFieldErrors', () => {
+  const g = { title: 'Отпуск', targetAmount: 100000, targetDate: '2027-01-01' }
+  it('корректная цель — без ошибок', () => expect(goalFieldErrors(g, '2026-11-04')).toEqual({}))
+  it('ошибки по полям', () => {
+    expect(Object.keys(goalFieldErrors({ title: ' ', targetAmount: 0, targetDate: '' }, '2026-11-04'))).toEqual(['title', 'targetAmount', 'targetDate'])
+    expect(Object.keys(goalFieldErrors({ ...g, targetDate: '2026-11-03' }, '2026-11-04'))).toEqual(['targetDate'])
+  })
+})
+
+describe('amountFieldError', () => {
+  it('сумма должна быть больше нуля', () => {
+    expect(amountFieldError(0)).toMatch(/больше нуля/)
+    expect(amountFieldError(NaN)).toMatch(/больше нуля/)
+    expect(amountFieldError(-5)).toMatch(/больше нуля/)
+    expect(amountFieldError(1)).toBeUndefined()
+  })
+  it('платёж не больше остатка долга', () => {
+    expect(amountFieldError(500, 400)).toMatch(/больше остатка/)
+    expect(amountFieldError(400, 400)).toBeUndefined()
   })
 })

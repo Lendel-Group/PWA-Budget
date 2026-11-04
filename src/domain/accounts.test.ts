@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { pickAccount, validateAccountInput, type AccountInput } from './accounts'
+import { accountFieldErrors, pickAccount, validateAccountInput, type AccountInput } from './accounts'
 
 const a = (o: Partial<AccountInput> = {}): AccountInput => ({ name: 'Kaspi', type: 'card', currency: 'KZT', initialBalance: 0, ...o })
 
@@ -34,5 +34,18 @@ describe('pickAccount', () => {
   it('все счета в архиве — первый в списке; пустой список — undefined', () => {
     expect(pickAccount([acc('x', true), acc('y', true)])?.id).toBe('x')
     expect(pickAccount([])).toBeUndefined()
+  })
+})
+
+describe('accountFieldErrors', () => {
+  it('нет ошибок — пустой объект', () => {
+    expect(accountFieldErrors(a())).toEqual({})
+  })
+  it('ошибки привязаны к полям и собираются все сразу', () => {
+    expect(accountFieldErrors(a({ name: ' ', initialBalance: NaN }))).toEqual({
+      name: 'Укажите название счёта',
+      initialBalance: 'Начальный остаток должен быть числом',
+    })
+    expect(Object.keys(accountFieldErrors(a({ initialBalance: Infinity })))).toEqual(['initialBalance'])
   })
 })

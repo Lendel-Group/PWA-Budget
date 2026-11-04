@@ -4,20 +4,24 @@ import { Plus } from 'lucide-react'
 import { ColorPicker } from '../ui/ColorPicker'
 import { IconPicker } from '../ui/IconPicker'
 import { SegmentedControl } from '../ui/SegmentedControl'
-import { Field, Sheet } from '../ui/Sheet'
-import { inputClass, primaryButton } from '../ui/form'
+import { FormField, SubmitButton } from '../ui/FormField'
+import { Sheet } from '../ui/Sheet'
+import { inputClass } from '../ui/form'
 import { db, type Category } from '../../db/schema'
 import { DEFAULT_CATEGORY_IDS } from '../../db/seed'
-import { CATEGORY_NAME_MAX, sortByDefaultOrder } from '../../domain/categories'
+import { CATEGORY_NAME_MAX, categoryFieldErrors, sortByDefaultOrder, type CategoryField } from '../../domain/categories'
 import { cn } from '../../lib/cn'
 import { CategoryIcon } from '../../lib/icons'
 import { COLOR_CHOICES } from '../../lib/palette'
+import { useFormValidation } from '../../lib/useFormValidation'
 import { createCategory, deleteCategory, setCategoryArchived, updateCategory } from '../../services/categoryService'
 
 const TYPES: { value: Category['type']; label: string }[] = [
   { value: 'expense', label: 'Расход' },
   { value: 'income', label: 'Доход' },
 ]
+
+const CATEGORY_FIELD_LABELS: Record<CategoryField, string> = { name: 'название', icon: 'иконка', color: 'цвет' }
 
 /** Добавление (`category` не задана) и редактирование категории. */
 function CategorySheet({ category, onClose }: { category?: Category; onClose: () => void }) {
@@ -27,6 +31,8 @@ function CategorySheet({ category, onClose }: { category?: Category; onClose: ()
   const [color, setColor] = useState<string>(category?.color ?? COLOR_CHOICES[0].value)
   const [exempt, setExempt] = useState(!!category?.isExcludedFromNoSpend)
   const [error, setError] = useState<string>()
+  const existing = useLiveQuery(() => db.categories.toArray(), [])
+  const v = useFormValidation(categoryFieldErrors({ name, type, icon, color }, existing ?? [], category?.id))
 
   async function run(action: () => Promise<unknown>) {
     setError(undefined)
@@ -42,9 +48,9 @@ function CategorySheet({ category, onClose }: { category?: Category; onClose: ()
   return (
     <Sheet title={category ? 'Категория' : 'Новая категория'} onClose={onClose}>
       {!category && <SegmentedControl label="Тип категории" options={TYPES} value={type} onChange={setType} className="p-1" itemClassName="text-sm" />}
-      <Field label="Название">
-        <input className={inputClass} value={name} maxLength={CATEGORY_NAME_MAX} onChange={(e) => setName(e.target.value)} placeholder="Подарки" />
-      </Field>
+      <FormField label="Название" {...v.field('name')}>
+        {(a11y) => <input {...a11y} data-autofocus className={inputClass} value={name} maxLength={CATEGORY_NAME_MAX} onChange={(e) => setName(e.target.value)} placeholder="Подарки" />}
+      </FormField>
       <div className="space-y-1">
         <p className="text-xs text-fg-muted">Иконка</p>
         <IconPicker value={icon} onChange={setIcon} color={color} />
@@ -63,13 +69,12 @@ function CategorySheet({ category, onClose }: { category?: Category; onClose: ()
         </label>
       )}
       {error && <p role="alert" className="text-sm text-danger">{error}</p>}
-      <button
-        type="button"
-        className={primaryButton}
+      <SubmitButton
+        missing={v.invalid.map((k) => CATEGORY_FIELD_LABELS[k])}
         onClick={() => run(() => (category ? updateCategory(category.id, { name, icon, color, isExcludedFromNoSpend: exempt }) : createCategory({ name, type, icon, color, isExcludedFromNoSpend: exempt })))}
       >
         {category ? 'Сохранить' : 'Добавить категорию'}
-      </button>
+      </SubmitButton>
       {category && (
         <div className="grid grid-cols-2 gap-2">
           <button

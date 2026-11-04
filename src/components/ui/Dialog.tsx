@@ -31,7 +31,7 @@ interface Props {
 /**
  * Модальное окно для `Sheet` и формы «+»:
  * — выносится в `document.body`, а остальное приложение становится `inert` (недоступно с клавиатуры и скринридера);
- * — при открытии фокус уходит на `[data-autofocus]` внутри (например, заголовок) или на саму панель;
+ * — при открытии фокус уходит на первое поле (`[data-autofocus]`), иначе на заголовок (`[data-autofocus-fallback]`) или на саму панель;
  * — Tab / Shift+Tab ходят по кругу внутри панели, Esc закрывает;
  * — при закрытии фокус возвращается на элемент, открывший окно;
  * — подложка скрыта от скринридера и не фокусируется: в дереве остаётся одна кнопка «Закрыть» (в содержимом).
@@ -40,14 +40,17 @@ export function Dialog({ label, onClose, panelClassName, children }: Props) {
   const panel = useRef<HTMLDivElement>(null)
   // onClose у родителей пересоздаётся на каждый рендер; эффект не должен из-за этого перезапускаться
   const closeRef = useRef(onClose)
+  // Кто открыл окно (его фокус вернём при закрытии); запоминается один раз и переживает повторный запуск эффекта в StrictMode
+  const initiatorRef = useRef<HTMLElement | null>(null)
   useEffect(() => { closeRef.current = onClose })
 
   useEffect(() => {
     const el = panel.current!
-    const initiator = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    if (document.activeElement instanceof HTMLElement && !el.contains(document.activeElement)) initiatorRef.current = document.activeElement
     const root = document.getElementById('root')
     lockBackground(root)
-    ;(el.querySelector<HTMLElement>('[data-autofocus]') ?? el).focus({ preventScroll: true })
+    // Первое поле формы (`data-autofocus`) важнее заголовка (`data-autofocus-fallback`), иначе — сама панель
+    ;(el.querySelector<HTMLElement>('[data-autofocus]') ?? el.querySelector<HTMLElement>('[data-autofocus-fallback]') ?? el).focus({ preventScroll: true })
 
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -79,7 +82,12 @@ export function Dialog({ label, onClose, panelClassName, children }: Props) {
     return () => {
       document.removeEventListener('keydown', onKey)
       unlockBackground(root)
-      if (initiator?.isConnected) initiator.focus({ preventScroll: true })
+      // Фокус возвращаем, только если окно действительно закрыто: в StrictMode эффект «размонтируется» и тут же
+      // запускается снова, и возврат фокуса на кнопку-инициатор считался бы уходом с первого поля формы
+      queueMicrotask(() => {
+        const initiator = initiatorRef.current
+        if (!el.isConnected && initiator?.isConnected) initiator.focus({ preventScroll: true })
+      })
     }
   }, [])
 

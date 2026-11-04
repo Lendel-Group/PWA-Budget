@@ -7,10 +7,19 @@ export interface AccountInput {
   initialBalance: number
 }
 
+export type AccountField = 'name' | 'initialBalance'
+
+/** Ошибки по полям формы счёта (нет ключа — поле в порядке). */
+export function accountFieldErrors(a: AccountInput): Partial<Record<AccountField, string>> {
+  const errors: Partial<Record<AccountField, string>> = {}
+  if (!a.name.trim()) errors.name = 'Укажите название счёта'
+  if (!Number.isFinite(a.initialBalance)) errors.initialBalance = 'Начальный остаток должен быть числом'
+  return errors
+}
+
+/** Первая ошибка или undefined. */
 export function validateAccountInput(a: AccountInput): string | undefined {
-  if (!a.name.trim()) return 'Укажите название счёта'
-  if (!Number.isFinite(a.initialBalance)) return 'Начальный остаток должен быть числом'
-  return undefined
+  return Object.values(accountFieldErrors(a))[0]
 }
 
 export const ACCOUNT_TYPE_LABELS: Record<Account['type'], string> = {
