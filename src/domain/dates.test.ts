@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  addDays, clampDueDay, daysInMonth, daysLeftInMonth, formatDateChip, monthStart, parseDate, toLocalDateString,
+  addDays, clampDueDay, daysInMonth, daysLeftInMonth, formatDateChip, formatDayHeading, monthStart, parseDate, toLocalDateString,
 } from './dates'
 
 describe('dates', () => {
@@ -38,5 +38,12 @@ describe('dates', () => {
     expect(formatDateChip('2026-10-31', '2026-11-01')).toBe('Вчера')
     expect(formatDateChip('2026-11-02', '2026-11-04')).toBe('2 ноя')
     expect(formatDateChip('2026-05-12', '2026-11-04')).toBe('12 мая')
+  })
+  it('formatDayHeading: relative days, weekday, year only for other years', () => {
+    expect(formatDayHeading('2026-11-04', '2026-11-04')).toBe('Сегодня')
+    expect(formatDayHeading('2026-11-03', '2026-11-04')).toBe('Вчера')
+    expect(formatDayHeading('2026-11-01', '2026-11-04')).toBe('1 ноября, вс')
+    expect(formatDayHeading('2026-05-12', '2026-11-04')).toBe('12 мая, вт')
+    expect(formatDayHeading('2025-12-31', '2026-11-04')).toBe('31 декабря 2025, ср')
   })
 })

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { AlertTriangle, ChevronDown } from 'lucide-react'
 import { TransactionRow } from '../components/transactions/TransactionRow'
-import { db, type Transaction } from '../db/schema'
+import { db } from '../db/schema'
 import { addDays, daysInMonth, daysLeftInMonth, monthStart, parseDate } from '../domain/dates'
 import {
   accountsMissingRates, calculateDailyAllowance, calculateExpensesKzt, calculateNetWorth,
@@ -12,7 +12,7 @@ import { cn } from '../lib/cn'
 import { formatMoney } from '../lib/format'
 import { useRates } from '../lib/useRates'
 import { useToday } from '../lib/useToday'
-import { deleteTransaction } from '../services/transactionService'
+import { useDeleteTransaction } from '../lib/useDeleteTransaction'
 
 const STATUS_STYLES: Record<AllowanceStatus, { card: string; text: string; label: string }> = {
   green: { card: 'border-emerald-500/40 bg-emerald-500/10', text: 'text-emerald-400', label: 'Всё в порядке' },
@@ -41,7 +41,7 @@ export default function DashboardPage() {
   )
 
   const [expanded, setExpanded] = useState(false)
-  const [deleteError, setDeleteError] = useState<string>()
+  const { remove, error: deleteError } = useDeleteTransaction()
 
   if (!accounts || !categories || !limits || !monthTxs || !recent) return null
 
@@ -53,16 +53,6 @@ export default function DashboardPage() {
   const allowance = calculateDailyAllowance(planned, spent, daysLeftInMonth(today))
   const status = STATUS_STYLES[getAllowanceStatus(allowance)]
   const usedPct = planned > 0 ? Math.min(100, (spent / planned) * 100) : 0
-
-  async function remove(t: Transaction) {
-    if (!window.confirm('Удалить операцию? Баланс счёта будет пересчитан.')) return
-    setDeleteError(undefined)
-    try {
-      await deleteTransaction(t.id)
-    } catch (e) {
-      setDeleteError(e instanceof Error ? e.message : 'Не удалось удалить')
-    }
-  }
 
   const group = (date: string, title: string) => {
     const items = recent.filter((t) => t.date === date).sort((a, b) => b.timestamp - a.timestamp)
@@ -156,6 +146,9 @@ export default function DashboardPage() {
         {deleteError && <p role="alert" className="text-sm text-red-400">{deleteError}</p>}
         {group(today, 'Сегодня')}
         {group(yesterday, 'Вчера')}
+        <a href="#/transactions" className="flex min-h-11 items-center justify-center rounded-xl border border-zinc-700 text-sm text-zinc-200 active:bg-zinc-900">
+          Все операции →
+        </a>
       </div>
     </section>
   )
