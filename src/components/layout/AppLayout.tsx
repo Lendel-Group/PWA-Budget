@@ -5,6 +5,14 @@ import type { Route } from '../../lib/useHashRoute'
 import { InstallBanner } from '../pwa/InstallBanner'
 import { AutoBackupBanner } from './AutoBackupBanner'
 
+const TITLES: Record<Route, string> = {
+  home: 'Мой бюджет',
+  budget: 'Бюджет',
+  analytics: 'Аналитика',
+  goals: 'Цели и долги',
+  settings: 'Настройки',
+}
+
 const TABS: { route: Route; label: string; icon: LucideIcon }[] = [
   { route: 'home', label: 'Главная', icon: Home },
   { route: 'budget', label: 'Бюджет', icon: Wallet },
@@ -40,13 +48,13 @@ export function AppLayout({ route, onNavigate, onAdd, children }: Props) {
   )
 
   return (
-    <div className="mx-auto min-h-dvh max-w-md bg-zinc-950 pt-[env(safe-area-inset-top)] pb-[calc(5rem+env(safe-area-inset-bottom))] text-zinc-100">
+    <div className="mx-auto min-h-dvh max-w-md bg-zinc-950 pt-[env(safe-area-inset-top)] pb-[calc(5.5rem+var(--safe-bottom))] text-zinc-100">
       {/* Закрывает область под статус-баром (iOS black-translucent), чтобы контент не просвечивал */}
       <div aria-hidden className="fixed inset-x-0 top-0 z-40 h-[env(safe-area-inset-top)] bg-zinc-950" />
       <InstallBanner />
       <AutoBackupBanner />
-      <header className="sticky top-[env(safe-area-inset-top)] z-30 flex h-12 items-center justify-between bg-zinc-950/95 px-4 backdrop-blur">
-        <span className="text-sm font-medium text-zinc-500">My Budget 2026</span>
+      <header className="sticky top-[env(safe-area-inset-top)] z-30 flex h-14 items-center justify-between bg-zinc-950/95 px-4 backdrop-blur">
+        <h1 className="truncate text-2xl font-bold tracking-tight text-zinc-50">{TITLES[route]}</h1>
         <button
           type="button"
           onClick={() => onNavigate('settings')}
@@ -63,7 +71,7 @@ export function AppLayout({ route, onNavigate, onAdd, children }: Props) {
       <main>{children}</main>
       <nav
         aria-label="Основная навигация"
-        className="fixed inset-x-0 bottom-0 z-40 mx-auto flex max-w-md items-end border-t border-zinc-800 bg-zinc-950/95 pb-[env(safe-area-inset-bottom)] backdrop-blur"
+        className="fixed inset-x-0 bottom-0 z-40 mx-auto flex max-w-md items-end border-t border-zinc-800 bg-zinc-950/95 pb-[var(--safe-bottom)] backdrop-blur"
       >
         {left.map(renderTab)}
         <div className="flex w-16 justify-center">

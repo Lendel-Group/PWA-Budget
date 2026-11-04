@@ -7,10 +7,23 @@ import { isStandalone, promptInstall, useCanInstall } from '../../lib/install'
 
 const formatDate = (iso: string) => (iso ? new Date(iso).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }) : '—')
 
+/** Размер окна и безопасные зоны (вырез / жест «домой») — пригодится при разборе отступов на телефоне. */
+function measureScreen(): string {
+  const probe = document.createElement('div')
+  probe.style.cssText = 'position:fixed;visibility:hidden;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)'
+  document.body.appendChild(probe)
+  const cs = getComputedStyle(probe)
+  const top = Math.round(parseFloat(cs.paddingTop) || 0)
+  const bottom = Math.round(parseFloat(cs.paddingBottom) || 0)
+  probe.remove()
+  return `${window.innerWidth}×${window.innerHeight}, зоны: ↑${top} ↓${bottom}`
+}
+
 export function AboutSection() {
   const [status, setStatus] = useState<string>()
   const [busy, setBusy] = useState(false)
   const canInstall = useCanInstall()
+  const [screen] = useState(measureScreen)
 
   async function checkUpdates() {
     setBusy(true)
@@ -34,6 +47,7 @@ export function AboutSection() {
     ['Дата сборки', formatDate(APP_INFO.buildDate)],
     ['Сборка', APP_INFO.commit],
     ['Режим', isStandalone() ? 'Установленное приложение' : 'В браузере'],
+    ['Экран', screen],
     ['Версия базы данных', String(db.verno)],
     ['Формат резервной копии', String(BACKUP_SCHEMA_VERSION)],
   ]

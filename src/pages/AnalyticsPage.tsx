@@ -57,7 +57,7 @@ export default function AnalyticsPage() {
         <button type="button" aria-label="Предыдущий год" onClick={() => setYear(y - 1)} className="grid size-10 place-items-center rounded-xl bg-zinc-900">
           <ChevronLeft className="size-5" aria-hidden />
         </button>
-        <h1 className="text-lg font-semibold" data-testid="year">{y}</h1>
+        <h2 className="text-lg font-semibold" data-testid="year">{y}</h2>
         <button type="button" aria-label="Следующий год" onClick={() => setYear(y + 1)} className="grid size-10 place-items-center rounded-xl bg-zinc-900">
           <ChevronRight className="size-5" aria-hidden />
         </button>

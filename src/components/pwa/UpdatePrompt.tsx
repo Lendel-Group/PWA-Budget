@@ -37,7 +37,7 @@ export function UpdatePrompt() {
   return (
     <div
       role="status"
-      className="fixed inset-x-0 bottom-[calc(6rem+env(safe-area-inset-bottom))] z-[45] mx-auto flex max-w-md items-center justify-between gap-3 rounded-2xl border border-zinc-700 bg-zinc-900 p-3 text-sm shadow-xl"
+      className="fixed inset-x-0 bottom-[calc(6rem+var(--safe-bottom))] z-[45] mx-auto flex max-w-md items-center justify-between gap-3 rounded-2xl border border-zinc-700 bg-zinc-900 p-3 text-sm shadow-xl"
       style={{ width: 'calc(100% - 2rem)' }}
     >
       <span>{needRefresh ? 'Доступна новая версия приложения' : 'Приложение готово к работе офлайн'}</span>

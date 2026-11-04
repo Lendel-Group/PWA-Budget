@@ -17,6 +17,11 @@ body,
 /*
  * Мобильные/iOS-доработки. Правила вне @layer перекрывают утилиты Tailwind.
  */
+/* Нижний отступ под жест «домой»: не больше 1.25rem, чтобы панель не «парила» высоко над краем */
+:root {
+  --safe-bottom: min(env(safe-area-inset-bottom), 1.25rem);
+}
+
 html {
   color-scheme: dark; /* системные элементы (дата, список, скролл) — тёмные */
   -webkit-text-size-adjust: 100%;
