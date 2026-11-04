@@ -18,3 +18,13 @@ jobs:
       - run: npm run lint
       - run: npm test --if-present
       - run: npm run build
+
+  version:
+    # Для PR с изменениями приложения версия должна расти по SemVer
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: node scripts/check-version.mjs origin/${{ github.base_ref }}
