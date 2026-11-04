@@ -48,8 +48,8 @@ function PlanInput({ stored, year, month, categoryId, name }: {
         setDraft(null)
       }}
       className={cn(
-        'min-h-11 w-28 rounded-lg bg-zinc-800 px-2 py-1.5 text-right text-sm tabular-nums outline-none focus:ring-2 focus:ring-emerald-500',
-        invalid && 'ring-2 ring-red-500',
+        'min-h-11 w-28 rounded-lg bg-zinc-800 px-2 py-1.5 text-right text-sm tabular-nums outline-none focus:ring-2 focus:ring-accent',
+        invalid && 'ring-2 ring-danger',
       )}
     />
   )
@@ -77,13 +77,13 @@ function CategoryRow({ category, planned, actual, year, month }: {
         aria-valuemax={100}
         aria-valuenow={Math.round(pct)}
       >
-        <div className={cn('h-full rounded-full', over ? 'bg-red-500' : 'bg-emerald-500')} style={{ width: `${pct}%` }} />
+        <div className={cn('h-full rounded-full', over ? 'bg-danger' : 'bg-expense')} style={{ width: `${pct}%` }} />
       </div>
       <div className="mt-1.5 flex justify-between text-xs">
-        <span className={cn('tabular-nums', over ? 'text-red-400' : 'text-zinc-400')} data-testid={`actual-${category.id}`}>
+        <span className={cn('tabular-nums', over ? 'text-danger' : 'text-zinc-400')} data-testid={`actual-${category.id}`}>
           Факт: {formatMoney(actual)}
         </span>
-        <span className={cn('tabular-nums', over ? 'text-red-400' : 'text-fg-muted')}>
+        <span className={cn('tabular-nums', over ? 'text-danger' : 'text-fg-muted')}>
           {planned > 0
             ? actual > planned ? `Перерасход ${formatMoney(actual - planned)}` : `Осталось ${formatMoney(planned - actual)}`
             : actual > 0 ? 'Нет лимита' : ''}
@@ -151,7 +151,7 @@ export default function BudgetPage() {
         </div>
         <div className="mt-1 flex justify-between text-sm">
           <span className="text-fg-muted">Фактические траты</span>
-          <span className={cn('tabular-nums', totalSpent > totalPlanned && totalPlanned > 0 && 'text-red-400')} data-testid="total-spent">{formatMoney(totalSpent)}</span>
+          <span className={cn('tabular-nums', totalSpent > totalPlanned && totalPlanned > 0 && 'text-danger')} data-testid="total-spent">{formatMoney(totalSpent)}</span>
         </div>
       </div>
 

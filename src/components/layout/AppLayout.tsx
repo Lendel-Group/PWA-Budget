@@ -43,7 +43,7 @@ export function AppLayout({ route, onNavigate, onAdd, children }: Props) {
       aria-current={route === r ? 'page' : undefined}
       className={cn(
         'flex flex-1 flex-col items-center gap-0.5 py-2 text-[11px]',
-        route === r ? 'text-emerald-400' : 'text-fg-muted',
+        route === r ? 'text-accent-fg' : 'text-fg-muted',
       )}
     >
       <Icon className="size-5" aria-hidden />
@@ -66,7 +66,7 @@ export function AppLayout({ route, onNavigate, onAdd, children }: Props) {
           aria-current={route === 'settings' ? 'page' : undefined}
           className={cn(
             'grid size-11 place-items-center rounded-xl active:bg-zinc-900',
-            route === 'settings' ? 'bg-zinc-900 text-emerald-400' : 'text-zinc-400',
+            route === 'settings' ? 'bg-zinc-900 text-accent-fg' : 'text-zinc-400',
           )}
         >
           <Settings className="size-5" aria-hidden />
@@ -83,7 +83,7 @@ export function AppLayout({ route, onNavigate, onAdd, children }: Props) {
             type="button"
             onClick={onAdd}
             aria-label="Добавить операцию"
-            className="-mt-6 grid size-14 place-items-center rounded-full bg-emerald-500 text-zinc-950 shadow-lg shadow-emerald-500/30 active:scale-95"
+            className="-mt-6 grid size-14 place-items-center rounded-full bg-accent text-zinc-950 shadow-lg shadow-accent/30 active:scale-95"
           >
             <Plus className="size-7" aria-hidden />
           </button>

@@ -60,7 +60,7 @@ function AddGoalSheet({ onClose }: { onClose: () => void }) {
           )
         })}
       </div>
-      {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
+      {error && <p role="alert" className="text-sm text-danger">{error}</p>}
       <button type="button" className={primaryButton} onClick={submit}>Добавить цель</button>
     </Sheet>
   )
@@ -92,9 +92,9 @@ function TopUpSheet({ goal, onClose }: { goal: FinancialGoal; onClose: () => voi
     <Sheet title={`Пополнить: ${goal.title}`} onClose={onClose}>
       <Field label="Сумма, ₸"><input className={inputClass} inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} autoFocus /></Field>
       <Field label="Списать со счёта">
-        {accounts?.length ? <AccountSelect accounts={accounts} value={selected ?? ''} onChange={setAccountId} /> : <p className="text-sm text-amber-400">Нет счёта в тенге</p>}
+        {accounts?.length ? <AccountSelect accounts={accounts} value={selected ?? ''} onChange={setAccountId} /> : <p className="text-sm text-warning">Нет счёта в тенге</p>}
       </Field>
-      {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
+      {error && <p role="alert" className="text-sm text-danger">{error}</p>}
       <button type="button" className={primaryButton} disabled={busy || !selected} onClick={submit}>Пополнить</button>
     </Sheet>
   )
@@ -111,7 +111,7 @@ export function GoalsTab() {
   return (
     <div className="space-y-3">
       {goals.length === 0 && <p className="py-6 text-center text-sm text-fg-muted">Целей пока нет. Поставьте первую!</p>}
-      {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
+      {error && <p role="alert" className="text-sm text-danger">{error}</p>}
       <ul className="space-y-3" aria-label="Финансовые цели">
         {goals.map((g) => {
           const pct = Math.min(100, (g.currentAmount / g.targetAmount) * 100)
@@ -122,14 +122,14 @@ export function GoalsTab() {
                 <div>
                   <h3 className="flex items-center gap-1.5 font-medium">
                     {g.title}
-                    {g.isAchieved && <CheckCircle2 className="size-4 text-emerald-400" aria-label="Цель достигнута" />}
+                    {g.isAchieved && <CheckCircle2 className="size-4 text-success" aria-label="Цель достигнута" />}
                   </h3>
                   <p className="text-xs text-fg-muted">
                     до {g.targetDate}
                     {!g.isAchieved && plan.daysLeft >= 0 && ` · осталось ${plan.daysLeft} дн.`}
                   </p>
                 </div>
-                <button type="button" aria-label={`Удалить цель ${g.title}`} className="-mr-2 -mt-2 grid size-11 shrink-0 place-items-center text-fg-muted hover:text-red-400"
+                <button type="button" aria-label={`Удалить цель ${g.title}`} className="-mr-2 -mt-2 grid size-11 shrink-0 place-items-center text-fg-muted hover:text-danger"
                   onClick={async () => {
                     if (!window.confirm(`Удалить цель «${g.title}»?`)) return
                     setError(undefined)
@@ -149,7 +149,7 @@ export function GoalsTab() {
                 <p className="mt-1 text-xs text-fg-muted">Чтобы успеть: ~{formatMoney(plan.perMonth)} в месяц</p>
               )}
               {!g.isAchieved && (
-                <button type="button" onClick={() => setTopping(g)} className="mt-3 h-11 w-full rounded-xl bg-emerald-500/15 font-medium text-emerald-400 active:bg-emerald-500/25">
+                <button type="button" onClick={() => setTopping(g)} className="mt-3 h-11 w-full rounded-xl bg-accent/15 font-medium text-accent-fg active:bg-accent/25">
                   Пополнить
                 </button>
               )}

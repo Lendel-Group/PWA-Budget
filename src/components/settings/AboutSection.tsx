@@ -74,7 +74,7 @@ export function AboutSection() {
         <button
           type="button"
           onClick={() => void promptInstall()}
-          className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 text-sm font-medium text-zinc-950"
+          className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-accent text-sm font-medium text-zinc-950"
         >
           <Download className="size-4" aria-hidden /> Установить приложение
         </button>
@@ -96,7 +96,7 @@ export function AboutSection() {
         href={APP_INFO.repoUrl}
         target="_blank"
         rel="noreferrer noopener"
-        className="flex min-h-11 items-center gap-1.5 text-xs text-emerald-400 underline"
+        className="flex min-h-11 items-center gap-1.5 text-xs text-accent-fg underline"
       >
         Исходный код на GitHub <ExternalLink className="size-3" aria-hidden />
       </a>

@@ -146,7 +146,7 @@ function QuickAddForm({ editing, onClose }: { editing?: Transaction; onClose: ()
             onClick={() => onPick(a.id)}
             className={cn(
               'shrink-0 rounded-xl border px-3 py-1.5 text-left text-sm [@media(max-height:700px)]:flex [@media(max-height:700px)]:min-h-11 [@media(max-height:700px)]:items-center [@media(max-height:700px)]:gap-2 [@media(max-height:700px)]:py-1',
-              a.id === selectedId ? 'border-emerald-500 bg-emerald-500/10' : 'border-zinc-800 bg-zinc-900',
+              a.id === selectedId ? 'border-accent bg-accent/10' : 'border-zinc-800 bg-zinc-900',
             )}
           >
             <div className="font-medium">{a.name}</div>
@@ -186,7 +186,7 @@ function QuickAddForm({ editing, onClose }: { editing?: Transaction; onClose: ()
       <div className="flex items-center justify-between gap-2 px-1">
         <div className="flex items-center gap-2">
           {/* Нативный выбор даты скрыт под чипом: нажатие по чипу открывает системный календарь */}
-          <label className="relative flex min-h-11 items-center gap-1.5 rounded-xl bg-zinc-900 px-3 text-sm text-zinc-300 focus-within:ring-2 focus-within:ring-emerald-500">
+          <label className="relative flex min-h-11 items-center gap-1.5 rounded-xl bg-zinc-900 px-3 text-sm text-zinc-300 focus-within:ring-2 focus-within:ring-accent">
             <CalendarDays className="size-4 text-fg-muted" aria-hidden />
             <span>{formatDateChip(date, today)}</span>
             <input
@@ -210,14 +210,14 @@ function QuickAddForm({ editing, onClose }: { editing?: Transaction; onClose: ()
             )}
           >
             <SlidersHorizontal className="size-5" aria-hidden />
-            {hasExtras && <span aria-hidden className="absolute right-2 top-2 size-2 rounded-full bg-emerald-400" />}
+            {hasExtras && <span aria-hidden className="absolute right-2 top-2 size-2 rounded-full bg-accent" />}
           </button>
         </div>
         <div
           data-testid="amount"
           className={cn(
             'min-w-0 truncate text-right text-4xl font-semibold tabular-nums',
-            type === 'income' ? 'text-emerald-400' : type === 'transfer' ? 'text-sky-400' : 'text-zinc-100',
+            type === 'income' ? 'text-income' : type === 'transfer' ? 'text-transfer' : 'text-zinc-100',
           )}
         >
           {displayAmount(amount).replace('.', ',')}
@@ -254,7 +254,7 @@ function QuickAddForm({ editing, onClose }: { editing?: Transaction; onClose: ()
                 onClick={() => setCategoryId(c.id)}
                 className={cn(
                   'flex min-h-[4.5rem] flex-col items-center justify-center gap-1 rounded-2xl border p-2 text-center text-xs [@media(max-height:600px)]:min-h-16 [@media(max-height:600px)]:gap-0.5 [@media(max-height:600px)]:p-1.5',
-                  c.id === categoryId ? 'border-emerald-500 bg-emerald-500/10' : 'border-zinc-800 bg-zinc-900',
+                  c.id === categoryId ? 'border-accent bg-accent/10' : 'border-zinc-800 bg-zinc-900',
                 )}
               >
                 <span className="grid size-9 place-items-center rounded-full [@media(max-height:600px)]:size-7" style={{ background: `${c.color}33`, color: c.color }}>
@@ -280,7 +280,7 @@ function QuickAddForm({ editing, onClose }: { editing?: Transaction; onClose: ()
               maxLength={100}
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              className="min-h-11 w-full rounded-xl bg-zinc-900 px-3 text-base outline-none focus:ring-2 focus:ring-emerald-500"
+              className="min-h-11 w-full rounded-xl bg-zinc-900 px-3 text-base outline-none focus:ring-2 focus:ring-accent"
             />
             {showExcluded && (
               <label className="flex items-center justify-between rounded-xl bg-zinc-900 px-3 py-2 text-sm">
@@ -288,7 +288,7 @@ function QuickAddForm({ editing, onClose }: { editing?: Transaction; onClose: ()
                   Исключить из дней без трат
                   <span className="block text-xs text-fg-muted">коммуналка, кредит, аренда</span>
                 </span>
-                <input type="checkbox" checked={excluded} onChange={(e) => setExcluded(e.target.checked)} className="size-5 accent-emerald-500" />
+                <input type="checkbox" checked={excluded} onChange={(e) => setExcluded(e.target.checked)} className="size-5 accent-[var(--color-accent)]" />
               </label>
             )}
           </div>
@@ -308,13 +308,13 @@ function QuickAddForm({ editing, onClose }: { editing?: Transaction; onClose: ()
           ))}
         </div>
 
-        {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
-        {needsCategory && value > 0 && <p role="status" className="text-center text-xs text-amber-400">Выберите категорию</p>}
+        {error && <p role="alert" className="text-sm text-danger">{error}</p>}
+        {needsCategory && value > 0 && <p role="status" className="text-center text-xs text-warning">Выберите категорию</p>}
         <button
           type="button"
           onClick={save}
           disabled={!canSave}
-          className="h-12 w-full rounded-2xl bg-emerald-500 text-lg font-semibold text-zinc-950 disabled:opacity-40"
+          className="h-12 w-full rounded-2xl bg-accent text-lg font-semibold text-zinc-950 disabled:opacity-40"
         >
           {editing ? 'Сохранить изменения' : 'Сохранить'}
         </button>

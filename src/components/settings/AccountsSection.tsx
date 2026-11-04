@@ -41,7 +41,7 @@ function AddAccountSheet({ onClose }: { onClose: () => void }) {
         </Field>
       </div>
       <Field label="Начальный остаток"><input className={inputClass} inputMode="decimal" value={balance} onChange={(e) => setBalance(e.target.value)} placeholder="0" /></Field>
-      {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
+      {error && <p role="alert" className="text-sm text-danger">{error}</p>}
       <button type="button" className={primaryButton} onClick={submit}>Создать счёт</button>
     </Sheet>
   )
@@ -78,7 +78,7 @@ export function AccountsSection() {
           </li>
         ))}
       </ul>
-      {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
+      {error && <p role="alert" className="text-sm text-danger">{error}</p>}
       <button type="button" onClick={() => setAdding(true)} className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-dashed border-zinc-700 text-sm text-zinc-300">
         <Plus className="size-4" aria-hidden /> Добавить счёт
       </button>
