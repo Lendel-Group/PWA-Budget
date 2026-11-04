@@ -20,6 +20,10 @@ export interface Category {
   icon: string // Lucide icon identifier
   color: string
   isDefault: boolean
+  /** Скрыта: не предлагается в форме «+», но остаётся в истории и аналитике. Нет поля = не скрыта. */
+  isArchived?: boolean
+  /** Порядок пользовательских категорий (по возрастанию) после набора по умолчанию. */
+  order?: number
 }
 
 export interface BudgetLimit {

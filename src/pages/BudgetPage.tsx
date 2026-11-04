@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { ChevronLeft, ChevronRight, Copy } from 'lucide-react'
 import { db, type BudgetLimit, type Category } from '../db/schema'
+import { DEFAULT_CATEGORY_IDS } from '../db/seed'
+import { sortByDefaultOrder } from '../domain/categories'
 import {
   calculateCategoryTotalsKzt, calculateUncategorizedKzt, limitId, monthLabel, nextMonth, parsePlanInput, planCopy, previousMonth,
 } from '../domain/budget'
@@ -112,6 +114,8 @@ export default function BudgetPage() {
 
   const plannedById = new Map(limits.map((l) => [l.categoryId, l.plannedAmount]))
   const totals = calculateCategoryTotalsKzt(txs, accounts, rates)
+  // Порядок как в форме «+»; скрытые категории остаются в месяце, где у них есть лимит или траты
+  const rows = sortByDefaultOrder(categories, DEFAULT_CATEGORY_IDS).filter((c) => !c.isArchived || (plannedById.get(c.id) ?? 0) > 0 || (totals[c.id] ?? 0) > 0)
   const uncategorized = calculateUncategorizedKzt(txs, accounts, rates)
   const totalPlanned = sumPlannedLimits(limits)
   const totalSpent = calculateExpensesKzt(txs, accounts, rates)
@@ -168,7 +172,7 @@ export default function BudgetPage() {
       </div>
 
       <ul className="space-y-2" aria-label="Категории расходов">
-        {categories.map((c) => (
+        {rows.map((c) => (
           <CategoryRow key={c.id} category={c} planned={plannedById.get(c.id) ?? 0} actual={totals[c.id] ?? 0} year={year} month={month} />
         ))}
         {uncategorized > 0 && (

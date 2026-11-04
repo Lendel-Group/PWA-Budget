@@ -1,4 +1,4 @@
-import type { Transaction } from '../db/schema'
+import type { Category, Transaction } from '../db/schema'
 import { addDays } from './dates'
 
 /** За какой период считается частота использования категорий. */
@@ -26,13 +26,44 @@ export function sortCategoriesByUsage<C extends { id: string }>(
 }
 
 /**
- * Порядок «по умолчанию»: как в списке `defaultIds` (набор из сида), остальные — после него в исходном порядке.
+ * Порядок «по умолчанию»: сначала набор из `defaultIds` в его порядке, затем остальные (пользовательские)
+ * по возрастанию `order`, а без него — в исходном порядке.
  * Нужен потому, что Dexie отдаёт записи по первичному ключу, то есть по алфавиту id, а не в порядке сида.
  */
-export function sortByDefaultOrder<C extends { id: string }>(categories: readonly C[], defaultIds: readonly string[]): C[] {
+export function sortByDefaultOrder<C extends { id: string; order?: number }>(categories: readonly C[], defaultIds: readonly string[]): C[] {
   const position = new Map(defaultIds.map((id, i) => [id, i] as const))
   return categories
     .map((category, index) => ({ category, index, rank: position.get(category.id) ?? defaultIds.length }))
-    .sort((a, b) => a.rank - b.rank || a.index - b.index)
+    .sort((a, b) => a.rank - b.rank || (a.category.order ?? 0) - (b.category.order ?? 0) || a.index - b.index)
     .map((x) => x.category)
+}
+
+export const CATEGORY_NAME_MAX = 30
+
+export interface CategoryInput {
+  name: string
+  type: Category['type']
+  icon: string
+  color: string
+}
+
+/**
+ * Проверка названия, иконки и цвета категории. Название — непустое, до 30 символов, уникальное
+ * (без учёта регистра) среди категорий того же типа, включая скрытые; `selfId` — редактируемая категория.
+ */
+export function validateCategoryInput(
+  input: CategoryInput,
+  existing: readonly Pick<Category, 'id' | 'name' | 'type' | 'isArchived'>[],
+  selfId?: string,
+): string | undefined {
+  const name = input.name.trim()
+  if (!name) return 'Укажите название категории'
+  if (name.length > CATEGORY_NAME_MAX) return `Название не длиннее ${CATEGORY_NAME_MAX} символов`
+  if (!input.icon) return 'Выберите иконку'
+  if (!/^#[0-9a-f]{6}$/i.test(input.color)) return 'Выберите цвет'
+  const same = existing.find(
+    (c) => c.id !== selfId && c.type === input.type && c.name.trim().toLowerCase() === name.toLowerCase(),
+  )
+  if (same) return same.isArchived ? 'Категория с таким названием есть среди скрытых' : 'Категория с таким названием уже есть'
+  return undefined
 }

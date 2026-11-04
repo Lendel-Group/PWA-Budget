@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { sortByDefaultOrder, sortCategoriesByUsage } from './categories'
+import { CATEGORY_NAME_MAX, sortByDefaultOrder, sortCategoriesByUsage, validateCategoryInput } from './categories'
 
 const cats = ['a', 'b', 'c', 'd'].map((id) => ({ id }))
 const ids = (list: { id: string }[]) => list.map((c) => c.id)
@@ -48,5 +48,48 @@ describe('sortByDefaultOrder', () => {
 
   it('пустой список по умолчанию ничего не меняет', () => {
     expect(ids(sortByDefaultOrder(cats, []))).toEqual(['a', 'b', 'c', 'd'])
+  })
+})
+
+describe('sortByDefaultOrder: пользовательские категории', () => {
+  it('идут после набора по умолчанию по возрастанию order, без order — в исходном порядке', () => {
+    const list = [{ id: 'u3', order: 3 }, { id: 'b' }, { id: 'u1', order: 1 }, { id: 'a' }, { id: 'u2', order: 2 }]
+    expect(ids(sortByDefaultOrder(list, ['a', 'b']))).toEqual(['a', 'b', 'u1', 'u2', 'u3'])
+  })
+})
+
+describe('validateCategoryInput', () => {
+  const input = { name: 'Подарки', type: 'expense' as const, icon: 'Gift', color: '#22c55e' }
+  const existing = [
+    { id: 'c1', name: 'Продукты', type: 'expense' as const },
+    { id: 'c2', name: 'Старая', type: 'expense' as const, isArchived: true },
+    { id: 'c3', name: 'Зарплата', type: 'income' as const },
+  ]
+
+  it('допускает корректные данные', () => {
+    expect(validateCategoryInput(input, existing)).toBeUndefined()
+  })
+  it('пустое название и пробелы', () => {
+    expect(validateCategoryInput({ ...input, name: '   ' }, existing)).toMatch(/название/i)
+  })
+  it('слишком длинное название', () => {
+    expect(validateCategoryInput({ ...input, name: 'я'.repeat(CATEGORY_NAME_MAX + 1) }, existing)).toMatch(/не длиннее/)
+    expect(validateCategoryInput({ ...input, name: 'я'.repeat(CATEGORY_NAME_MAX) }, existing)).toBeUndefined()
+  })
+  it('иконка и цвет обязательны', () => {
+    expect(validateCategoryInput({ ...input, icon: '' }, existing)).toMatch(/иконку/)
+    expect(validateCategoryInput({ ...input, color: 'red' }, existing)).toMatch(/цвет/)
+    expect(validateCategoryInput({ ...input, color: '#FFAA00' }, existing)).toBeUndefined()
+  })
+  it('уникальность без учёта регистра и пробелов, в пределах типа', () => {
+    expect(validateCategoryInput({ ...input, name: '  продУКТЫ ' }, existing)).toMatch(/уже есть/)
+    expect(validateCategoryInput({ ...input, name: 'Зарплата' }, existing)).toBeUndefined() // другой тип
+  })
+  it('совпадение со скрытой категорией объясняется отдельно', () => {
+    expect(validateCategoryInput({ ...input, name: 'старая' }, existing)).toMatch(/скрытых/)
+  })
+  it('своё же название при редактировании допустимо', () => {
+    expect(validateCategoryInput({ ...input, name: 'Продукты' }, existing, 'c1')).toBeUndefined()
+    expect(validateCategoryInput({ ...input, name: 'Продукты' }, existing, 'c2')).toMatch(/уже есть/)
   })
 })

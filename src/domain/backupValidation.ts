@@ -31,7 +31,7 @@ export class BackupValidationError extends Error {
   }
 }
 
-type FieldSpec = 'string' | 'number' | 'boolean' | 'string?' | 'number?' | readonly string[]
+type FieldSpec = 'string' | 'number' | 'boolean' | 'string?' | 'number?' | 'boolean?' | readonly string[]
 type TableSpec = Record<string, FieldSpec>
 
 const TABLES: Record<Exclude<keyof BackupData, 'config'>, TableSpec> = {
@@ -42,7 +42,7 @@ const TABLES: Record<Exclude<keyof BackupData, 'config'>, TableSpec> = {
   },
   categories: {
     id: 'string', name: 'string', type: ['expense', 'income'], icon: 'string', color: 'string',
-    isDefault: 'boolean',
+    isDefault: 'boolean', isArchived: 'boolean?', order: 'number?',
   },
   budgetLimits: {
     id: 'string', year: 'number', month: 'number', categoryId: 'string', plannedAmount: 'number',

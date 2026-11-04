@@ -70,7 +70,7 @@ export function HistoryFilters({ filter, period, accounts, categories, today, on
           onChange={(e) => onFilter({ categoryId: e.target.value })}
         >
           <option value="">Все категории</option>
-          {visibleCategories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          {visibleCategories.map((c) => <option key={c.id} value={c.id}>{c.name}{c.isArchived ? ' (скрыта)' : ''}</option>)}
         </select>
       </div>
 
