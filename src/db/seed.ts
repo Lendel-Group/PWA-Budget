@@ -24,6 +24,9 @@ export const DEFAULT_CATEGORIES: Category[] = [
   income('cat-in-other', 'Прочий доход', 'PlusCircle', '#71717a'),
 ]
 
+/** Порядок категорий из сида: при отображении по умолчанию пользовательские категории идут после него. */
+export const DEFAULT_CATEGORY_IDS: readonly string[] = DEFAULT_CATEGORIES.map((c) => c.id)
+
 /** Заполняет БД стартовыми данными один раз (идемпотентно). */
 export async function seedIfEmpty(): Promise<boolean> {
   return db.transaction('rw', [db.accounts, db.categories, db.config], async () => {

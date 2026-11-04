@@ -62,6 +62,11 @@ describe('parseBackup', () => {
     expect(() => parse((b) => { b.data.debts[0].interestRate = 'x' })).toThrow(/число/)
     expect(() => parse((b) => { b.data.transactions[0].comment = 3 })).toThrow(/string/)
   })
+  it('categories: isArchived и order необязательны, но проверяются по типу', () => {
+    expect(() => parse((b) => { b.data.categories[0].isArchived = true; b.data.categories[0].order = 3 })).not.toThrow()
+    expect(() => parse((b) => { b.data.categories[0].isArchived = 'yes' })).toThrow(/boolean/)
+    expect(() => parse((b) => { b.data.categories[0].order = 'x' })).toThrow(/число/)
+  })
   it('rejects missing required field', () => {
     expect(() => parse((b) => { delete b.data.goals[0].title })).toThrow(/goals\[0\]\.title/)
   })

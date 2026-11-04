@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { CalendarDays, Delete, SlidersHorizontal, X } from 'lucide-react'
 import { db, type Transaction } from '../../db/schema'
-import { DEFAULT_CATEGORIES } from '../../db/seed'
+import { DEFAULT_CATEGORY_IDS } from '../../db/seed'
 import { sortByDefaultOrder, sortCategoriesByUsage, USAGE_WINDOW_DAYS } from '../../domain/categories'
 import { pickAccount } from '../../domain/accounts'
 import { addDays, formatDateChip, toLocalDateString } from '../../domain/dates'
@@ -55,9 +55,6 @@ export function QuickAddModal({ open, editing, onClose }: ModalProps) {
   return open ? <QuickAddForm editing={editing} onClose={onClose} /> : null
 }
 
-/** Порядок категорий из сида: при равной частоте использования категории идут в нём. */
-const DEFAULT_IDS = DEFAULT_CATEGORIES.map((c) => c.id)
-
 function QuickAddForm({ editing, onClose }: { editing?: Transaction; onClose: () => void }) {
   /** Платёж по долгу / пополнение цели: тип, категория и связь не меняются, счёт — только в тенге. */
   const linked = !!editing && (!!editing.debtId || !!editing.goalId)
@@ -97,8 +94,8 @@ function QuickAddForm({ editing, onClose }: { editing?: Transaction; onClose: ()
   )
   const toAccount = targets.find((a) => a.id === toAccountId) ?? targets[0]
   const visibleCategories = useMemo(
-    () => sortCategoriesByUsage(sortByDefaultOrder(categories?.filter((c) => c.type === type) ?? [], DEFAULT_IDS), recent ?? [], today),
-    [categories, recent, today, type],
+    () => sortCategoriesByUsage(sortByDefaultOrder(categories?.filter((c) => c.type === type && (!c.isArchived || c.id === editing?.categoryId)) ?? [], DEFAULT_CATEGORY_IDS), recent ?? [], today),
+    [categories, recent, today, type, editing?.categoryId],
   )
   const crossCurrency =
     type === 'transfer' && !!toAccount && !!fromAccount && toAccount.currency !== fromAccount.currency

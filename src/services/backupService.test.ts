@@ -56,6 +56,18 @@ describe('export / import', () => {
     expect((await db.config.get('seeded'))?.value).toBe(true)
   })
 
+  it('пользовательские и скрытые категории входят в бэкап и возвращаются при импорте', async () => {
+    await db.categories.bulkAdd([
+      { id: 'cat-user', name: 'Спорт', type: 'expense', icon: 'Dumbbell', color: '#3b82f6', isDefault: false, order: 2 },
+      { id: 'cat-hidden', name: 'Старая', type: 'income', icon: 'Gift', color: '#ec4899', isDefault: false, isArchived: true, order: 3 },
+    ])
+    const json = await exportDatabaseToJson()
+    await clearAll()
+    await importDatabaseFromJson(json)
+    expect(await db.categories.get('cat-user')).toMatchObject({ name: 'Спорт', icon: 'Dumbbell', isDefault: false, order: 2 })
+    expect(await db.categories.get('cat-hidden')).toMatchObject({ isArchived: true, order: 3 })
+  })
+
   it('does not export local config (handle, persisted)', async () => {
     await db.config.bulkPut([
       { key: 'auto_backup_handle', value: 'h' }, { key: 'storage_persisted', value: true },
