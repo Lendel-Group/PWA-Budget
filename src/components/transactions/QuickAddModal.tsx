@@ -8,6 +8,7 @@ import { cn } from '../../lib/cn'
 import { formatMoney } from '../../lib/format'
 import { CategoryIcon } from '../../lib/icons'
 import type { NewTransaction } from '../../domain/finance'
+import { Dialog } from '../ui/Dialog'
 import { useToast } from '../../lib/toastContext'
 import { savedMessage } from '../../lib/savedMessage'
 import { addTransaction, updateTransaction } from '../../services/transactionService'
@@ -77,17 +78,6 @@ function QuickAddForm({ editing, onClose }: { editing?: Transaction; onClose: ()
   const [error, setError] = useState<string>()
   const [saving, setSaving] = useState(false)
   const { ref: scrollRef, more: moreBelow, update: updateMore } = useMoreBelow()
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
-    document.addEventListener('keydown', onKey)
-    const prev = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.removeEventListener('keydown', onKey)
-      document.body.style.overflow = prev
-    }
-  }, [onClose])
 
   const fromAccount = accounts?.find((a) => a.id === accountId) ?? accounts?.[0]
   const targets = useMemo(
@@ -167,175 +157,176 @@ function QuickAddForm({ editing, onClose }: { editing?: Transaction; onClose: ()
   )
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true" aria-label={editing ? 'Редактирование операции' : 'Новая операция'}>
-      <button type="button" aria-label="Закрыть" className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <div className="relative flex h-[calc(100dvh-env(safe-area-inset-top)-0.5rem)] w-full max-w-md flex-col gap-2.5 rounded-t-3xl [@media(max-height:700px)]:gap-2 bg-zinc-950 p-4 pb-[max(1rem,var(--safe-bottom))]">
-        <div className="flex items-center gap-2">
-          {linked ? (
-            <p className="flex min-h-11 flex-1 items-center rounded-xl bg-zinc-900 px-3 text-sm font-medium">
-              {editing.debtId ? 'Платёж по долгу' : 'Пополнение цели'}
-            </p>
-          ) : (
-          <div className="flex flex-1 rounded-xl bg-zinc-900 p-0.5" role="tablist">
-            {TYPES.map((t) => (
-              <button
-                key={t.value}
-                type="button"
-                role="tab"
-                aria-selected={type === t.value}
-                onClick={() => { setType(t.value); setCategoryId(undefined) }}
-                className={cn(
-                  'min-h-11 flex-1 rounded-lg text-sm font-medium',
-                  type === t.value ? 'bg-zinc-700 text-white' : 'text-zinc-400',
-                )}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
-          )}
-          <button type="button" aria-label="Закрыть" onClick={onClose} className="grid size-11 place-items-center rounded-xl bg-zinc-900">
-            <X className="size-5" aria-hidden />
-          </button>
-        </div>
-
-        <div className="flex items-center justify-between gap-2 px-1">
-          <div className="flex items-center gap-2">
-            {/* Нативный выбор даты скрыт под чипом: нажатие по чипу открывает системный календарь */}
-            <label className="relative flex min-h-11 items-center gap-1.5 rounded-xl bg-zinc-900 px-3 text-sm text-zinc-300 focus-within:ring-2 focus-within:ring-emerald-500">
-              <CalendarDays className="size-4 text-fg-muted" aria-hidden />
-              <span>{formatDateChip(date, today)}</span>
-              <input
-                type="date"
-                aria-label="Дата"
-                value={date}
-                max={today}
-                onChange={(e) => e.target.value && setDate(e.target.value)}
-                className="absolute inset-0 size-full cursor-pointer opacity-0"
-              />
-            </label>
+    <Dialog
+      label={editing ? 'Редактирование операции' : 'Новая операция'}
+      onClose={onClose}
+      panelClassName="flex h-[calc(100dvh-env(safe-area-inset-top)-0.5rem)] w-full max-w-md flex-col gap-2.5 rounded-t-3xl [@media(max-height:700px)]:gap-2 bg-zinc-950 p-4 pb-[max(1rem,var(--safe-bottom))]"
+    >
+      <div className="flex items-center gap-2">
+        {linked ? (
+          <p className="flex min-h-11 flex-1 items-center rounded-xl bg-zinc-900 px-3 text-sm font-medium">
+            {editing.debtId ? 'Платёж по долгу' : 'Пополнение цели'}
+          </p>
+        ) : (
+        <div className="flex flex-1 rounded-xl bg-zinc-900 p-0.5" role="tablist">
+          {TYPES.map((t) => (
             <button
+              key={t.value}
               type="button"
-              aria-expanded={moreOpen}
-              aria-controls={moreOpen ? 'quick-add-more' : undefined}
-              aria-label={hasExtras ? 'Ещё: есть комментарий или особая настройка' : 'Ещё'}
-              onClick={() => setMoreOpen((v) => !v)}
+              role="tab"
+              aria-selected={type === t.value}
+              onClick={() => { setType(t.value); setCategoryId(undefined) }}
               className={cn(
-                'relative grid size-11 place-items-center rounded-xl bg-zinc-900 text-zinc-400',
-                moreOpen && 'bg-zinc-800 text-zinc-100',
+                'min-h-11 flex-1 rounded-lg text-sm font-medium',
+                type === t.value ? 'bg-zinc-700 text-white' : 'text-zinc-400',
               )}
             >
-              <SlidersHorizontal className="size-5" aria-hidden />
-              {hasExtras && <span aria-hidden className="absolute right-2 top-2 size-2 rounded-full bg-emerald-400" />}
+              {t.label}
             </button>
-          </div>
-          <div
-            data-testid="amount"
-            className={cn(
-              'min-w-0 truncate text-right text-4xl font-semibold tabular-nums',
-              type === 'income' ? 'text-emerald-400' : type === 'transfer' ? 'text-sky-400' : 'text-zinc-100',
-            )}
-          >
-            {displayAmount(amount).replace('.', ',')}
-            <span className="ml-1 text-2xl text-fg-muted">{fromAccount ? formatMoney(0, fromAccount.currency).slice(-1) : ''}</span>
-          </div>
+          ))}
         </div>
+        )}
+        <button type="button" aria-label="Закрыть" onClick={onClose} className="grid size-11 place-items-center rounded-xl bg-zinc-900">
+          <X className="size-5" aria-hidden />
+        </button>
+      </div>
 
-        {accountChips(accounts, fromAccount?.id, setAccountId, type === 'income' ? 'Счёт зачисления' : 'Счёт списания', type !== 'transfer')}
-        {type === 'transfer' && accountChips(targets, toAccount?.id, setToAccountId, 'Счёт зачисления')}
-
-        {crossCurrency && (
-          <label className="flex items-center justify-between gap-3 rounded-xl bg-zinc-900 px-3 py-2 text-sm">
-            <span>Сумма зачисления ({toAccount?.currency})</span>
+      <div className="flex items-center justify-between gap-2 px-1">
+        <div className="flex items-center gap-2">
+          {/* Нативный выбор даты скрыт под чипом: нажатие по чипу открывает системный календарь */}
+          <label className="relative flex min-h-11 items-center gap-1.5 rounded-xl bg-zinc-900 px-3 text-sm text-zinc-300 focus-within:ring-2 focus-within:ring-emerald-500">
+            <CalendarDays className="size-4 text-fg-muted" aria-hidden />
+            <span>{formatDateChip(date, today)}</span>
             <input
-              inputMode="decimal"
-              value={toAmount}
-              onChange={(e) => setToAmount(e.target.value.replace(',', '.').replace(/[^\d.]/g, ''))}
-              className="w-28 rounded-lg bg-zinc-800 px-2 py-1 text-right"
+              type="date"
+              aria-label="Дата"
+              value={date}
+              max={today}
+              onChange={(e) => e.target.value && setDate(e.target.value)}
+              className="absolute inset-0 size-full cursor-pointer opacity-0"
             />
           </label>
-        )}
-
-        {/* Категории прокручиваются, а цифровая клавиатура и «Сохранить» всегда остаются на экране */}
-        <div className="relative min-h-0 flex-1">
-        <div ref={scrollRef} onScroll={updateMore} className="h-full overflow-y-auto">
-          {type !== 'transfer' && !linked && (
-            <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Категория">
-              {visibleCategories.map((c) => (
-                <button
-                  key={c.id}
-                  type="button"
-                  role="radio"
-                  aria-checked={c.id === categoryId}
-                  onClick={() => setCategoryId(c.id)}
-                  className={cn(
-                    'flex min-h-[4.5rem] flex-col items-center justify-center gap-1 rounded-2xl border p-2 text-center text-xs [@media(max-height:600px)]:min-h-16 [@media(max-height:600px)]:gap-0.5 [@media(max-height:600px)]:p-1.5',
-                    c.id === categoryId ? 'border-emerald-500 bg-emerald-500/10' : 'border-zinc-800 bg-zinc-900',
-                  )}
-                >
-                  <span className="grid size-9 place-items-center rounded-full [@media(max-height:600px)]:size-7" style={{ background: `${c.color}33`, color: c.color }}>
-                    <CategoryIcon name={c.icon} className="size-5 [@media(max-height:600px)]:size-4" />
-                  </span>
-                  {c.name}
-                </button>
-              ))}
-            </div>
-          )}
+          <button
+            type="button"
+            aria-expanded={moreOpen}
+            aria-controls={moreOpen ? 'quick-add-more' : undefined}
+            aria-label={hasExtras ? 'Ещё: есть комментарий или особая настройка' : 'Ещё'}
+            onClick={() => setMoreOpen((v) => !v)}
+            className={cn(
+              'relative grid size-11 place-items-center rounded-xl bg-zinc-900 text-zinc-400',
+              moreOpen && 'bg-zinc-800 text-zinc-100',
+            )}
+          >
+            <SlidersHorizontal className="size-5" aria-hidden />
+            {hasExtras && <span aria-hidden className="absolute right-2 top-2 size-2 rounded-full bg-emerald-400" />}
+          </button>
         </div>
-        {moreBelow && (
-          <div aria-hidden data-testid="more-categories" className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-zinc-950 to-transparent" />
-        )}
-        </div>
-
-        <div className="shrink-0 space-y-2">
-          {moreOpen && (
-            <div id="quick-add-more" className="space-y-2">
-              <input
-                aria-label="Комментарий"
-                placeholder="Комментарий"
-                maxLength={100}
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                className="min-h-11 w-full rounded-xl bg-zinc-900 px-3 text-base outline-none focus:ring-2 focus:ring-emerald-500"
-              />
-              {showExcluded && (
-                <label className="flex items-center justify-between rounded-xl bg-zinc-900 px-3 py-2 text-sm">
-                  <span>
-                    Исключить из дней без трат
-                    <span className="block text-xs text-fg-muted">коммуналка, кредит, аренда</span>
-                  </span>
-                  <input type="checkbox" checked={excluded} onChange={(e) => setExcluded(e.target.checked)} className="size-5 accent-emerald-500" />
-                </label>
-              )}
-            </div>
+        <div
+          data-testid="amount"
+          className={cn(
+            'min-w-0 truncate text-right text-4xl font-semibold tabular-nums',
+            type === 'income' ? 'text-emerald-400' : type === 'transfer' ? 'text-sky-400' : 'text-zinc-100',
           )}
+        >
+          {displayAmount(amount).replace('.', ',')}
+          <span className="ml-1 text-2xl text-fg-muted">{fromAccount ? formatMoney(0, fromAccount.currency).slice(-1) : ''}</span>
+        </div>
+      </div>
 
-          <div className="grid grid-cols-3 gap-2">
-            {KEYS.map((k) => (
+      {accountChips(accounts, fromAccount?.id, setAccountId, type === 'income' ? 'Счёт зачисления' : 'Счёт списания', type !== 'transfer')}
+      {type === 'transfer' && accountChips(targets, toAccount?.id, setToAccountId, 'Счёт зачисления')}
+
+      {crossCurrency && (
+        <label className="flex items-center justify-between gap-3 rounded-xl bg-zinc-900 px-3 py-2 text-sm">
+          <span>Сумма зачисления ({toAccount?.currency})</span>
+          <input
+            inputMode="decimal"
+            value={toAmount}
+            onChange={(e) => setToAmount(e.target.value.replace(',', '.').replace(/[^\d.]/g, ''))}
+            className="w-28 rounded-lg bg-zinc-800 px-2 py-1 text-right"
+          />
+        </label>
+      )}
+
+      {/* Категории прокручиваются, а цифровая клавиатура и «Сохранить» всегда остаются на экране */}
+      <div className="relative min-h-0 flex-1">
+      <div ref={scrollRef} onScroll={updateMore} className="h-full overflow-y-auto">
+        {type !== 'transfer' && !linked && (
+          <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Категория">
+            {visibleCategories.map((c) => (
               <button
-                key={k}
+                key={c.id}
                 type="button"
-                aria-label={k === 'backspace' ? 'Стереть' : k === '.' ? 'Точка' : k}
-                onClick={() => setAmount((a) => applyNumpadKey(a, k))}
-                className="grid h-12 place-items-center rounded-2xl bg-zinc-900 text-2xl active:bg-zinc-800 [@media(max-height:700px)]:h-11"
+                role="radio"
+                aria-checked={c.id === categoryId}
+                onClick={() => setCategoryId(c.id)}
+                className={cn(
+                  'flex min-h-[4.5rem] flex-col items-center justify-center gap-1 rounded-2xl border p-2 text-center text-xs [@media(max-height:600px)]:min-h-16 [@media(max-height:600px)]:gap-0.5 [@media(max-height:600px)]:p-1.5',
+                  c.id === categoryId ? 'border-emerald-500 bg-emerald-500/10' : 'border-zinc-800 bg-zinc-900',
+                )}
               >
-                {k === 'backspace' ? <Delete className="size-6" aria-hidden /> : k === '.' ? ',' : k}
+                <span className="grid size-9 place-items-center rounded-full [@media(max-height:600px)]:size-7" style={{ background: `${c.color}33`, color: c.color }}>
+                  <CategoryIcon name={c.icon} className="size-5 [@media(max-height:600px)]:size-4" />
+                </span>
+                {c.name}
               </button>
             ))}
           </div>
-
-          {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
-          {needsCategory && value > 0 && <p role="status" className="text-center text-xs text-amber-400">Выберите категорию</p>}
-          <button
-            type="button"
-            onClick={save}
-            disabled={!canSave}
-            className="h-12 w-full rounded-2xl bg-emerald-500 text-lg font-semibold text-zinc-950 disabled:opacity-40"
-          >
-            {editing ? 'Сохранить изменения' : 'Сохранить'}
-          </button>
-        </div>
+        )}
       </div>
-    </div>
+      {moreBelow && (
+        <div aria-hidden data-testid="more-categories" className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-zinc-950 to-transparent" />
+      )}
+      </div>
+
+      <div className="shrink-0 space-y-2">
+        {moreOpen && (
+          <div id="quick-add-more" className="space-y-2">
+            <input
+              aria-label="Комментарий"
+              placeholder="Комментарий"
+              maxLength={100}
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              className="min-h-11 w-full rounded-xl bg-zinc-900 px-3 text-base outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+            {showExcluded && (
+              <label className="flex items-center justify-between rounded-xl bg-zinc-900 px-3 py-2 text-sm">
+                <span>
+                  Исключить из дней без трат
+                  <span className="block text-xs text-fg-muted">коммуналка, кредит, аренда</span>
+                </span>
+                <input type="checkbox" checked={excluded} onChange={(e) => setExcluded(e.target.checked)} className="size-5 accent-emerald-500" />
+              </label>
+            )}
+          </div>
+        )}
+
+        <div className="grid grid-cols-3 gap-2">
+          {KEYS.map((k) => (
+            <button
+              key={k}
+              type="button"
+              aria-label={k === 'backspace' ? 'Стереть' : k === '.' ? 'Точка' : k}
+              onClick={() => setAmount((a) => applyNumpadKey(a, k))}
+              className="grid h-12 place-items-center rounded-2xl bg-zinc-900 text-2xl active:bg-zinc-800 [@media(max-height:700px)]:h-11"
+            >
+              {k === 'backspace' ? <Delete className="size-6" aria-hidden /> : k === '.' ? ',' : k}
+            </button>
+          ))}
+        </div>
+
+        {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
+        {needsCategory && value > 0 && <p role="status" className="text-center text-xs text-amber-400">Выберите категорию</p>}
+        <button
+          type="button"
+          onClick={save}
+          disabled={!canSave}
+          className="h-12 w-full rounded-2xl bg-emerald-500 text-lg font-semibold text-zinc-950 disabled:opacity-40"
+        >
+          {editing ? 'Сохранить изменения' : 'Сохранить'}
+        </button>
+      </div>
+    </Dialog>
   )
 }
