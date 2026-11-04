@@ -42,7 +42,8 @@ export function AppLayout({ route, onNavigate, onAdd, children }: Props) {
       onClick={() => onNavigate(r)}
       aria-current={route === r ? 'page' : undefined}
       className={cn(
-        'flex flex-1 flex-col items-center gap-0.5 py-2 text-[11px]',
+        // Подписи вкладок — фиксированные 12 px (как у системных таб-баров): при увеличении шрифта четыре подписи и «+» иначе не помещаются
+        'flex min-w-0 flex-1 flex-col items-center gap-0.5 py-2 text-[12px]',
         route === r ? 'text-accent-fg' : 'text-fg-muted',
       )}
     >

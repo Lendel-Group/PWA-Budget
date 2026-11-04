@@ -66,7 +66,7 @@ export function AboutSection() {
         {rows.map(([k, v]) => (
           <div key={k} className="flex justify-between gap-3 py-2">
             <dt className="text-fg-muted">{k}</dt>
-            <dd className="text-right tabular-nums">{v}</dd>
+            <dd className="min-w-0 text-right tabular-nums [overflow-wrap:anywhere]">{v}</dd>
           </div>
         ))}
       </dl>
@@ -88,7 +88,7 @@ export function AboutSection() {
         <RefreshCw className="size-4" aria-hidden /> Проверить обновления
       </button>
       {status && <p role="status" className="text-xs text-zinc-400">{status}</p>}
-      <p className="text-xs leading-relaxed text-fg-muted">
+      <p className="text-xs leading-relaxed text-fg-muted [overflow-wrap:anywhere]">
         Конфиденциальность: все данные хранятся только на вашем устройстве, аккаунта и сервера нет.
         Единственный внешний запрос — загрузка курсов валют (копия официальных курсов Нацбанка РК на al-writer.github.io/nbk-rates).
       </p>
