@@ -1,16 +1,45 @@
+import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
+import { AppLayout } from './components/layout/AppLayout'
+import { QuickAddModal } from './components/transactions/QuickAddModal'
+import { RecentTransactions } from './components/transactions/RecentTransactions'
 import { db } from './db/schema'
+import { calculateNetWorth } from './domain/finance'
+import { formatMoney } from './lib/format'
+import { useHashRoute, type Route } from './lib/useHashRoute'
+import { PlaceholderPage } from './pages/PlaceholderPage'
+
+const TITLES: Record<Exclude<Route, 'home'>, string> = {
+  budget: 'Бюджет',
+  analytics: 'Аналитика',
+  goals: 'Цели и долги',
+  settings: 'Настройки',
+}
+
+function HomePreview() {
+  const accounts = useLiveQuery(() => db.accounts.toArray(), [])
+  return (
+    <section className="space-y-4 py-4">
+      <div className="px-4">
+        <p className="text-sm text-zinc-500">Общий капитал</p>
+        <p className="text-3xl font-semibold tabular-nums" data-testid="net-worth">
+          {formatMoney(calculateNetWorth(accounts ?? []))}
+        </p>
+      </div>
+      <RecentTransactions />
+    </section>
+  )
+}
 
 export default function App() {
-  const categories = useLiveQuery(() => db.categories.count(), [])
-  const persisted = useLiveQuery(() => db.config.get('storage_persisted'), [])
+  const [route, navigate] = useHashRoute()
+  const [adding, setAdding] = useState(false)
   return (
-    <main className="mx-auto min-h-screen max-w-md bg-zinc-950 p-4 text-zinc-100">
-      <h1 className="text-xl font-semibold">My Budget 2026</h1>
-      <p className="mt-2 text-sm text-zinc-400">Категорий: {categories ?? '…'}</p>
-      <p className="text-sm text-zinc-400">
-        Хранилище: {persisted?.value ? 'защищено от очистки' : 'не гарантировано'}
-      </p>
-    </main>
+    <>
+      <AppLayout route={route} onNavigate={navigate} onAdd={() => setAdding(true)}>
+        {route === 'home' ? <HomePreview /> : <PlaceholderPage title={TITLES[route]} />}
+      </AppLayout>
+      <QuickAddModal open={adding} onClose={() => setAdding(false)} />
+    </>
   )
 }
