@@ -45,11 +45,15 @@ export function calculateNoSpendStreak(
   return { currentStreak, cleanDaysThisMonth }
 }
 
+/** Операция нарушает «день без трат»: расход без отметки «Исключить». Доходы и переводы день не нарушают. */
+export const breaksNoSpendDay = (t: Pick<Transaction, 'type' | 'isExcludedFromNoSpend'>): boolean =>
+  t.type === 'expense' && !t.isExcludedFromNoSpend
+
 /** День без трат: нет расходов с isExcludedFromNoSpend === false. */
 export function getDatesWithExpenses(transactions: Transaction[]): Set<string> {
   const set = new Set<string>()
   for (const t of transactions) {
-    if (t.type === 'expense' && !t.isExcludedFromNoSpend) set.add(t.date)
+    if (breaksNoSpendDay(t)) set.add(t.date)
   }
   return set
 }
