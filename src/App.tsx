@@ -8,6 +8,7 @@ import BudgetPage from './pages/BudgetPage'
 import DashboardPage from './pages/DashboardPage'
 import GoalsAndDebtsPage from './pages/GoalsAndDebtsPage'
 import SettingsPage from './pages/SettingsPage'
+import TransactionsPage from './pages/TransactionsPage'
 
 function renderPage(route: Route) {
   switch (route) {
@@ -15,6 +16,7 @@ function renderPage(route: Route) {
     case 'budget': return <BudgetPage />
     case 'goals': return <GoalsAndDebtsPage />
     case 'analytics': return <AnalyticsPage />
+    case 'transactions': return <TransactionsPage />
     case 'settings': return <SettingsPage />
   }
 }

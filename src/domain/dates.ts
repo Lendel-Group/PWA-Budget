@@ -46,3 +46,19 @@ export function formatDateChip(date: string, today: string): string {
   const { day, month } = parseDate(date)
   return `${day} ${MONTHS_SHORT_GEN[month - 1]}`
 }
+
+const MONTHS_FULL_GEN = [
+  'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
+  'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря',
+]
+const WEEKDAYS_SHORT = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб']
+
+/** Заголовок дня в ленте: «Сегодня», «Вчера» или «3 ноября, пн» (с годом для прошлых лет). */
+export function formatDayHeading(date: string, today: string): string {
+  if (date === today) return 'Сегодня'
+  if (date === addDays(today, -1)) return 'Вчера'
+  const { year, month, day } = parseDate(date)
+  const weekday = WEEKDAYS_SHORT[new Date(Date.UTC(year, month - 1, day)).getUTCDay()]
+  const yearPart = year === parseDate(today).year ? '' : ` ${year}`
+  return `${day} ${MONTHS_FULL_GEN[month - 1]}${yearPart}, ${weekday}`
+}

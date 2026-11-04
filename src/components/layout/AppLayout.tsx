@@ -11,6 +11,7 @@ const TITLES: Record<Route, string> = {
   budget: 'Бюджет',
   analytics: 'Аналитика',
   goals: 'Цели и долги',
+  transactions: 'Операции',
   settings: 'Настройки',
 }
 
