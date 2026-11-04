@@ -13,8 +13,8 @@ const WEEKDAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
 const STATE_CLASS: Record<DayState, string> = {
   clean: 'bg-emerald-500/20 text-emerald-300',
   spent: 'bg-zinc-800 text-zinc-300',
-  future: 'text-zinc-700',
-  untracked: 'text-zinc-700',
+  future: 'text-fg-muted',
+  untracked: 'text-fg-muted',
 }
 const STATE_LABEL: Record<DayState, string> = {
   clean: 'день без трат', spent: 'были траты', future: 'впереди', untracked: 'до начала учёта',
@@ -42,14 +42,14 @@ export function NoSpendTab() {
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-2xl bg-zinc-900 p-4">
-          <p className="flex items-center gap-1 text-xs text-zinc-500"><Flame className="size-4 text-orange-400" aria-hidden /> Страйк</p>
+          <p className="flex items-center gap-1 text-xs text-fg-muted"><Flame className="size-4 text-orange-400" aria-hidden /> Страйк</p>
           <p className="mt-1 text-3xl font-semibold tabular-nums" data-testid="streak">{currentStreak}</p>
-          <p className="text-xs text-zinc-500">дней подряд без трат</p>
+          <p className="text-xs text-fg-muted">дней подряд без трат</p>
         </div>
         <div className="rounded-2xl bg-zinc-900 p-4">
-          <p className="text-xs text-zinc-500">Чистых дней в месяце</p>
+          <p className="text-xs text-fg-muted">Чистых дней в месяце</p>
           <p className="mt-1 text-3xl font-semibold tabular-nums text-emerald-400" data-testid="clean-days">{isCurrent ? cleanDaysThisMonth : monthClean}</p>
-          <p className="text-xs text-zinc-500">{monthLabel(year, month)}</p>
+          <p className="text-xs text-fg-muted">{monthLabel(year, month)}</p>
         </div>
       </div>
 
@@ -62,7 +62,7 @@ export function NoSpendTab() {
             onClick={() => setPeriod(nextMonth(year, month))}><ChevronRight className="size-4" aria-hidden /></button>
         </div>
         <div role="grid" aria-label="Календарь дней без трат" className="grid grid-cols-7 gap-1.5 text-center text-sm">
-          {WEEKDAYS.map((d) => <div key={d} role="columnheader" className="pb-1 text-xs text-zinc-500">{d}</div>)}
+          {WEEKDAYS.map((d) => <div key={d} role="columnheader" className="pb-1 text-xs text-fg-muted">{d}</div>)}
           {weeks.flat().map((c, i) =>
             c === null ? <div key={`b${i}`} role="gridcell" /> : (
               <div
@@ -78,7 +78,7 @@ export function NoSpendTab() {
             ),
           )}
         </div>
-        <p className="mt-3 text-xs text-zinc-500">
+        <p className="mt-3 text-xs text-fg-muted">
           Зелёные дни — без расходов. Коммуналка, аренда и кредиты (с отметкой «Исключить») не считаются тратами.
         </p>
       </div>

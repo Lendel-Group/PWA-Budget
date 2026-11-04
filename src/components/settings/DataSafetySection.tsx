@@ -64,7 +64,7 @@ export function DataSafetySection() {
         {persisted ? <ShieldCheck className="mt-0.5 size-5 shrink-0 text-emerald-400" aria-hidden /> : <ShieldAlert className="mt-0.5 size-5 shrink-0 text-amber-400" aria-hidden />}
         <div className="text-sm">
           <p>{persisted ? 'Хранилище защищено от очистки' : 'Хранилище может быть очищено браузером'}</p>
-          <p className="text-xs text-zinc-500">Занято {mb(storage?.usage)} из {mb(storage?.quota)}</p>
+          <p className="text-xs text-fg-muted">Занято {mb(storage?.usage)} из {mb(storage?.quota)}</p>
           {!persisted && (
             <button type="button" className="mt-1 text-xs text-emerald-400 underline" onClick={async () => { const s = await requestPersistentStorage(); setStorage(s); if (!s.isPersisted) setMessage({ ok: false, text: 'Браузер не дал защиту хранилища. Делайте резервные копии.' }) }}>
               Запросить защиту
@@ -84,7 +84,7 @@ export function DataSafetySection() {
                 Возобновить автобэкап
               </button>
             )}
-            <p className="text-xs text-zinc-500" data-testid="autobackup-status">
+            <p className="text-xs text-fg-muted" data-testid="autobackup-status">
               {permission === 'none' && 'Автобэкап не настроен.'}
               {permission === 'granted' && 'Автобэкап активен: каждое изменение сохраняется в файл.'}
               {permission === 'prompt' && 'Автобэкап приостановлен — нужно подтвердить доступ к файлу.'}
@@ -93,7 +93,7 @@ export function DataSafetySection() {
             </p>
           </>
         ) : (
-          <p className="text-xs text-zinc-500">
+          <p className="text-xs text-fg-muted">
             Автобэкап в файл недоступен в этом браузере (например, iOS Safari). Скачивайте резервную копию вручную.
             Последняя копия: {lastBackup ? new Date(lastBackup).toLocaleString('ru-RU') : 'ещё не создавалась'}
           </p>

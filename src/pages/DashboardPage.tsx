@@ -58,9 +58,9 @@ export default function DashboardPage({ onEdit }: { onEdit: (t: Transaction) => 
     const items = recent.filter((t) => t.date === date).sort((a, b) => b.timestamp - a.timestamp)
     return (
       <div>
-        <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-zinc-500">{title}</h3>
+        <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-fg-muted">{title}</h3>
         {items.length === 0 ? (
-          <p className="text-sm text-zinc-600">Операций нет</p>
+          <p className="text-sm text-fg-muted">Операций нет</p>
         ) : (
           <ul className="space-y-2" aria-label={title}>
             {items.map((t) => (
@@ -82,10 +82,10 @@ export default function DashboardPage({ onEdit }: { onEdit: (t: Transaction) => 
           onClick={() => setExpanded((v) => !v)}
         >
           <span>
-            <span className="block text-sm text-zinc-500">Общий капитал</span>
+            <span className="block text-sm text-fg-muted">Общий капитал</span>
             <span className="text-3xl font-semibold tabular-nums" data-testid="net-worth">{formatMoney(netWorth)}</span>
           </span>
-          <ChevronDown className={cn('size-5 text-zinc-500 transition-transform', expanded && 'rotate-180')} aria-hidden />
+          <ChevronDown className={cn('size-5 text-fg-muted transition-transform', expanded && 'rotate-180')} aria-hidden />
         </button>
         {expanded && (
           <ul className="mt-3 divide-y divide-zinc-800 text-sm" aria-label="Балансы счетов">
@@ -121,7 +121,7 @@ export default function DashboardPage({ onEdit }: { onEdit: (t: Transaction) => 
       </div>
 
       <div className="rounded-2xl bg-zinc-900 p-4">
-        <p className="mb-3 text-sm text-zinc-500">Месячный бюджет</p>
+        <p className="mb-3 text-sm text-fg-muted">Месячный бюджет</p>
         <div
           className="h-3 overflow-hidden rounded-full bg-zinc-800"
           role="progressbar"
@@ -133,10 +133,10 @@ export default function DashboardPage({ onEdit }: { onEdit: (t: Transaction) => 
           <div className={cn('h-full rounded-full', spent > planned ? 'bg-red-500' : 'bg-emerald-500')} style={{ width: `${planned > 0 ? usedPct : spent > 0 ? 100 : 0}%` }} />
         </div>
         <dl className="mt-3 grid grid-cols-3 gap-2 text-xs">
-          <div><dt className="text-zinc-500">Израсходовано</dt><dd className="text-sm tabular-nums" data-testid="spent">{formatMoney(spent)}</dd></div>
-          <div><dt className="text-zinc-500">Запланировано</dt><dd className="text-sm tabular-nums">{formatMoney(planned)}</dd></div>
+          <div><dt className="text-fg-muted">Израсходовано</dt><dd className="text-sm tabular-nums" data-testid="spent">{formatMoney(spent)}</dd></div>
+          <div><dt className="text-fg-muted">Запланировано</dt><dd className="text-sm tabular-nums">{formatMoney(planned)}</dd></div>
           <div>
-            <dt className="text-zinc-500">{remaining < 0 ? 'Перерасход' : 'Остаток'}</dt>
+            <dt className="text-fg-muted">{remaining < 0 ? 'Перерасход' : 'Остаток'}</dt>
             <dd className={cn('text-sm tabular-nums', remaining < 0 && 'text-red-400')}>{formatMoney(Math.abs(remaining))}</dd>
           </div>
         </dl>

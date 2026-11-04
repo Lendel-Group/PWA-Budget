@@ -93,7 +93,7 @@ export function GoalsTab() {
 
   return (
     <div className="space-y-3">
-      {goals.length === 0 && <p className="py-6 text-center text-sm text-zinc-500">Целей пока нет. Поставьте первую!</p>}
+      {goals.length === 0 && <p className="py-6 text-center text-sm text-fg-muted">Целей пока нет. Поставьте первую!</p>}
       {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
       <ul className="space-y-3" aria-label="Финансовые цели">
         {goals.map((g) => {
@@ -107,12 +107,12 @@ export function GoalsTab() {
                     {g.title}
                     {g.isAchieved && <CheckCircle2 className="size-4 text-emerald-400" aria-label="Цель достигнута" />}
                   </h3>
-                  <p className="text-xs text-zinc-500">
+                  <p className="text-xs text-fg-muted">
                     до {g.targetDate}
                     {!g.isAchieved && plan.daysLeft >= 0 && ` · осталось ${plan.daysLeft} дн.`}
                   </p>
                 </div>
-                <button type="button" aria-label={`Удалить цель ${g.title}`} className="grid size-8 place-items-center text-zinc-600 hover:text-red-400"
+                <button type="button" aria-label={`Удалить цель ${g.title}`} className="grid size-8 place-items-center text-fg-muted hover:text-red-400"
                   onClick={async () => {
                     if (!window.confirm(`Удалить цель «${g.title}»?`)) return
                     setError(undefined)
@@ -123,13 +123,13 @@ export function GoalsTab() {
               </div>
               <p className="mt-3 tabular-nums" data-testid={`goal-current-${g.title}`}>
                 <span className="text-2xl font-semibold">{formatMoney(g.currentAmount)}</span>
-                <span className="text-sm text-zinc-500"> / {formatMoney(g.targetAmount)}</span>
+                <span className="text-sm text-fg-muted"> / {formatMoney(g.targetAmount)}</span>
               </p>
               <div className="mt-2 h-2 overflow-hidden rounded-full bg-zinc-800" role="progressbar" aria-label={`Накоплено: ${g.title}`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(pct)}>
                 <div className="h-full rounded-full" style={{ width: `${pct}%`, background: g.color }} />
               </div>
               {!g.isAchieved && plan.remaining > 0 && (
-                <p className="mt-1 text-xs text-zinc-500">Чтобы успеть: ~{formatMoney(plan.perMonth)} в месяц</p>
+                <p className="mt-1 text-xs text-fg-muted">Чтобы успеть: ~{formatMoney(plan.perMonth)} в месяц</p>
               )}
               {!g.isAchieved && (
                 <button type="button" onClick={() => setTopping(g)} className="mt-3 h-11 w-full rounded-xl bg-emerald-500/15 font-medium text-emerald-400 active:bg-emerald-500/25">

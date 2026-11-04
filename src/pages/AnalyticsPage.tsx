@@ -19,7 +19,7 @@ function ExpenseChart({ expenses, currentMonth }: { expenses: number[]; currentM
   return (
     <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Расходы по месяцам" className="w-full">
       <line x1={left} x2={W} y1={H - bottom} y2={H - bottom} className="stroke-zinc-700" />
-      {max > 0 && <text x={left} y={9} className="fill-zinc-500" fontSize="9">{compactAmount(max)} ₸</text>}
+      {max > 0 && <text x={left} y={9} className="fill-fg-muted" fontSize="9">{compactAmount(max)} ₸</text>}
       {fractions.map((f, i) => {
         const h = Math.max(f * plot, expenses[i] > 0 ? 2 : 0)
         const x = left + i * slot + (slot - bw) / 2
@@ -29,7 +29,7 @@ function ExpenseChart({ expenses, currentMonth }: { expenses: number[]; currentM
               className={i + 1 === currentMonth ? 'fill-emerald-400' : 'fill-emerald-600'} data-testid={`bar-${i + 1}`}>
               <title>{`${MONTHS_SHORT[i]}: ${formatMoney(expenses[i])}`}</title>
             </rect>
-            <text x={x + bw / 2} y={H - 8} textAnchor="middle" fontSize="8" className="fill-zinc-500">{MONTHS_SHORT[i]}</text>
+            <text x={x + bw / 2} y={H - 8} textAnchor="middle" fontSize="8" className="fill-fg-muted">{MONTHS_SHORT[i]}</text>
           </g>
         )
       })}
@@ -64,14 +64,14 @@ export default function AnalyticsPage() {
       </div>
 
       <div className="rounded-2xl bg-zinc-900 p-4">
-        <p className="mb-2 text-sm text-zinc-500">Расходы по месяцам</p>
+        <p className="mb-2 text-sm text-fg-muted">Расходы по месяцам</p>
         <ExpenseChart expenses={rows.map((r) => r.expense)} currentMonth={y === current.year ? current.month : undefined} />
       </div>
 
       <div className="overflow-hidden rounded-2xl bg-zinc-900">
         <table className="w-full text-xs tabular-nums" data-testid="summary">
           <caption className="sr-only">Доходы, расходы и сбережения по месяцам, ₸</caption>
-          <thead className="text-zinc-500">
+          <thead className="text-fg-muted">
             <tr>
               <th scope="col" className="px-3 py-2 text-left font-normal">Месяц</th>
               <th scope="col" className="px-2 py-2 text-right font-normal">Доходы</th>
@@ -85,7 +85,7 @@ export default function AnalyticsPage() {
                 <th scope="row" className="px-3 py-2 text-left font-normal text-zinc-300">{MONTHS_SHORT[r.month - 1]}</th>
                 <td className="px-2 py-2 text-right text-emerald-400">{r.income ? money(r.income) : '—'}</td>
                 <td className="px-2 py-2 text-right">{r.expense ? money(r.expense) : '—'}</td>
-                <td className={cn('px-3 py-2 text-right', r.savings < 0 ? 'text-red-400' : r.savings > 0 ? 'text-zinc-100' : 'text-zinc-600')}>
+                <td className={cn('px-3 py-2 text-right', r.savings < 0 ? 'text-red-400' : r.savings > 0 ? 'text-zinc-100' : 'text-fg-muted')}>
                   {r.savings ? money(r.savings) : '—'}
                 </td>
               </tr>
@@ -101,7 +101,7 @@ export default function AnalyticsPage() {
           </tfoot>
         </table>
       </div>
-      <p className="text-xs text-zinc-600">Суммы в тенге. Сбережения = доходы − расходы; пополнения целей остаются сбережениями.</p>
+      <p className="text-xs text-fg-muted">Суммы в тенге. Сбережения = доходы − расходы; пополнения целей остаются сбережениями.</p>
     </section>
   )
 }

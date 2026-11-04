@@ -33,7 +33,7 @@ export function Sheet({ title, onClose, children }: { title: string; onClose: ()
 export function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <label className="block text-sm">
-      <span className="mb-1 block text-xs text-zinc-500">{label}</span>
+      <span className="mb-1 block text-xs text-fg-muted">{label}</span>
       {children}
     </label>
   )

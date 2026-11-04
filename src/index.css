@@ -4,6 +4,8 @@
   --color-surface: #09090b;
   --color-surface-2: #18181b;
   --color-accent: #22c55e;
+  /* Вторичный текст (подписи, подсказки): zinc-400, контраст ≥ 4.5:1 на zinc-800, 900 и 950 (WCAG AA) */
+  --color-fg-muted: #a1a1aa;
   --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 }
 
@@ -44,4 +46,10 @@ textarea {
   -webkit-user-select: text;
   user-select: text;
   font-size: 16px;
+}
+
+/* Подсказки в полях: по умолчанию Tailwind делает их полупрозрачными (~4:1) — приводим к токену вторичного текста */
+input::placeholder,
+textarea::placeholder {
+  color: var(--color-fg-muted);
 }

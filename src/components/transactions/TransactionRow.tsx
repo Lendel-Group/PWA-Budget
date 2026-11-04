@@ -55,7 +55,7 @@ export function TransactionRow({ transaction: t, accounts, categories, onDelete,
       </span>
       <div className="min-w-0 flex-1">
         <div className="truncate text-sm">{describe(t, categories, accounts)}</div>
-        <div className="truncate text-xs text-zinc-500">
+        <div className="truncate text-xs text-fg-muted">
           {account?.name}
           {t.comment ? ` · ${t.comment}` : ''}
         </div>
@@ -102,7 +102,7 @@ export function TransactionRow({ transaction: t, accounts, categories, onDelete,
           aria-label="Удалить операцию"
           onPointerDown={(e) => e.stopPropagation()}
           onClick={() => onDelete(t)}
-          className="grid size-9 shrink-0 place-items-center rounded-lg text-zinc-500 hover:text-red-400"
+          className="grid size-9 shrink-0 place-items-center rounded-lg text-fg-muted hover:text-red-400"
         >
           <Trash2 className="size-4" aria-hidden />
         </button>
