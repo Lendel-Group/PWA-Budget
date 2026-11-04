@@ -62,8 +62,9 @@ function QuickAddForm({ onClose }: { onClose: () => void }) {
     type === 'transfer' && !!toAccount && !!fromAccount && toAccount.currency !== fromAccount.currency
 
   const value = parseAmount(amount)
+  const needsCategory = type !== 'transfer' && !categoryId
   const canSave =
-    !saving && value > 0 && !!fromAccount &&
+    !saving && value > 0 && !!fromAccount && !needsCategory &&
     (type === 'transfer' ? !!toAccount && (!crossCurrency || parseAmount(toAmount) > 0) : true)
 
   async function save() {
@@ -232,6 +233,7 @@ function QuickAddForm({ onClose }: { onClose: () => void }) {
           </div>
 
           {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
+          {needsCategory && value > 0 && <p role="status" className="text-center text-xs text-amber-400">Выберите категорию</p>}
           <button
             type="button"
             onClick={save}

@@ -45,7 +45,7 @@ describe('export / import', () => {
     await db.goals.add({ id: 'g', title: 'G', targetAmount: 5, currentAmount: 1, targetDate: '2027-01-01', icon: 'i', color: 'c', isAchieved: false })
     await db.budgetLimits.add({ id: '2026-11-cat-food', year: 2026, month: 11, categoryId: 'cat-food', plannedAmount: 1000.5 })
     await db.config.put({ key: 'fx_rates', value: { USD: 500 } })
-    await addTransaction({ date: '2026-11-04', type: 'income', accountId: acc.id, amount: 1234.56, isExcludedFromNoSpend: false, comment: 'зарплата' })
+    await addTransaction({ date: '2026-11-04', type: 'income', accountId: acc.id, amount: 1234.56, isExcludedFromNoSpend: false, categoryId: 'cat-salary', comment: 'зарплата' })
     const before = await exportDatabaseToJson()
     const snapshot = JSON.parse(before).data
 
@@ -163,8 +163,8 @@ describe('auto-backup (File System Access)', () => {
     installAutoBackupHooks()
     installAutoBackupHooks() // idempotent
     const acc = (await db.accounts.toArray())[0]
-    await addTransaction({ date: '2026-11-04', type: 'income', accountId: acc.id, amount: 10, isExcludedFromNoSpend: false })
-    await addTransaction({ date: '2026-11-04', type: 'income', accountId: acc.id, amount: 20, isExcludedFromNoSpend: false })
+    await addTransaction({ date: '2026-11-04', type: 'income', accountId: acc.id, amount: 10, isExcludedFromNoSpend: false, categoryId: 'cat-salary' })
+    await addTransaction({ date: '2026-11-04', type: 'income', accountId: acc.id, amount: 20, isExcludedFromNoSpend: false, categoryId: 'cat-salary' })
     await vi.waitFor(() => expect(writes.length).toBe(1), { timeout: 4000 })
     const dump = JSON.parse(writes[0])
     expect(dump.data.transactions).toHaveLength(2)

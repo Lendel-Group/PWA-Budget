@@ -43,6 +43,26 @@ export function parsePlanInput(input: string): number | null {
   return Number.isFinite(n) && n >= 0 ? round2(n) : null
 }
 
+/**
+ * Расходы без категории в KZT (операции, созданные до обязательности категории).
+ * Платежи по долгам входят в общие расходы месяца, пополнения целей — нет.
+ */
+export function calculateUncategorizedKzt(
+  transactions: Transaction[],
+  accounts: Account[],
+  rates: Rates = {},
+): number {
+  const currencyById = new Map(accounts.map((a) => [a.id, a.currency]))
+  let total = 0
+  for (const t of transactions) {
+    if (t.type !== 'expense' || t.goalId || t.categoryId) continue
+    const currency = currencyById.get(t.accountId)
+    if (!currency) continue
+    total += convertToKzt(t.amount, currency, rates) ?? 0
+  }
+  return round2(total)
+}
+
 /** Расходы по категориям в KZT (пополнения целей и операции без курса не учитываются). */
 export function calculateCategoryTotalsKzt(
   transactions: Transaction[],
