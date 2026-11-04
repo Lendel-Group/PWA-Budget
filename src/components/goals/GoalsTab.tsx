@@ -117,7 +117,7 @@ export function GoalsTab() {
           const pct = Math.min(100, (g.currentAmount / g.targetAmount) * 100)
           const plan = calculateGoalPlan(g, today)
           return (
-            <li key={g.id} className="rounded-2xl bg-zinc-900 p-4">
+            <li key={g.id} data-selectable className="rounded-2xl bg-zinc-900 p-4">
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <h3 className="flex items-center gap-1.5 font-medium">

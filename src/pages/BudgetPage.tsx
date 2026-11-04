@@ -61,7 +61,7 @@ function CategoryRow({ category, planned, actual, year, month }: {
   const over = planned > 0 ? actual > planned : actual > 0
   const pct = planned > 0 ? Math.min(100, (actual / planned) * 100) : actual > 0 ? 100 : 0
   return (
-    <li className="rounded-2xl bg-zinc-900 p-3">
+    <li data-selectable className="rounded-2xl bg-zinc-900 p-3">
       <div className="flex items-center gap-3">
         <span className="grid size-9 shrink-0 place-items-center rounded-full" style={{ background: `${category.color}33`, color: category.color }}>
           <CategoryIcon name={category.icon} className="size-5" />
@@ -144,7 +144,7 @@ export default function BudgetPage() {
         </button>
       </div>
 
-      <div className="rounded-2xl bg-zinc-900 p-4" data-testid="totals">
+      <div data-selectable className="rounded-2xl bg-zinc-900 p-4" data-testid="totals">
         <div className="flex justify-between gap-3 text-sm">
           <span className="text-fg-muted">Запланировано</span>
           <span className="min-w-0 text-right tabular-nums [overflow-wrap:anywhere]" data-testid="total-planned">{formatMoney(totalPlanned)}</span>
@@ -172,7 +172,7 @@ export default function BudgetPage() {
           <CategoryRow key={c.id} category={c} planned={plannedById.get(c.id) ?? 0} actual={totals[c.id] ?? 0} year={year} month={month} />
         ))}
         {uncategorized > 0 && (
-          <li className="flex items-center justify-between rounded-2xl bg-zinc-900 p-3 text-sm" data-testid="uncategorized">
+          <li data-selectable className="flex items-center justify-between rounded-2xl bg-zinc-900 p-3 text-sm" data-testid="uncategorized">
             <span>Без категории</span>
             <span className="tabular-nums text-zinc-400">Факт: {formatMoney(uncategorized)}</span>
           </li>

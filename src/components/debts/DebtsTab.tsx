@@ -108,7 +108,7 @@ export function DebtsTab() {
         {sorted.map((d) => {
           const paid = Math.min(100, ((d.totalAmount - d.remainingAmount) / d.totalAmount) * 100)
           return (
-            <li key={d.id} className={cn('rounded-2xl bg-zinc-900 p-4', d.isClosed && 'opacity-60')}>
+            <li key={d.id} data-selectable className={cn('rounded-2xl bg-zinc-900 p-4', d.isClosed && 'opacity-60')}>
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <h3 className="font-medium">{d.name}</h3>
