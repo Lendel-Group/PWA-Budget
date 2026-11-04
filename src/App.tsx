@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { UpdatePrompt } from './components/pwa/UpdatePrompt'
 import { AppLayout } from './components/layout/AppLayout'
 import { QuickAddModal } from './components/transactions/QuickAddModal'
+import type { Transaction } from './db/schema'
 import { useHashRoute, type Route } from './lib/useHashRoute'
 import AnalyticsPage from './pages/AnalyticsPage'
 import BudgetPage from './pages/BudgetPage'
@@ -10,13 +11,13 @@ import GoalsAndDebtsPage from './pages/GoalsAndDebtsPage'
 import SettingsPage from './pages/SettingsPage'
 import TransactionsPage from './pages/TransactionsPage'
 
-function renderPage(route: Route) {
+function renderPage(route: Route, onEdit: (t: Transaction) => void) {
   switch (route) {
-    case 'home': return <DashboardPage />
+    case 'home': return <DashboardPage onEdit={onEdit} />
     case 'budget': return <BudgetPage />
     case 'goals': return <GoalsAndDebtsPage />
     case 'analytics': return <AnalyticsPage />
-    case 'transactions': return <TransactionsPage />
+    case 'transactions': return <TransactionsPage onEdit={onEdit} />
     case 'settings': return <SettingsPage />
   }
 }
@@ -24,12 +25,14 @@ function renderPage(route: Route) {
 export default function App() {
   const [route, navigate] = useHashRoute()
   const [adding, setAdding] = useState(false)
+  const [editing, setEditing] = useState<Transaction>()
+  const closeForm = () => { setAdding(false); setEditing(undefined) }
   return (
     <>
       <AppLayout route={route} onNavigate={navigate} onAdd={() => setAdding(true)}>
-        {renderPage(route)}
+        {renderPage(route, setEditing)}
       </AppLayout>
-      <QuickAddModal open={adding} onClose={() => setAdding(false)} />
+      <QuickAddModal open={adding || !!editing} editing={editing} onClose={closeForm} />
       <UpdatePrompt />
     </>
   )

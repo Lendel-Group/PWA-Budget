@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { AlertTriangle, ChevronDown } from 'lucide-react'
 import { TransactionRow } from '../components/transactions/TransactionRow'
-import { db } from '../db/schema'
+import { db, type Transaction } from '../db/schema'
 import { addDays, daysInMonth, daysLeftInMonth, monthStart, parseDate } from '../domain/dates'
 import {
   accountsMissingRates, calculateDailyAllowance, calculateExpensesKzt, calculateNetWorth,
@@ -20,7 +20,7 @@ const STATUS_STYLES: Record<AllowanceStatus, { card: string; text: string; label
   red: { card: 'border-red-500/40 bg-red-500/10', text: 'text-red-400', label: 'Лимит исчерпан' },
 }
 
-export default function DashboardPage() {
+export default function DashboardPage({ onEdit }: { onEdit: (t: Transaction) => void }) {
   const today = useToday()
   const yesterday = addDays(today, -1)
   const { year, month } = parseDate(today)
@@ -64,7 +64,7 @@ export default function DashboardPage() {
         ) : (
           <ul className="space-y-2" aria-label={title}>
             {items.map((t) => (
-              <TransactionRow key={t.id} transaction={t} accounts={accounts} categories={categories} onDelete={remove} />
+              <TransactionRow key={t.id} transaction={t} accounts={accounts} categories={categories} onDelete={remove} onEdit={onEdit} />
             ))}
           </ul>
         )}
