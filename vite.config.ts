@@ -3,7 +3,11 @@ import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
+// BASE_PATH задаёт подпуть хостинга (GitHub Pages: /<repo>/); локально — '/'.
+const base = process.env.BASE_PATH ?? '/'
+
 export default defineConfig({
+  base,
   plugins: [
     react(),
     tailwindcss(),
@@ -17,7 +21,8 @@ export default defineConfig({
         display: 'standalone',
         theme_color: '#09090b',
         background_color: '#09090b',
-        start_url: '/',
+        start_url: base,
+        scope: base,
         lang: 'ru',
         icons: [
           { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
