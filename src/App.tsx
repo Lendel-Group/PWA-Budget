@@ -4,12 +4,21 @@ import { QuickAddModal } from './components/transactions/QuickAddModal'
 import { useHashRoute, type Route } from './lib/useHashRoute'
 import BudgetPage from './pages/BudgetPage'
 import DashboardPage from './pages/DashboardPage'
+import GoalsAndDebtsPage from './pages/GoalsAndDebtsPage'
 import { PlaceholderPage } from './pages/PlaceholderPage'
 
-const TITLES: Record<Exclude<Route, 'home' | 'budget'>, string> = {
+const TITLES: Record<Exclude<Route, 'home' | 'budget' | 'goals'>, string> = {
   analytics: 'Аналитика',
-  goals: 'Цели и долги',
   settings: 'Настройки',
+}
+
+function renderPage(route: Route) {
+  switch (route) {
+    case 'home': return <DashboardPage />
+    case 'budget': return <BudgetPage />
+    case 'goals': return <GoalsAndDebtsPage />
+    default: return <PlaceholderPage title={TITLES[route]} />
+  }
 }
 
 export default function App() {
@@ -18,7 +27,7 @@ export default function App() {
   return (
     <>
       <AppLayout route={route} onNavigate={navigate} onAdd={() => setAdding(true)}>
-        {route === 'home' ? <DashboardPage /> : route === 'budget' ? <BudgetPage /> : <PlaceholderPage title={TITLES[route]} />}
+        {renderPage(route)}
       </AppLayout>
       <QuickAddModal open={adding} onClose={() => setAdding(false)} />
     </>
