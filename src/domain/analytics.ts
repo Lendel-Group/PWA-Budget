@@ -1,4 +1,4 @@
-import type { Account, Transaction } from '../db/schema'
+import type { Account, Currency, Transaction } from '../db/schema'
 import { convertToKzt, round2, type Rates } from './finance'
 
 export interface MonthSummary {
@@ -38,6 +38,58 @@ export function calculateYearSummary(
     r.savings = round2(r.income - r.expense)
   }
   return rows
+}
+
+export interface CategoryShare {
+  /** `null` — расходы без категории. */
+  categoryId: string | null
+  /** Сумма в KZT. */
+  amount: number
+  /** Доля от общей суммы, 0..1. */
+  share: number
+}
+
+export interface CategoryBreakdown {
+  /** По убыванию суммы; при равных — по id категории, «без категории» в конце. */
+  rows: CategoryShare[]
+  total: number
+  /** Валюты, расходы в которых не учтены из-за отсутствия курса. */
+  skippedCurrencies: Currency[]
+}
+
+/**
+ * Расходы по категориям за год или месяц (`month` 1–12) в KZT по текущим курсам. Как и в остальной аналитике,
+ * переводы и пополнения целей не учитываются; расходы в валюте без курса исключаются и перечисляются в `skippedCurrencies`.
+ * Итог совпадает с расходами за тот же период в `calculateYearSummary`.
+ */
+export function calculateCategoryBreakdown(
+  transactions: Transaction[],
+  accounts: Account[],
+  rates: Rates,
+  year: number,
+  month?: number,
+): CategoryBreakdown {
+  const currencyById = new Map(accounts.map((a) => [a.id, a.currency]))
+  const prefix = month === undefined ? `${year}-` : `${year}-${String(month).padStart(2, '0')}-`
+  const sums = new Map<string | null, number>()
+  const skipped = new Set<Currency>()
+  for (const t of transactions) {
+    if (!t.date.startsWith(prefix) || t.type !== 'expense' || t.goalId) continue
+    const currency = currencyById.get(t.accountId)
+    if (!currency) continue
+    const kzt = convertToKzt(t.amount, currency, rates)
+    if (kzt === undefined) {
+      skipped.add(currency)
+      continue
+    }
+    const key = t.categoryId ?? null
+    sums.set(key, (sums.get(key) ?? 0) + kzt)
+  }
+  const total = round2([...sums.values()].reduce((a, b) => a + b, 0))
+  const rows = [...sums.entries()]
+    .map(([categoryId, amount]) => ({ categoryId, amount: round2(amount), share: total > 0 ? amount / total : 0 }))
+    .sort((a, b) => b.amount - a.amount || (a.categoryId ?? '\uffff').localeCompare(b.categoryId ?? '\uffff'))
+  return { rows, total, skippedCurrencies: [...skipped].sort() }
 }
 
 export function sumYear(rows: MonthSummary[]): Omit<MonthSummary, 'month'> {
