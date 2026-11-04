@@ -66,7 +66,7 @@ export function DataSafetySection() {
           <p>{persisted ? 'Хранилище защищено от очистки' : 'Хранилище может быть очищено браузером'}</p>
           <p className="text-xs text-fg-muted">Занято {mb(storage?.usage)} из {mb(storage?.quota)}</p>
           {!persisted && (
-            <button type="button" className="mt-1 text-xs text-emerald-400 underline" onClick={async () => { const s = await requestPersistentStorage(); setStorage(s); if (!s.isPersisted) setMessage({ ok: false, text: 'Браузер не дал защиту хранилища. Делайте резервные копии.' }) }}>
+            <button type="button" className="-ml-1 mt-0.5 flex min-h-11 items-center px-1 text-xs text-emerald-400 underline" onClick={async () => { const s = await requestPersistentStorage(); setStorage(s); if (!s.isPersisted) setMessage({ ok: false, text: 'Браузер не дал защиту хранилища. Делайте резервные копии.' }) }}>
               Запросить защиту
             </button>
           )}

@@ -37,10 +37,11 @@ function AddGoalSheet({ onClose }: { onClose: () => void }) {
         <Field label="Сумма, ₸"><input className={inputClass} inputMode="decimal" value={target} onChange={(e) => setTarget(e.target.value)} /></Field>
         <Field label="Дата"><input className={inputClass} type="date" min={today} value={date} onChange={(e) => setDate(e.target.value)} /></Field>
       </div>
-      <div className="flex gap-3" role="radiogroup" aria-label="Цвет">
+      <div className="flex flex-wrap gap-x-1 gap-y-0" role="radiogroup" aria-label="Цвет">
         {COLORS.map((c) => (
-          <button key={c} type="button" role="radio" aria-checked={c === color} aria-label={c} onClick={() => setColor(c)}
-            className={cn('size-8 rounded-full', c === color && 'ring-2 ring-white ring-offset-2 ring-offset-zinc-950')} style={{ background: c }} />
+          <button key={c} type="button" role="radio" aria-checked={c === color} aria-label={c} onClick={() => setColor(c)} className="grid size-11 place-items-center">
+            <span className={cn('size-8 rounded-full', c === color && 'ring-2 ring-white ring-offset-2 ring-offset-zinc-950')} style={{ background: c }} />
+          </button>
         ))}
       </div>
       {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
@@ -112,7 +113,7 @@ export function GoalsTab() {
                     {!g.isAchieved && plan.daysLeft >= 0 && ` · осталось ${plan.daysLeft} дн.`}
                   </p>
                 </div>
-                <button type="button" aria-label={`Удалить цель ${g.title}`} className="grid size-8 place-items-center text-fg-muted hover:text-red-400"
+                <button type="button" aria-label={`Удалить цель ${g.title}`} className="-mr-2 -mt-2 grid size-11 shrink-0 place-items-center text-fg-muted hover:text-red-400"
                   onClick={async () => {
                     if (!window.confirm(`Удалить цель «${g.title}»?`)) return
                     setError(undefined)

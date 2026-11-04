@@ -43,14 +43,14 @@ export function UpdatePrompt() {
       <span>{needRefresh ? 'Доступна новая версия приложения' : 'Приложение готово к работе офлайн'}</span>
       <span className="flex shrink-0 gap-2">
         {needRefresh && (
-          <button type="button" onClick={() => void updateServiceWorker(true)} className="rounded-lg bg-emerald-500 px-3 py-1.5 font-medium text-zinc-950">
+          <button type="button" onClick={() => void updateServiceWorker(true)} className="min-h-11 rounded-lg bg-emerald-500 px-3 font-medium text-zinc-950">
             Обновить
           </button>
         )}
         <button
           type="button"
           onClick={() => (needRefresh ? setNeedRefresh(false) : setOfflineReady(false))}
-          className="rounded-lg bg-zinc-800 px-3 py-1.5"
+          className="min-h-11 rounded-lg bg-zinc-800 px-3"
         >
           {needRefresh ? 'Позже' : 'Ок'}
         </button>

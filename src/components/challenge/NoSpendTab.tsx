@@ -55,10 +55,10 @@ export function NoSpendTab() {
 
       <div className="rounded-2xl bg-zinc-900 p-4">
         <div className="mb-3 flex items-center justify-between">
-          <button type="button" aria-label="Предыдущий месяц" className="grid size-9 place-items-center rounded-lg bg-zinc-800"
+          <button type="button" aria-label="Предыдущий месяц" className="grid size-11 place-items-center rounded-lg bg-zinc-800"
             onClick={() => setPeriod(previousMonth(year, month))}><ChevronLeft className="size-4" aria-hidden /></button>
           <h2 className="font-medium" data-testid="calendar-title">{monthLabel(year, month)}</h2>
-          <button type="button" aria-label="Следующий месяц" className="grid size-9 place-items-center rounded-lg bg-zinc-800"
+          <button type="button" aria-label="Следующий месяц" className="grid size-11 place-items-center rounded-lg bg-zinc-800"
             onClick={() => setPeriod(nextMonth(year, month))}><ChevronRight className="size-4" aria-hidden /></button>
         </div>
         <div role="grid" aria-label="Календарь дней без трат" className="grid grid-cols-7 gap-1.5 text-center text-sm">

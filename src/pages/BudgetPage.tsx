@@ -48,7 +48,7 @@ function PlanInput({ stored, year, month, categoryId, name }: {
         setDraft(null)
       }}
       className={cn(
-        'w-28 rounded-lg bg-zinc-800 px-2 py-1.5 text-right text-sm tabular-nums outline-none focus:ring-2 focus:ring-emerald-500',
+        'min-h-11 w-28 rounded-lg bg-zinc-800 px-2 py-1.5 text-right text-sm tabular-nums outline-none focus:ring-2 focus:ring-emerald-500',
         invalid && 'ring-2 ring-red-500',
       )}
     />
@@ -135,11 +135,11 @@ export default function BudgetPage() {
   return (
     <section className="space-y-4 p-4">
       <div className="flex items-center justify-between">
-        <button type="button" aria-label="Предыдущий месяц" onClick={() => go(prev)} className="grid size-10 place-items-center rounded-xl bg-zinc-900">
+        <button type="button" aria-label="Предыдущий месяц" onClick={() => go(prev)} className="grid size-11 place-items-center rounded-xl bg-zinc-900">
           <ChevronLeft className="size-5" aria-hidden />
         </button>
         <h2 className="text-lg font-semibold" data-testid="period">{monthLabel(year, month)}</h2>
-        <button type="button" aria-label="Следующий месяц" onClick={() => go(nextMonth(year, month))} className="grid size-10 place-items-center rounded-xl bg-zinc-900">
+        <button type="button" aria-label="Следующий месяц" onClick={() => go(nextMonth(year, month))} className="grid size-11 place-items-center rounded-xl bg-zinc-900">
           <ChevronRight className="size-5" aria-hidden />
         </button>
       </div>

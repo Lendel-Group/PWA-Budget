@@ -18,7 +18,7 @@ export default function GoalsAndDebtsPage() {
       <div className="flex rounded-xl bg-zinc-900 p-1" role="tablist">
         {TABS.map((t) => (
           <button key={t.id} type="button" role="tab" aria-selected={tab === t.id} onClick={() => setTab(t.id)}
-            className={cn('flex-1 rounded-lg py-2 text-xs font-medium', tab === t.id ? 'bg-zinc-700 text-white' : 'text-zinc-400')}>
+            className={cn('min-h-11 flex-1 rounded-lg text-xs font-medium', tab === t.id ? 'bg-zinc-700 text-white' : 'text-zinc-400')}>
             {t.label}
           </button>
         ))}

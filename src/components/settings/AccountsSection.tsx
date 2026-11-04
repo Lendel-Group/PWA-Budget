@@ -67,7 +67,7 @@ export function AccountsSection() {
             <button
               type="button"
               aria-label={a.isArchived ? `Вернуть счёт ${a.name}` : `Архивировать счёт ${a.name}`}
-              className="grid size-9 shrink-0 place-items-center rounded-lg bg-zinc-800 text-zinc-300"
+              className="grid size-11 shrink-0 place-items-center rounded-lg bg-zinc-800 text-zinc-300"
               onClick={async () => {
                 setError(undefined)
                 try { await setAccountArchived(a.id, !a.isArchived) } catch (e) { setError(e instanceof Error ? e.message : 'Ошибка') }
@@ -79,7 +79,7 @@ export function AccountsSection() {
         ))}
       </ul>
       {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
-      <button type="button" onClick={() => setAdding(true)} className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-zinc-700 py-2.5 text-sm text-zinc-300">
+      <button type="button" onClick={() => setAdding(true)} className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-dashed border-zinc-700 text-sm text-zinc-300">
         <Plus className="size-4" aria-hidden /> Добавить счёт
       </button>
       {adding && <AddAccountSheet onClose={() => setAdding(false)} />}
