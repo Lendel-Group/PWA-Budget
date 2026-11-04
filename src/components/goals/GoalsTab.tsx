@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { CheckCircle2, Plus, Trash2 } from 'lucide-react'
+import { Check, CheckCircle2, Plus, Trash2 } from 'lucide-react'
 import { AccountSelect } from '../ui/AccountSelect'
 import { Field, Sheet } from '../ui/Sheet'
 import { inputClass, primaryButton, toNumber } from '../ui/form'
@@ -11,14 +11,22 @@ import { formatMoney } from '../../lib/format'
 import { useToday } from '../../lib/useToday'
 import { createGoal, deleteGoal, topUpGoal } from '../../services/planningService'
 
-const COLORS = ['#22c55e', '#3b82f6', '#a855f7', '#f97316', '#ec4899', '#eab308']
+/** Цвета цели: название читает скринридер, hex — только для отрисовки. */
+const COLORS = [
+  { value: '#22c55e', name: 'Зелёный' },
+  { value: '#3b82f6', name: 'Синий' },
+  { value: '#a855f7', name: 'Фиолетовый' },
+  { value: '#f97316', name: 'Оранжевый' },
+  { value: '#ec4899', name: 'Розовый' },
+  { value: '#eab308', name: 'Жёлтый' },
+]
 
 function AddGoalSheet({ onClose }: { onClose: () => void }) {
   const today = useToday()
   const [title, setTitle] = useState('')
   const [target, setTarget] = useState('')
   const [date, setDate] = useState('')
-  const [color, setColor] = useState(COLORS[0])
+  const [color, setColor] = useState(COLORS[0].value)
   const [error, setError] = useState<string>()
 
   async function submit() {
@@ -38,11 +46,19 @@ function AddGoalSheet({ onClose }: { onClose: () => void }) {
         <Field label="Дата"><input className={inputClass} type="date" min={today} value={date} onChange={(e) => setDate(e.target.value)} /></Field>
       </div>
       <div className="flex flex-wrap gap-x-1 gap-y-0" role="radiogroup" aria-label="Цвет">
-        {COLORS.map((c) => (
-          <button key={c} type="button" role="radio" aria-checked={c === color} aria-label={c} onClick={() => setColor(c)} className="grid size-11 place-items-center">
-            <span className={cn('size-8 rounded-full', c === color && 'ring-2 ring-white ring-offset-2 ring-offset-zinc-950')} style={{ background: c }} />
-          </button>
-        ))}
+        {COLORS.map((c) => {
+          const selected = c.value === color
+          return (
+            <button key={c.value} type="button" role="radio" aria-checked={selected} aria-label={c.name} onClick={() => setColor(c.value)} className="grid size-11 place-items-center">
+              <span
+                className={cn('grid size-8 place-items-center rounded-full', selected && 'ring-2 ring-white ring-offset-2 ring-offset-zinc-950')}
+                style={{ background: c.value }}
+              >
+                {selected && <Check className="size-5 text-zinc-950" strokeWidth={3} aria-hidden />}
+              </span>
+            </button>
+          )
+        })}
       </div>
       {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
       <button type="button" className={primaryButton} onClick={submit}>Добавить цель</button>
