@@ -1,11 +1,12 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Trash2 } from 'lucide-react'
 import type { Account, Category, Transaction } from '../../db/schema'
 import { cn } from '../../lib/cn'
 import { formatMoney } from '../../lib/format'
 import { CategoryIcon } from '../../lib/icons'
 
-const SWIPE_THRESHOLD = 80
+/** Ширина раскрываемой кнопки «Удалить». */
+const REVEAL = 88
 /** Сдвиг, после которого жест считается свайпом, а не нажатием. */
 const DRAG_START = 8
 
@@ -28,22 +29,40 @@ interface Props {
   onEdit?: (t: Transaction) => void
 }
 
-/** Строка операции: нажатие — редактирование, удаление — кнопкой-корзиной или свайпом влево. */
+/**
+ * Строка операции: нажатие — редактирование. Свайп влево раскрывает кнопку «Удалить» (как в iOS),
+ * удаление — только нажатием на неё. Свайп вправо, нажатие на строку или вне её закрывают кнопку.
+ * Кнопка всегда в DOM под строкой: с клавиатуры/скринридером до неё доходят Tab'ом, фокус раскрывает строку.
+ */
 export function TransactionRow({ transaction: t, accounts, categories, onDelete, onEdit }: Props) {
+  const [open, setOpen] = useState(false)
   const [dx, setDx] = useState(0)
   const [dragging, setDragging] = useState(false)
-  const startX = useRef<number | null>(null)
+  const start = useRef<{ x: number; base: number } | null>(null)
+  const root = useRef<HTMLLIElement>(null)
   const account = accounts.find((a) => a.id === t.accountId)
   const category = categories.find((c) => c.id === t.categoryId)
   const sign = t.type === 'income' ? '+' : t.type === 'expense' ? '−' : ''
 
+  // Нажатие вне строки закрывает раскрытое действие
+  useEffect(() => {
+    if (!open) return
+    const onDown = (e: PointerEvent) => {
+      if (!root.current?.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('pointerdown', onDown)
+    return () => document.removeEventListener('pointerdown', onDown)
+  }, [open])
+
   const end = () => {
-    if (startX.current === null) return
-    startX.current = null
+    if (!start.current) return
+    start.current = null
+    if (dragging) setOpen(dx <= -REVEAL / 2)
     setDragging(false)
-    if (dx <= -SWIPE_THRESHOLD) onDelete(t)
     setDx(0)
   }
+
+  const offset = dragging ? dx : open ? -REVEAL : 0
 
   const body = (
     <>
@@ -68,28 +87,43 @@ export function TransactionRow({ transaction: t, accounts, categories, onDelete,
   )
 
   return (
-    <li className="relative overflow-hidden rounded-xl bg-red-600/80">
-      <Trash2 className="absolute right-5 top-1/2 size-5 -translate-y-1/2 text-white" aria-hidden />
+    <li ref={root} className="relative overflow-hidden rounded-xl">
+      <button
+        type="button"
+        aria-label="Удалить операцию"
+        onClick={() => onDelete(t)}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setOpen(false)}
+        style={{ width: REVEAL }}
+        className="absolute inset-y-0 right-0 flex flex-col items-center justify-center gap-0.5 rounded-xl bg-red-600 text-xs font-medium text-white"
+      >
+        <Trash2 className="size-5" aria-hidden />
+        Удалить
+      </button>
       <div
         className="relative flex touch-pan-y items-center gap-3 bg-zinc-900 px-3"
-        style={{ transform: `translateX(${dx}px)`, transition: dragging ? undefined : 'transform .2s' }}
+        style={{ transform: `translateX(${offset}px)`, transition: dragging ? undefined : 'transform .2s' }}
         // Захват указателя — только после сдвига: иначе обычное нажатие по кнопке «Изменить» не дойдёт до click
-        onPointerDown={(e) => { startX.current = e.clientX }}
+        onPointerDown={(e) => { start.current = { x: e.clientX, base: open ? -REVEAL : 0 } }}
         onPointerMove={(e) => {
-          if (startX.current === null) return
-          const delta = e.clientX - startX.current
+          if (!start.current) return
+          const delta = e.clientX - start.current.x
           if (!dragging) {
             if (Math.abs(delta) < DRAG_START) return
             setDragging(true)
             e.currentTarget.setPointerCapture(e.pointerId)
           }
-          setDx(Math.min(0, delta))
+          setDx(Math.max(-REVEAL, Math.min(0, start.current.base + delta)))
         }}
         onPointerUp={end}
         onPointerCancel={end}
       >
         {onEdit ? (
-          <button type="button" onClick={() => onEdit(t)} className="flex min-h-14 min-w-0 flex-1 items-center gap-3 py-3 text-left">
+          <button
+            type="button"
+            onClick={() => (open ? setOpen(false) : onEdit(t))}
+            className="flex min-h-14 min-w-0 flex-1 items-center gap-3 py-3 text-left"
+          >
             {body}
           </button>
         ) : (
@@ -97,15 +131,6 @@ export function TransactionRow({ transaction: t, accounts, categories, onDelete,
             {body}
           </div>
         )}
-        <button
-          type="button"
-          aria-label="Удалить операцию"
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={() => onDelete(t)}
-          className="-mr-1 grid size-11 shrink-0 place-items-center rounded-lg text-fg-muted hover:text-red-400"
-        >
-          <Trash2 className="size-4" aria-hidden />
-        </button>
       </div>
     </li>
   )
