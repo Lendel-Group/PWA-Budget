@@ -11,7 +11,7 @@ import { useToday } from '../../lib/useToday'
 
 const WEEKDAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
 const STATE_CLASS: Record<DayState, string> = {
-  clean: 'bg-emerald-500/20 text-emerald-300',
+  clean: 'bg-accent/20 text-accent-fg',
   spent: 'bg-zinc-800 text-zinc-300',
   future: 'text-fg-muted',
   untracked: 'text-fg-muted',
@@ -48,7 +48,7 @@ export function NoSpendTab() {
         </div>
         <div className="rounded-2xl bg-zinc-900 p-4">
           <p className="text-xs text-fg-muted">Чистых дней в месяце</p>
-          <p className="mt-1 text-3xl font-semibold tabular-nums text-emerald-400" data-testid="clean-days">{isCurrent ? cleanDaysThisMonth : monthClean}</p>
+          <p className="mt-1 text-3xl font-semibold tabular-nums text-accent-fg" data-testid="clean-days">{isCurrent ? cleanDaysThisMonth : monthClean}</p>
           <p className="text-xs text-fg-muted">{monthLabel(year, month)}</p>
         </div>
       </div>
@@ -71,7 +71,7 @@ export function NoSpendTab() {
                 data-state={c.state}
                 data-date={c.date}
                 aria-label={`${c.date}: ${STATE_LABEL[c.state]}`}
-                className={cn('grid aspect-square place-items-center rounded-lg tabular-nums', STATE_CLASS[c.state], c.isToday && 'ring-2 ring-emerald-400')}
+                className={cn('grid aspect-square place-items-center rounded-lg tabular-nums', STATE_CLASS[c.state], c.isToday && 'ring-2 ring-accent')}
               >
                 {c.day}
               </div>

@@ -49,14 +49,14 @@ export default function TransactionsPage({ onEdit }: { onEdit: (t: Transaction) 
         onFilter={updateFilter} onPeriod={updatePeriod} onReset={reset}
       />
 
-      {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
+      {error && <p role="alert" className="text-sm text-danger">{error}</p>}
 
       {all.length === 0 ? (
         <p className="py-8 text-center text-sm text-zinc-400">Операций пока нет. Нажмите «+», чтобы добавить первую.</p>
       ) : found.length === 0 ? (
         <div className="py-8 text-center text-sm text-zinc-400">
           <p>По выбранным фильтрам ничего не найдено.</p>
-          <button type="button" onClick={reset} className="mt-2 min-h-11 text-emerald-400 underline">Сбросить фильтры</button>
+          <button type="button" onClick={reset} className="mt-2 min-h-11 text-accent-fg underline">Сбросить фильтры</button>
         </div>
       ) : (
         <>
@@ -66,7 +66,7 @@ export default function TransactionsPage({ onEdit }: { onEdit: (t: Transaction) 
               <div className="mb-2 flex items-baseline justify-between">
                 <h2 className="text-xs font-medium uppercase tracking-wide text-zinc-400">{formatDayHeading(g.date, today)}</h2>
                 {g.totalKzt !== null && (
-                  <span className={cn('text-xs tabular-nums', g.totalKzt > 0 ? 'text-emerald-400' : 'text-zinc-400')} data-testid={`day-total-${g.date}`}>
+                  <span className={cn('text-xs tabular-nums', g.totalKzt > 0 ? 'text-accent-fg' : 'text-zinc-400')} data-testid={`day-total-${g.date}`}>
                     {g.totalKzt > 0 ? '+' : g.totalKzt < 0 ? '−' : ''}{formatMoney(Math.abs(g.totalKzt))}
                   </span>
                 )}

@@ -93,12 +93,12 @@ export function HistoryFilters({ filter, period, accounts, categories, today, on
             По
             <input type="date" className={cn(select, 'mt-1')} max={today} value={period.to} onChange={(e) => onPeriod({ ...period, to: e.target.value })} />
           </label>
-          {rangeInvalid && <p role="alert" className="col-span-2 text-xs text-red-400">Начало периода позже конца</p>}
+          {rangeInvalid && <p role="alert" className="col-span-2 text-xs text-danger">Начало периода позже конца</p>}
         </div>
       )}
 
       {isFilterActive(filter) && (
-        <button type="button" onClick={onReset} className="flex min-h-11 items-center gap-1.5 px-1 text-sm text-emerald-400">
+        <button type="button" onClick={onReset} className="flex min-h-11 items-center gap-1.5 px-1 text-sm text-accent-fg">
           <X className="size-4" aria-hidden /> Сбросить фильтры
         </button>
       )}

@@ -56,12 +56,12 @@ export function RatesSection() {
         ))}
       </div>
       <div className="grid grid-cols-2 gap-2">
-        <button type="button" onClick={saveManual} className="h-11 rounded-xl bg-emerald-500 text-sm font-medium text-zinc-950">Сохранить</button>
+        <button type="button" onClick={saveManual} className="h-11 rounded-xl bg-accent text-sm font-medium text-zinc-950">Сохранить</button>
         <button type="button" onClick={fetchNbk} disabled={busy} className="h-11 rounded-xl bg-zinc-800 text-sm disabled:opacity-50">
           {busy ? 'Загрузка…' : 'Обновить курсы'}
         </button>
       </div>
-      {message && <p role="status" className={message.ok ? 'text-xs text-emerald-400' : 'text-xs text-amber-400'}>{message.text}</p>}
+      {message && <p role="status" className={message.ok ? 'text-xs text-success' : 'text-xs text-warning'}>{message.text}</p>}
     </section>
   )
 }

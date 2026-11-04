@@ -15,9 +15,9 @@ import { useToday } from '../lib/useToday'
 import { useDeleteTransaction } from '../lib/useDeleteTransaction'
 
 const STATUS_STYLES: Record<AllowanceStatus, { card: string; text: string; label: string }> = {
-  green: { card: 'border-emerald-500/40 bg-emerald-500/10', text: 'text-emerald-400', label: 'Всё в порядке' },
-  yellow: { card: 'border-amber-500/40 bg-amber-500/10', text: 'text-amber-400', label: 'Тратьте аккуратнее' },
-  red: { card: 'border-red-500/40 bg-red-500/10', text: 'text-red-400', label: 'Лимит исчерпан' },
+  green: { card: 'border-success/40 bg-success/10', text: 'text-success', label: 'Всё в порядке' },
+  yellow: { card: 'border-warning/40 bg-warning/10', text: 'text-warning', label: 'Тратьте аккуратнее' },
+  red: { card: 'border-danger/40 bg-danger/10', text: 'text-danger', label: 'Лимит исчерпан' },
 }
 
 export default function DashboardPage({ onEdit }: { onEdit: (t: Transaction) => void }) {
@@ -98,7 +98,7 @@ export default function DashboardPage({ onEdit }: { onEdit: (t: Transaction) => 
           </ul>
         )}
         {missing.length > 0 && (
-          <p className="mt-3 flex items-start gap-2 text-xs text-amber-400">
+          <p className="mt-3 flex items-start gap-2 text-xs text-warning">
             <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden />
             Нет курса для {[...new Set(missing.map((a) => a.currency))].join(', ')} — эти счета не вошли в капитал.
             Задайте курсы в настройках.
@@ -115,7 +115,7 @@ export default function DashboardPage({ onEdit }: { onEdit: (t: Transaction) => 
           </>
         ) : (
           <p className="mt-1 text-sm text-zinc-400">
-            Задайте плановые лимиты на вкладке <a className="text-emerald-400 underline" href="#/budget">«Бюджет»</a>, чтобы увидеть дневной лимит.
+            Задайте плановые лимиты на вкладке <a className="text-accent-fg underline" href="#/budget">«Бюджет»</a>, чтобы увидеть дневной лимит.
           </p>
         )}
       </div>
@@ -130,20 +130,20 @@ export default function DashboardPage({ onEdit }: { onEdit: (t: Transaction) => 
           aria-valuenow={Math.round(usedPct)}
           aria-label="Израсходовано от плана"
         >
-          <div className={cn('h-full rounded-full', spent > planned ? 'bg-red-500' : 'bg-emerald-500')} style={{ width: `${planned > 0 ? usedPct : spent > 0 ? 100 : 0}%` }} />
+          <div className={cn('h-full rounded-full', spent > planned ? 'bg-danger' : 'bg-expense')} style={{ width: `${planned > 0 ? usedPct : spent > 0 ? 100 : 0}%` }} />
         </div>
         <dl className="mt-3 grid grid-cols-3 gap-2 text-xs">
           <div><dt className="text-fg-muted">Израсходовано</dt><dd className="text-sm tabular-nums" data-testid="spent">{formatMoney(spent)}</dd></div>
           <div><dt className="text-fg-muted">Запланировано</dt><dd className="text-sm tabular-nums">{formatMoney(planned)}</dd></div>
           <div>
             <dt className="text-fg-muted">{remaining < 0 ? 'Перерасход' : 'Остаток'}</dt>
-            <dd className={cn('text-sm tabular-nums', remaining < 0 && 'text-red-400')}>{formatMoney(Math.abs(remaining))}</dd>
+            <dd className={cn('text-sm tabular-nums', remaining < 0 && 'text-danger')}>{formatMoney(Math.abs(remaining))}</dd>
           </div>
         </dl>
       </div>
 
       <div className="space-y-4">
-        {deleteError && <p role="alert" className="text-sm text-red-400">{deleteError}</p>}
+        {deleteError && <p role="alert" className="text-sm text-danger">{deleteError}</p>}
         {group(today, 'Сегодня')}
         {group(yesterday, 'Вчера')}
         <a href="#/transactions" className="flex min-h-11 items-center justify-center rounded-xl border border-zinc-700 text-sm text-zinc-200 active:bg-zinc-900">

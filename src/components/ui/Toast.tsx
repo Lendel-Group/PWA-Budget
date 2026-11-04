@@ -48,7 +48,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               <button
                 type="button"
                 onClick={() => { toast.action?.onClick(); dismiss() }}
-                className="min-h-11 shrink-0 rounded-xl px-3 font-semibold text-emerald-400 active:bg-zinc-700"
+                className="min-h-11 shrink-0 rounded-xl px-3 font-semibold text-accent-fg active:bg-zinc-700"
               >
                 {toast.action.label}
               </button>

@@ -48,7 +48,7 @@ function AddDebtSheet({ onClose }: { onClose: () => void }) {
         <Field label="День платежа (1–31)"><input className={inputClass} inputMode="numeric" value={f.dueDay} onChange={set('dueDay')} /></Field>
       </div>
       <Field label="Ставка, % годовых (необязательно)"><input className={inputClass} inputMode="decimal" value={f.rate} onChange={set('rate')} /></Field>
-      {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
+      {error && <p role="alert" className="text-sm text-danger">{error}</p>}
       <button type="button" className={primaryButton} onClick={submit}>Добавить долг</button>
     </Sheet>
   )
@@ -81,10 +81,10 @@ function PaySheet({ debt, onClose }: { debt: Debt; onClose: () => void }) {
       <p className="text-sm text-zinc-400">Остаток долга: {formatMoney(debt.remainingAmount)}</p>
       <Field label="Сумма платежа, ₸"><input className={inputClass} inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} /></Field>
       <Field label="Списать со счёта">
-        {accounts?.length ? <AccountSelect accounts={accounts} value={selected ?? ''} onChange={setAccountId} /> : <p className="text-sm text-amber-400">Нет счёта в тенге</p>}
+        {accounts?.length ? <AccountSelect accounts={accounts} value={selected ?? ''} onChange={setAccountId} /> : <p className="text-sm text-warning">Нет счёта в тенге</p>}
       </Field>
       <p className="text-xs text-fg-muted">Платёж не нарушает «дни без трат».</p>
-      {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
+      {error && <p role="alert" className="text-sm text-danger">{error}</p>}
       <button type="button" className={primaryButton} disabled={busy || !selected} onClick={submit}>Внести платёж</button>
     </Sheet>
   )
@@ -103,7 +103,7 @@ export function DebtsTab() {
   return (
     <div className="space-y-3">
       {sorted.length === 0 && <p className="py-6 text-center text-sm text-fg-muted">Долгов нет. Добавьте кредит, чтобы отслеживать платежи.</p>}
-      {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
+      {error && <p role="alert" className="text-sm text-danger">{error}</p>}
       <ul className="space-y-3" aria-label="Долги">
         {sorted.map((d) => {
           const paid = Math.min(100, ((d.totalAmount - d.remainingAmount) / d.totalAmount) * 100)
@@ -119,7 +119,7 @@ export function DebtsTab() {
                 </div>
                 <button
                   type="button" aria-label={`Удалить долг ${d.name}`}
-                  className="-mr-2 -mt-2 grid size-11 shrink-0 place-items-center text-fg-muted hover:text-red-400"
+                  className="-mr-2 -mt-2 grid size-11 shrink-0 place-items-center text-fg-muted hover:text-danger"
                   onClick={async () => {
                     if (!window.confirm(`Удалить долг «${d.name}»?`)) return
                     setError(undefined)
@@ -131,11 +131,11 @@ export function DebtsTab() {
               </div>
               <p className="mt-3 text-2xl font-semibold tabular-nums" data-testid={`debt-remaining-${d.name}`}>{formatMoney(d.remainingAmount)}</p>
               <div className="mt-2 h-2 overflow-hidden rounded-full bg-zinc-800" role="progressbar" aria-label={`Погашено: ${d.name}`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(paid)}>
-                <div className="h-full rounded-full bg-emerald-500" style={{ width: `${paid}%` }} />
+                <div className="h-full rounded-full bg-success" style={{ width: `${paid}%` }} />
               </div>
               <p className="mt-1 text-xs text-fg-muted">Погашено {Math.round(paid)}% из {formatMoney(d.totalAmount)}</p>
               {!d.isClosed && (
-                <button type="button" onClick={() => setPaying(d)} className="mt-3 h-11 w-full rounded-xl bg-emerald-500/15 font-medium text-emerald-400 active:bg-emerald-500/25">
+                <button type="button" onClick={() => setPaying(d)} className="mt-3 h-11 w-full rounded-xl bg-accent/15 font-medium text-accent-fg active:bg-accent/25">
                   Внести платёж
                 </button>
               )}

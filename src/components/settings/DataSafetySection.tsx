@@ -61,12 +61,12 @@ export function DataSafetySection() {
       <h2 id="safety-h" className="font-medium">Сохранность данных</h2>
 
       <div className="flex items-start gap-3 rounded-xl bg-zinc-800/60 p-3" data-testid="persist-status">
-        {persisted ? <ShieldCheck className="mt-0.5 size-5 shrink-0 text-emerald-400" aria-hidden /> : <ShieldAlert className="mt-0.5 size-5 shrink-0 text-amber-400" aria-hidden />}
+        {persisted ? <ShieldCheck className="mt-0.5 size-5 shrink-0 text-success" aria-hidden /> : <ShieldAlert className="mt-0.5 size-5 shrink-0 text-warning" aria-hidden />}
         <div className="text-sm">
           <p>{persisted ? 'Хранилище защищено от очистки' : 'Хранилище может быть очищено браузером'}</p>
           <p className="text-xs text-fg-muted">Занято {mb(storage?.usage)} из {mb(storage?.quota)}</p>
           {!persisted && (
-            <button type="button" className="-ml-1 mt-0.5 flex min-h-11 items-center px-1 text-xs text-emerald-400 underline" onClick={async () => { const s = await requestPersistentStorage(); setStorage(s); if (!s.isPersisted) setMessage({ ok: false, text: 'Браузер не дал защиту хранилища. Делайте резервные копии.' }) }}>
+            <button type="button" className="-ml-1 mt-0.5 flex min-h-11 items-center px-1 text-xs text-accent-fg underline" onClick={async () => { const s = await requestPersistentStorage(); setStorage(s); if (!s.isPersisted) setMessage({ ok: false, text: 'Браузер не дал защиту хранилища. Делайте резервные копии.' }) }}>
               Запросить защиту
             </button>
           )}
@@ -108,11 +108,11 @@ export function DataSafetySection() {
           ref={fileInput} type="file" accept="application/json,.json" hidden data-testid="restore-input"
           onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) void restore(f) }}
         />
-        <button type="button" onClick={reset} className="flex h-11 w-full items-center justify-center rounded-xl bg-red-500/15 text-sm font-medium text-red-400 active:bg-red-500/25">
+        <button type="button" onClick={reset} className="flex h-11 w-full items-center justify-center rounded-xl bg-danger/15 text-sm font-medium text-danger active:bg-danger/25">
           Полный сброс приложения
         </button>
       </div>
-      {message && <p role="status" className={message.ok ? 'text-xs text-emerald-400' : 'text-xs text-red-400'}>{message.text}</p>}
+      {message && <p role="status" className={message.ok ? 'text-xs text-success' : 'text-xs text-danger'}>{message.text}</p>}
     </section>
   )
 }

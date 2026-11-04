@@ -79,7 +79,7 @@ export function TransactionRow({ transaction: t, accounts, categories, onDelete,
           {t.comment ? ` · ${t.comment}` : ''}
         </div>
       </div>
-      <div className={cn('text-sm tabular-nums', t.type === 'income' ? 'text-emerald-400' : t.type === 'transfer' ? 'text-sky-400' : 'text-zinc-100')}>
+      <div className={cn('text-sm tabular-nums', t.type === 'income' ? 'text-income' : t.type === 'transfer' ? 'text-transfer' : 'text-zinc-100')}>
         {sign}
         {formatMoney(t.amount, account?.currency)}
       </div>

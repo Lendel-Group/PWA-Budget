@@ -26,7 +26,7 @@ function ExpenseChart({ expenses, currentMonth }: { expenses: number[]; currentM
         return (
           <g key={i}>
             <rect x={x} y={H - bottom - h} width={bw} height={h} rx={2}
-              className={i + 1 === currentMonth ? 'fill-emerald-400' : 'fill-emerald-600'} data-testid={`bar-${i + 1}`}>
+              className={i + 1 === currentMonth ? 'fill-expense-strong' : 'fill-expense'} data-testid={`bar-${i + 1}`}>
               <title>{`${MONTHS_SHORT[i]}: ${formatMoney(expenses[i])}`}</title>
             </rect>
             <text x={x + bw / 2} y={H - 8} textAnchor="middle" fontSize="8" className="fill-fg-muted">{MONTHS_SHORT[i]}</text>
@@ -81,11 +81,11 @@ export default function AnalyticsPage() {
           </thead>
           <tbody className="divide-y divide-zinc-800">
             {rows.map((r) => (
-              <tr key={r.month} className={cn(y === current.year && r.month === current.month && 'bg-emerald-500/10')}>
+              <tr key={r.month} className={cn(y === current.year && r.month === current.month && 'bg-accent/10')}>
                 <th scope="row" className="px-3 py-2 text-left font-normal text-zinc-300">{MONTHS_SHORT[r.month - 1]}</th>
-                <td className="px-2 py-2 text-right text-emerald-400">{r.income ? money(r.income) : '—'}</td>
+                <td className={cn('px-2 py-2 text-right', r.income ? 'text-income' : 'text-fg-muted')}>{r.income ? money(r.income) : '—'}</td>
                 <td className="px-2 py-2 text-right">{r.expense ? money(r.expense) : '—'}</td>
-                <td className={cn('px-3 py-2 text-right', r.savings < 0 ? 'text-red-400' : r.savings > 0 ? 'text-zinc-100' : 'text-fg-muted')}>
+                <td className={cn('px-3 py-2 text-right', r.savings < 0 ? 'text-danger' : r.savings > 0 ? 'text-zinc-100' : 'text-fg-muted')}>
                   {r.savings ? money(r.savings) : '—'}
                 </td>
               </tr>
@@ -94,9 +94,9 @@ export default function AnalyticsPage() {
           <tfoot className="border-t border-zinc-700 font-medium">
             <tr data-testid="summary-total">
               <th scope="row" className="px-3 py-2.5 text-left">Итого</th>
-              <td className="px-2 py-2.5 text-right text-emerald-400">{money(total.income)}</td>
+              <td className="px-2 py-2.5 text-right text-income">{money(total.income)}</td>
               <td className="px-2 py-2.5 text-right">{money(total.expense)}</td>
-              <td className={cn('px-3 py-2.5 text-right', total.savings < 0 && 'text-red-400')}>{money(total.savings)}</td>
+              <td className={cn('px-3 py-2.5 text-right', total.savings < 0 && 'text-danger')}>{money(total.savings)}</td>
             </tr>
           </tfoot>
         </table>

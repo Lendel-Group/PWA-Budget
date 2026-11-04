@@ -43,7 +43,7 @@ export function UpdatePrompt() {
       <span>{needRefresh ? 'Доступна новая версия приложения' : 'Приложение готово к работе офлайн'}</span>
       <span className="flex shrink-0 gap-2">
         {needRefresh && (
-          <button type="button" onClick={() => void updateServiceWorker(true)} className="min-h-11 rounded-lg bg-emerald-500 px-3 font-medium text-zinc-950">
+          <button type="button" onClick={() => void updateServiceWorker(true)} className="min-h-11 rounded-lg bg-accent px-3 font-medium text-zinc-950">
             Обновить
           </button>
         )}

@@ -74,7 +74,7 @@ export function SegmentedControl<T extends string>({
             tabIndex={selected ? 0 : -1}
             onClick={() => onChange(o.value)}
             className={cn(
-              'min-h-11 flex-1 rounded-lg font-medium focus-visible:outline-2 focus-visible:outline-emerald-500',
+              'min-h-11 flex-1 rounded-lg font-medium focus-visible:outline-2 focus-visible:outline-accent',
               selected ? 'bg-zinc-700 text-white' : 'text-zinc-400',
               itemClassName,
             )}
