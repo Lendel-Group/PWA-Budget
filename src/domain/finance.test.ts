@@ -6,6 +6,7 @@ import {
   MAX_STREAK_DAYS, validateNewTransaction, type NewTransaction, convertToKzt, calculateExpensesKzt,
   sumPlannedLimits, getAllowanceStatus,
 } from './finance'
+import { resolveExcludedFromNoSpend } from './categories'
 
 const acc = (o: Partial<Account>): Account => ({
   id: 'a', name: 'A', type: 'card', currency: 'KZT', initialBalance: 0, currentBalance: 0,
@@ -73,6 +74,21 @@ describe('getDatesWithExpenses', () => {
     expect([...set]).toEqual(['2026-11-01'])
   })
   it('empty input', () => expect(getDatesWithExpenses([]).size).toBe(0))
+
+  it('расход в категории «не нарушает дни без трат» не прерывает серию, пока не переопределён вручную', () => {
+    const utilities = { isExcludedFromNoSpend: true }
+    const today = '2026-11-04'
+    // коммуналка 2 и 3 ноября получает исключение от категории, кофе 1 ноября — нет
+    const history = [
+      tx({ date: '2026-11-01', isExcludedFromNoSpend: resolveExcludedFromNoSpend(undefined) }),
+      tx({ date: '2026-11-02', isExcludedFromNoSpend: resolveExcludedFromNoSpend(utilities) }),
+      tx({ date: '2026-11-03', isExcludedFromNoSpend: resolveExcludedFromNoSpend(utilities) }),
+    ]
+    expect(calculateNoSpendStreak(getDatesWithExpenses(history), today)).toEqual({ currentStreak: 3, cleanDaysThisMonth: 3 })
+    // ручное переопределение «считать» на 3 ноября прерывает серию
+    const overridden = [...history.slice(0, 2), tx({ date: '2026-11-03', isExcludedFromNoSpend: resolveExcludedFromNoSpend(utilities, false) })]
+    expect(calculateNoSpendStreak(getDatesWithExpenses(overridden), today)).toEqual({ currentStreak: 1, cleanDaysThisMonth: 2 })
+  })
 })
 
 describe('calculateCategoryTotals', () => {

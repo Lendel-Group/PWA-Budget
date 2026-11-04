@@ -2,6 +2,7 @@ import 'fake-indexeddb/auto'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { db, type Category } from '../db/schema'
 import { createCategory, deleteCategory, setCategoryArchived, updateCategory } from './categoryService'
+import { seedIfEmpty } from '../db/seed'
 
 const cat = (id: string, name: string, type: Category['type'] = 'expense', extra: Partial<Category> = {}): Category => ({
   id, name, type, icon: 'Circle', color: '#22c55e', isDefault: true, ...extra,
@@ -103,5 +104,44 @@ describe('deleteCategory', () => {
 
   it('неизвестная категория', async () => {
     await expect(deleteCategory('zzz')).rejects.toThrow(/не найдена/)
+  })
+})
+
+describe('флаг «не нарушает дни без трат»', () => {
+  it('по умолчанию у новой категории поля нет (false)', async () => {
+    const id = await createCategory(input)
+    expect((await db.categories.get(id))!.isExcludedFromNoSpend).toBeUndefined()
+  })
+
+  it('создание расходной категории с флагом; для доходной флаг игнорируется', async () => {
+    const expense = await createCategory({ ...input, isExcludedFromNoSpend: true })
+    const income = await createCategory({ ...input, name: 'Бонус', type: 'income', isExcludedFromNoSpend: true })
+    expect((await db.categories.get(expense))!.isExcludedFromNoSpend).toBe(true)
+    expect((await db.categories.get(income))!.isExcludedFromNoSpend).toBeUndefined()
+  })
+
+  it('обновление включает и выключает флаг (false сохраняется явно), у доходной не появляется', async () => {
+    await updateCategory('e1', { name: 'Продукты', icon: 'Gift', color: '#3b82f6', isExcludedFromNoSpend: true })
+    expect((await db.categories.get('e1'))!.isExcludedFromNoSpend).toBe(true)
+    await updateCategory('e1', { name: 'Продукты', icon: 'Gift', color: '#3b82f6', isExcludedFromNoSpend: false })
+    expect((await db.categories.get('e1'))!.isExcludedFromNoSpend).toBe(false)
+    await updateCategory('i1', { name: 'Зарплата', icon: 'Gift', color: '#3b82f6', isExcludedFromNoSpend: true })
+    expect('isExcludedFromNoSpend' in (await db.categories.get('i1'))!).toBe(false)
+  })
+
+  it('обновление без флага снимает его; существующие операции не меняются', async () => {
+    await db.categories.update('e1', { isExcludedFromNoSpend: true })
+    await db.transactions.add({ id: 't', date: '2026-11-04', timestamp: 1, type: 'expense', accountId: 'a', amount: 1, categoryId: 'e1', isExcludedFromNoSpend: false })
+    await updateCategory('e1', { name: 'Продукты', icon: 'Gift', color: '#3b82f6' })
+    expect((await db.categories.get('e1'))!.isExcludedFromNoSpend).toBe(false)
+    expect((await db.transactions.get('t'))!.isExcludedFromNoSpend).toBe(false)
+  })
+
+  it('сид: коммуналка и кредиты не нарушают дни без трат, остальные — нет', async () => {
+    await db.categories.clear()
+    await db.config.clear()
+    await seedIfEmpty()
+    const flagged = (await db.categories.toArray()).filter((c) => c.isExcludedFromNoSpend).map((c) => c.id).sort()
+    expect(flagged).toEqual(['cat-credit', 'cat-housing'])
   })
 })

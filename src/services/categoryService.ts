@@ -15,20 +15,28 @@ export async function createCategory(input: CategoryInput): Promise<string> {
       color: input.color,
       isDefault: false,
       order: Math.max(0, ...all.map((c) => c.order ?? 0)) + 1,
+      // Флаг есть только у расходных и только когда включён: нет поля = false
+      ...(input.type === 'expense' && input.isExcludedFromNoSpend ? { isExcludedFromNoSpend: true } : {}),
     }
     await db.categories.add(category)
     return category.id
   })
 }
 
-/** Переименование и смена иконки/цвета. Тип менять нельзя: операции привязаны к нему. */
-export async function updateCategory(id: string, patch: Pick<CategoryInput, 'name' | 'icon' | 'color'>): Promise<void> {
+/** Переименование, иконка, цвет и флаг «не нарушает дни без трат». Тип менять нельзя: операции привязаны к нему. */
+export async function updateCategory(id: string, patch: Pick<CategoryInput, 'name' | 'icon' | 'color' | 'isExcludedFromNoSpend'>): Promise<void> {
   await db.transaction('rw', db.categories, async () => {
     const category = await db.categories.get(id)
     if (!category) throw new Error('Категория не найдена')
     const error = validateCategoryInput({ ...patch, type: category.type }, await db.categories.toArray(), id)
     if (error) throw new Error(error)
-    await db.categories.update(id, { name: patch.name.trim(), icon: patch.icon, color: patch.color })
+    await db.categories.update(id, {
+      name: patch.name.trim(),
+      icon: patch.icon,
+      color: patch.color,
+      // Флаг только у расходных; false записываем явно, чтобы он переопределял значение из сида
+      ...(category.type === 'expense' ? { isExcludedFromNoSpend: !!patch.isExcludedFromNoSpend } : {}),
+    })
   })
 }
 

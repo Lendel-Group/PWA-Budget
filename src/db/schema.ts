@@ -24,6 +24,8 @@ export interface Category {
   isArchived?: boolean
   /** Порядок пользовательских категорий (по возрастанию) после набора по умолчанию. */
   order?: number
+  /** Расходы в этой категории не нарушают «дни без трат»: новая операция получает `isExcludedFromNoSpend`. Нет поля = false. */
+  isExcludedFromNoSpend?: boolean
 }
 
 export interface BudgetLimit {

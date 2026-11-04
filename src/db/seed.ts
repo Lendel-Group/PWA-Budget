@@ -1,7 +1,7 @@
 import { db, type Account, type Category } from './schema'
 
-const expense = (id: string, name: string, icon: string, color: string): Category => ({
-  id, name, type: 'expense', icon, color, isDefault: true,
+const expense = (id: string, name: string, icon: string, color: string, isExcludedFromNoSpend = false): Category => ({
+  id, name, type: 'expense', icon, color, isDefault: true, ...(isExcludedFromNoSpend ? { isExcludedFromNoSpend } : {}),
 })
 const income = (id: string, name: string, icon: string, color: string): Category => ({
   id, name, type: 'income', icon, color, isDefault: true,
@@ -11,8 +11,8 @@ export const DEFAULT_CATEGORIES: Category[] = [
   expense('cat-food', 'Продукты', 'ShoppingCart', '#22c55e'),
   expense('cat-cafe', 'Кафе и рестораны', 'Utensils', '#f97316'),
   expense('cat-transport', 'Транспорт', 'Bus', '#3b82f6'),
-  expense('cat-housing', 'Жильё и коммуналка', 'Home', '#a855f7'),
-  expense('cat-credit', 'Кредиты', 'Landmark', '#ef4444'),
+  expense('cat-housing', 'Жильё и коммуналка', 'Home', '#a855f7', true),
+  expense('cat-credit', 'Кредиты', 'Landmark', '#ef4444', true),
   expense('cat-health', 'Здоровье', 'HeartPulse', '#ec4899'),
   expense('cat-fun', 'Развлечения', 'Gamepad2', '#eab308'),
   expense('cat-clothes', 'Одежда', 'Shirt', '#14b8a6'),

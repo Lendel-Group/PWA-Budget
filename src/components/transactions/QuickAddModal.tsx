@@ -3,7 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { CalendarDays, Delete, SlidersHorizontal, X } from 'lucide-react'
 import { db, type Transaction } from '../../db/schema'
 import { DEFAULT_CATEGORY_IDS } from '../../db/seed'
-import { sortByDefaultOrder, sortCategoriesByUsage, USAGE_WINDOW_DAYS } from '../../domain/categories'
+import { resolveExcludedFromNoSpend, sortByDefaultOrder, sortCategoriesByUsage, USAGE_WINDOW_DAYS } from '../../domain/categories'
 import { pickAccount } from '../../domain/accounts'
 import { addDays, formatDateChip, toLocalDateString } from '../../domain/dates'
 import { applyNumpadKey, displayAmount, parseAmount, type NumpadKey } from '../../domain/numpad'
@@ -74,7 +74,8 @@ function QuickAddForm({ editing, onClose }: { editing?: Transaction; onClose: ()
   const [accountId, setAccountId] = useState<string | undefined>(editing?.accountId)
   const [toAccountId, setToAccountId] = useState<string | undefined>(editing?.toAccountId)
   const [categoryId, setCategoryId] = useState<string | undefined>(editing?.categoryId)
-  const [excluded, setExcluded] = useState(editing?.isExcludedFromNoSpend ?? false)
+  // Ручной выбор «Исключить из дней без трат»: пока не трогали — действует настройка категории; у существующей операции — её сохранённое значение
+  const [manualExcluded, setManualExcluded] = useState<boolean | undefined>(editing?.isExcludedFromNoSpend)
   const [comment, setComment] = useState(editing?.comment ?? '')
   const [moreOpen, setMoreOpen] = useState(!!editing?.comment)
   const [toAmount, setToAmount] = useState(editing?.toAmount !== undefined ? String(editing.toAmount) : '')
@@ -102,7 +103,11 @@ function QuickAddForm({ editing, onClose }: { editing?: Transaction; onClose: ()
 
   const value = parseAmount(amount)
   const showExcluded = type === 'expense' && !linked
-  const hasExtras = (showExcluded && excluded) || comment.trim() !== ''
+  const selectedCategory = categories?.find((c) => c.id === categoryId)
+  const categoryExempt = resolveExcludedFromNoSpend(selectedCategory)
+  const excluded = resolveExcludedFromNoSpend(selectedCategory, manualExcluded)
+  // Точка на «Ещё»: есть комментарий или исключение отличается от настройки категории
+  const hasExtras = (showExcluded && excluded !== categoryExempt) || comment.trim() !== ''
   const needsCategory = type !== 'transfer' && !linked && !categoryId
   const canSave =
     !saving && value > 0 && !!fromAccount && !needsCategory &&
@@ -298,9 +303,11 @@ function QuickAddForm({ editing, onClose }: { editing?: Transaction; onClose: ()
                 <label className="flex items-center justify-between rounded-xl bg-zinc-900 px-3 py-2 text-sm">
                   <span>
                     Исключить из дней без трат
-                    <span className="block text-xs text-fg-muted">коммуналка, кредит, аренда</span>
+                    <span className="block text-xs text-fg-muted">
+                      {categoryExempt && selectedCategory ? `Категория «${selectedCategory.name}» не нарушает дни без трат` : 'коммуналка, кредит, аренда'}
+                    </span>
                   </span>
-                  <input type="checkbox" checked={excluded} onChange={(e) => setExcluded(e.target.checked)} className="size-5 accent-[var(--color-accent)]" />
+                  <input type="checkbox" checked={excluded} onChange={(e) => setManualExcluded(e.target.checked)} className="size-5 accent-[var(--color-accent)]" />
                 </label>
               )}
             </div>

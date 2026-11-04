@@ -42,7 +42,7 @@ const TABLES: Record<Exclude<keyof BackupData, 'config'>, TableSpec> = {
   },
   categories: {
     id: 'string', name: 'string', type: ['expense', 'income'], icon: 'string', color: 'string',
-    isDefault: 'boolean', isArchived: 'boolean?', order: 'number?',
+    isDefault: 'boolean', isArchived: 'boolean?', order: 'number?', isExcludedFromNoSpend: 'boolean?',
   },
   budgetLimits: {
     id: 'string', year: 'number', month: 'number', categoryId: 'string', plannedAmount: 'number',
