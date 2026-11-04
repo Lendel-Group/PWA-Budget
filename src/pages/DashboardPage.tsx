@@ -88,7 +88,7 @@ export default function DashboardPage({ onEdit }: { onEdit: (t: Transaction) => 
           <ChevronDown className={cn('size-5 shrink-0 text-fg-muted transition-transform', expanded && 'rotate-180')} aria-hidden />
         </button>
         {expanded && (
-          <ul className="mt-3 divide-y divide-zinc-800 text-sm" aria-label="Балансы счетов">
+          <ul data-selectable className="mt-3 divide-y divide-zinc-800 text-sm" aria-label="Балансы счетов">
             {accounts.map((a) => (
               <li key={a.id} className="flex justify-between py-2">
                 <span>{a.name}</span>
@@ -106,7 +106,7 @@ export default function DashboardPage({ onEdit }: { onEdit: (t: Transaction) => 
         )}
       </div>
 
-      <div className={cn('rounded-2xl border p-4', planned > 0 ? status.card : 'border-zinc-800 bg-zinc-900')} data-testid="allowance-card" data-status={planned > 0 ? getAllowanceStatus(allowance) : 'none'}>
+      <div data-selectable className={cn('rounded-2xl border p-4', planned > 0 ? status.card : 'border-zinc-800 bg-zinc-900')} data-testid="allowance-card" data-status={planned > 0 ? getAllowanceStatus(allowance) : 'none'}>
         <p className="text-sm text-zinc-400">Лимит на сегодня</p>
         {planned > 0 ? (
           <>
