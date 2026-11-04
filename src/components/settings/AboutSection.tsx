@@ -1,18 +1,16 @@
 import { useState } from 'react'
-import { ExternalLink, RefreshCw } from 'lucide-react'
+import { Download, ExternalLink, RefreshCw } from 'lucide-react'
 import { db } from '../../db/schema'
 import { BACKUP_SCHEMA_VERSION } from '../../domain/backupValidation'
 import { APP_INFO } from '../../lib/appInfo'
-
-const isStandalone = () =>
-  window.matchMedia('(display-mode: standalone)').matches ||
-  (navigator as Navigator & { standalone?: boolean }).standalone === true
+import { isStandalone, promptInstall, useCanInstall } from '../../lib/install'
 
 const formatDate = (iso: string) => (iso ? new Date(iso).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }) : '—')
 
 export function AboutSection() {
   const [status, setStatus] = useState<string>()
   const [busy, setBusy] = useState(false)
+  const canInstall = useCanInstall()
 
   async function checkUpdates() {
     setBusy(true)
@@ -54,6 +52,15 @@ export function AboutSection() {
           </div>
         ))}
       </dl>
+      {canInstall && (
+        <button
+          type="button"
+          onClick={() => void promptInstall()}
+          className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 text-sm font-medium text-zinc-950"
+        >
+          <Download className="size-4" aria-hidden /> Установить приложение
+        </button>
+      )}
       <button
         type="button"
         onClick={checkUpdates}

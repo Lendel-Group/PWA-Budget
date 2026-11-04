@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { BarChart3, Home, PiggyBank, Plus, Settings, Wallet, type LucideIcon } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import type { Route } from '../../lib/useHashRoute'
+import { InstallBanner } from '../pwa/InstallBanner'
 import { AutoBackupBanner } from './AutoBackupBanner'
 
 const TABS: { route: Route; label: string; icon: LucideIcon }[] = [
@@ -40,6 +41,7 @@ export function AppLayout({ route, onNavigate, onAdd, children }: Props) {
 
   return (
     <div className="mx-auto min-h-screen max-w-md bg-zinc-950 pb-20 text-zinc-100">
+      <InstallBanner />
       <AutoBackupBanner />
       <header className="sticky top-0 z-30 flex h-12 items-center justify-between bg-zinc-950/95 px-4 backdrop-blur">
         <span className="text-sm font-medium text-zinc-500">My Budget 2026</span>

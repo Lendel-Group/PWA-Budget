@@ -3,10 +3,13 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
 import { seedIfEmpty } from './db/seed'
+import { captureInstallPrompt } from './lib/install'
 import { toLocalDateString } from './domain/dates'
 import { refreshRates } from './services/ratesService'
 import { installAutoBackupHooks } from './services/backupService'
 import { requestPersistentStorage } from './services/storageService'
+
+captureInstallPrompt() // событие beforeinstallprompt может прийти до первого рендера
 
 async function bootstrap() {
   installAutoBackupHooks()
