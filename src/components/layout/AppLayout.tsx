@@ -43,7 +43,7 @@ export function AppLayout({ route, onNavigate, onAdd, children }: Props) {
       aria-current={route === r ? 'page' : undefined}
       className={cn(
         'flex flex-1 flex-col items-center gap-0.5 py-2 text-[11px]',
-        route === r ? 'text-emerald-400' : 'text-zinc-500',
+        route === r ? 'text-emerald-400' : 'text-fg-muted',
       )}
     >
       <Icon className="size-5" aria-hidden />

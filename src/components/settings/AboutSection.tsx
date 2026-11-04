@@ -60,12 +60,12 @@ export function AboutSection() {
     <section aria-labelledby="about-h" className="space-y-3 rounded-2xl bg-zinc-900 p-4">
       <div>
         <h2 id="about-h" className="font-medium">О приложении</h2>
-        <p className="text-xs text-zinc-500">{APP_INFO.name} — офлайн-учёт личных финансов</p>
+        <p className="text-xs text-fg-muted">{APP_INFO.name} — офлайн-учёт личных финансов</p>
       </div>
       <dl className="divide-y divide-zinc-800 text-sm" data-testid="about">
         {rows.map(([k, v]) => (
           <div key={k} className="flex justify-between gap-3 py-2">
-            <dt className="text-zinc-500">{k}</dt>
+            <dt className="text-fg-muted">{k}</dt>
             <dd className="text-right tabular-nums">{v}</dd>
           </div>
         ))}
@@ -88,7 +88,7 @@ export function AboutSection() {
         <RefreshCw className="size-4" aria-hidden /> Проверить обновления
       </button>
       {status && <p role="status" className="text-xs text-zinc-400">{status}</p>}
-      <p className="text-xs leading-relaxed text-zinc-500">
+      <p className="text-xs leading-relaxed text-fg-muted">
         Конфиденциальность: все данные хранятся только на вашем устройстве, аккаунта и сервера нет.
         Единственный внешний запрос — загрузка курсов валют (копия официальных курсов Нацбанка РК на al-writer.github.io/nbk-rates).
       </p>
@@ -100,7 +100,7 @@ export function AboutSection() {
       >
         Исходный код на GitHub <ExternalLink className="size-3" aria-hidden />
       </a>
-      <p className="text-xs text-zinc-600">© 2026</p>
+      <p className="text-xs text-fg-muted">© 2026</p>
     </section>
   )
 }

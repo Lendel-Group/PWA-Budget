@@ -83,7 +83,7 @@ function CategoryRow({ category, planned, actual, year, month }: {
         <span className={cn('tabular-nums', over ? 'text-red-400' : 'text-zinc-400')} data-testid={`actual-${category.id}`}>
           Факт: {formatMoney(actual)}
         </span>
-        <span className={cn('tabular-nums', over ? 'text-red-400' : 'text-zinc-500')}>
+        <span className={cn('tabular-nums', over ? 'text-red-400' : 'text-fg-muted')}>
           {planned > 0
             ? actual > planned ? `Перерасход ${formatMoney(actual - planned)}` : `Осталось ${formatMoney(planned - actual)}`
             : actual > 0 ? 'Нет лимита' : ''}
@@ -146,11 +146,11 @@ export default function BudgetPage() {
 
       <div className="rounded-2xl bg-zinc-900 p-4" data-testid="totals">
         <div className="flex justify-between text-sm">
-          <span className="text-zinc-500">Запланировано</span>
+          <span className="text-fg-muted">Запланировано</span>
           <span className="tabular-nums" data-testid="total-planned">{formatMoney(totalPlanned)}</span>
         </div>
         <div className="mt-1 flex justify-between text-sm">
-          <span className="text-zinc-500">Фактические траты</span>
+          <span className="text-fg-muted">Фактические траты</span>
           <span className={cn('tabular-nums', totalSpent > totalPlanned && totalPlanned > 0 && 'text-red-400')} data-testid="total-spent">{formatMoney(totalSpent)}</span>
         </div>
       </div>

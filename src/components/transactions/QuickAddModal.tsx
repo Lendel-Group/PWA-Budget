@@ -140,7 +140,7 @@ function QuickAddForm({ editing, onClose }: { editing?: Transaction; onClose: ()
     hideLabelWhenShort = false,
   ) => (
     <div>
-      <p className={cn('mb-1 px-1 text-xs text-zinc-500', hideLabelWhenShort && '[@media(max-height:700px)]:hidden')}>{label}</p>
+      <p className={cn('mb-1 px-1 text-xs text-fg-muted', hideLabelWhenShort && '[@media(max-height:700px)]:hidden')}>{label}</p>
       <div className="flex gap-2 overflow-x-auto pb-1" role="radiogroup" aria-label={label}>
         {list?.map((a) => (
           <button
@@ -199,7 +199,7 @@ function QuickAddForm({ editing, onClose }: { editing?: Transaction; onClose: ()
           <div className="flex items-center gap-2">
             {/* Нативный выбор даты скрыт под чипом: нажатие по чипу открывает системный календарь */}
             <label className="relative flex min-h-11 items-center gap-1.5 rounded-xl bg-zinc-900 px-3 text-sm text-zinc-300 focus-within:ring-2 focus-within:ring-emerald-500">
-              <CalendarDays className="size-4 text-zinc-500" aria-hidden />
+              <CalendarDays className="size-4 text-fg-muted" aria-hidden />
               <span>{formatDateChip(date, today)}</span>
               <input
                 type="date"
@@ -233,7 +233,7 @@ function QuickAddForm({ editing, onClose }: { editing?: Transaction; onClose: ()
             )}
           >
             {displayAmount(amount).replace('.', ',')}
-            <span className="ml-1 text-2xl text-zinc-500">{fromAccount ? formatMoney(0, fromAccount.currency).slice(-1) : ''}</span>
+            <span className="ml-1 text-2xl text-fg-muted">{fromAccount ? formatMoney(0, fromAccount.currency).slice(-1) : ''}</span>
           </div>
         </div>
 
@@ -298,7 +298,7 @@ function QuickAddForm({ editing, onClose }: { editing?: Transaction; onClose: ()
                 <label className="flex items-center justify-between rounded-xl bg-zinc-900 px-3 py-2 text-sm">
                   <span>
                     Исключить из дней без трат
-                    <span className="block text-xs text-zinc-500">коммуналка, кредит, аренда</span>
+                    <span className="block text-xs text-fg-muted">коммуналка, кредит, аренда</span>
                   </span>
                   <input type="checkbox" checked={excluded} onChange={(e) => setExcluded(e.target.checked)} className="size-5 accent-emerald-500" />
                 </label>

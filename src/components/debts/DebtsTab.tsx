@@ -83,7 +83,7 @@ function PaySheet({ debt, onClose }: { debt: Debt; onClose: () => void }) {
       <Field label="Списать со счёта">
         {accounts?.length ? <AccountSelect accounts={accounts} value={selected ?? ''} onChange={setAccountId} /> : <p className="text-sm text-amber-400">Нет счёта в тенге</p>}
       </Field>
-      <p className="text-xs text-zinc-500">Платёж не нарушает «дни без трат».</p>
+      <p className="text-xs text-fg-muted">Платёж не нарушает «дни без трат».</p>
       {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
       <button type="button" className={primaryButton} disabled={busy || !selected} onClick={submit}>Внести платёж</button>
     </Sheet>
@@ -102,7 +102,7 @@ export function DebtsTab() {
 
   return (
     <div className="space-y-3">
-      {sorted.length === 0 && <p className="py-6 text-center text-sm text-zinc-500">Долгов нет. Добавьте кредит, чтобы отслеживать платежи.</p>}
+      {sorted.length === 0 && <p className="py-6 text-center text-sm text-fg-muted">Долгов нет. Добавьте кредит, чтобы отслеживать платежи.</p>}
       {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
       <ul className="space-y-3" aria-label="Долги">
         {sorted.map((d) => {
@@ -112,14 +112,14 @@ export function DebtsTab() {
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <h3 className="font-medium">{d.name}</h3>
-                  <p className="text-xs text-zinc-500">
+                  <p className="text-xs text-fg-muted">
                     {d.isClosed ? 'Погашен' : `${formatMoney(d.monthlyPayment)}/мес · ${dueText(today, d.dueDay)}`}
                     {d.interestRate !== undefined && ` · ${d.interestRate}%`}
                   </p>
                 </div>
                 <button
                   type="button" aria-label={`Удалить долг ${d.name}`}
-                  className="grid size-8 place-items-center text-zinc-600 hover:text-red-400"
+                  className="grid size-8 place-items-center text-fg-muted hover:text-red-400"
                   onClick={async () => {
                     if (!window.confirm(`Удалить долг «${d.name}»?`)) return
                     setError(undefined)
@@ -133,7 +133,7 @@ export function DebtsTab() {
               <div className="mt-2 h-2 overflow-hidden rounded-full bg-zinc-800" role="progressbar" aria-label={`Погашено: ${d.name}`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(paid)}>
                 <div className="h-full rounded-full bg-emerald-500" style={{ width: `${paid}%` }} />
               </div>
-              <p className="mt-1 text-xs text-zinc-500">Погашено {Math.round(paid)}% из {formatMoney(d.totalAmount)}</p>
+              <p className="mt-1 text-xs text-fg-muted">Погашено {Math.round(paid)}% из {formatMoney(d.totalAmount)}</p>
               {!d.isClosed && (
                 <button type="button" onClick={() => setPaying(d)} className="mt-3 h-11 w-full rounded-xl bg-emerald-500/15 font-medium text-emerald-400 active:bg-emerald-500/25">
                   Внести платёж
