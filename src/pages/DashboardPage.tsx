@@ -81,11 +81,11 @@ export default function DashboardPage({ onEdit }: { onEdit: (t: Transaction) => 
           aria-expanded={expanded}
           onClick={() => setExpanded((v) => !v)}
         >
-          <span>
+          <span className="min-w-0 text-left">
             <span className="block text-sm text-fg-muted">Общий капитал</span>
-            <span className="text-3xl font-semibold tabular-nums" data-testid="net-worth">{formatMoney(netWorth)}</span>
+            <span className="text-3xl font-semibold tabular-nums [overflow-wrap:anywhere]" data-testid="net-worth">{formatMoney(netWorth)}</span>
           </span>
-          <ChevronDown className={cn('size-5 text-fg-muted transition-transform', expanded && 'rotate-180')} aria-hidden />
+          <ChevronDown className={cn('size-5 shrink-0 text-fg-muted transition-transform', expanded && 'rotate-180')} aria-hidden />
         </button>
         {expanded && (
           <ul className="mt-3 divide-y divide-zinc-800 text-sm" aria-label="Балансы счетов">
@@ -132,12 +132,12 @@ export default function DashboardPage({ onEdit }: { onEdit: (t: Transaction) => 
         >
           <div className={cn('h-full rounded-full', spent > planned ? 'bg-danger' : 'bg-expense')} style={{ width: `${planned > 0 ? usedPct : spent > 0 ? 100 : 0}%` }} />
         </div>
-        <dl className="mt-3 grid grid-cols-3 gap-2 text-xs">
-          <div><dt className="text-fg-muted">Израсходовано</dt><dd className="text-sm tabular-nums" data-testid="spent">{formatMoney(spent)}</dd></div>
-          <div><dt className="text-fg-muted">Запланировано</dt><dd className="text-sm tabular-nums">{formatMoney(planned)}</dd></div>
+        <dl className="mt-3 grid grid-cols-[repeat(auto-fit,minmax(5rem,1fr))] gap-2 text-xs">
+          <div><dt className="text-fg-muted">Израсходовано</dt><dd className="text-sm tabular-nums [overflow-wrap:anywhere]" data-testid="spent">{formatMoney(spent)}</dd></div>
+          <div><dt className="text-fg-muted">Запланировано</dt><dd className="text-sm tabular-nums [overflow-wrap:anywhere]">{formatMoney(planned)}</dd></div>
           <div>
             <dt className="text-fg-muted">{remaining < 0 ? 'Перерасход' : 'Остаток'}</dt>
-            <dd className={cn('text-sm tabular-nums', remaining < 0 && 'text-danger')}>{formatMoney(Math.abs(remaining))}</dd>
+            <dd className={cn('text-sm tabular-nums [overflow-wrap:anywhere]', remaining < 0 && 'text-danger')}>{formatMoney(Math.abs(remaining))}</dd>
           </div>
         </dl>
       </div>

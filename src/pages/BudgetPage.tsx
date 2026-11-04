@@ -48,7 +48,7 @@ function PlanInput({ stored, year, month, categoryId, name }: {
         setDraft(null)
       }}
       className={cn(
-        'min-h-11 w-28 rounded-lg bg-zinc-800 px-2 py-1.5 text-right text-sm tabular-nums outline-none focus:ring-2 focus:ring-accent',
+        'min-h-11 w-28 min-w-0 shrink rounded-lg bg-zinc-800 px-2 py-1.5 text-right text-sm tabular-nums outline-none focus:ring-2 focus:ring-accent',
         invalid && 'ring-2 ring-danger',
       )}
     />
@@ -145,13 +145,13 @@ export default function BudgetPage() {
       </div>
 
       <div className="rounded-2xl bg-zinc-900 p-4" data-testid="totals">
-        <div className="flex justify-between text-sm">
+        <div className="flex justify-between gap-3 text-sm">
           <span className="text-fg-muted">Запланировано</span>
-          <span className="tabular-nums" data-testid="total-planned">{formatMoney(totalPlanned)}</span>
+          <span className="min-w-0 text-right tabular-nums [overflow-wrap:anywhere]" data-testid="total-planned">{formatMoney(totalPlanned)}</span>
         </div>
-        <div className="mt-1 flex justify-between text-sm">
+        <div className="mt-1 flex justify-between gap-3 text-sm">
           <span className="text-fg-muted">Фактические траты</span>
-          <span className={cn('tabular-nums', totalSpent > totalPlanned && totalPlanned > 0 && 'text-danger')} data-testid="total-spent">{formatMoney(totalSpent)}</span>
+          <span className={cn('min-w-0 text-right tabular-nums [overflow-wrap:anywhere]', totalSpent > totalPlanned && totalPlanned > 0 && 'text-danger')} data-testid="total-spent">{formatMoney(totalSpent)}</span>
         </div>
       </div>
 

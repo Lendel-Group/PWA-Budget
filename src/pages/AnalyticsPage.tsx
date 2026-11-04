@@ -11,29 +11,36 @@ import { useToday } from '../lib/useToday'
 
 const MONTHS_SHORT = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек']
 
+/**
+ * Столбцы рисует SVG, а подписи — обычный HTML: при масштабировании `viewBox` текст внутри SVG
+ * уменьшался до ~7 px, а HTML-подписи всегда 11 px и растут вместе с системным размером шрифта.
+ * 12 колонок сетки совпадают со слотами столбцов, поэтому подписи лежат точно под ними.
+ * Если ячейки уже ~25 px (узкий экран или крупный системный шрифт), подписи показываются через одну.
+ */
 function ExpenseChart({ expenses, currentMonth }: { expenses: number[]; currentMonth?: number }) {
   const fractions = barFractions(expenses)
   const max = Math.max(...expenses)
-  const W = 340, H = 150, top = 14, bottom = 22, left = 4, slot = (W - left) / 12, bw = slot * 0.6
-  const plot = H - top - bottom
+  const W = 336, H = 120, top = 4, slot = W / 12, bw = slot * 0.6
+  const plot = H - top
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Расходы по месяцам" className="w-full">
-      <line x1={left} x2={W} y1={H - bottom} y2={H - bottom} className="stroke-zinc-700" />
-      {max > 0 && <text x={left} y={9} className="fill-fg-muted" fontSize="9">{compactAmount(max)} ₸</text>}
-      {fractions.map((f, i) => {
-        const h = Math.max(f * plot, expenses[i] > 0 ? 2 : 0)
-        const x = left + i * slot + (slot - bw) / 2
-        return (
-          <g key={i}>
-            <rect x={x} y={H - bottom - h} width={bw} height={h} rx={2}
+    <div role="img" aria-label="Расходы по месяцам">
+      <p aria-hidden className="h-4 text-[11px] leading-4 text-fg-muted">{max > 0 ? `${compactAmount(max)} ₸` : ''}</p>
+      <svg viewBox={`0 0 ${W} ${H}`} aria-hidden className="w-full">
+        <line x1={0} x2={W} y1={H - 0.5} y2={H - 0.5} className="stroke-zinc-700" />
+        {fractions.map((f, i) => {
+          const h = Math.max(f * plot, expenses[i] > 0 ? 2 : 0)
+          return (
+            <rect key={i} x={i * slot + (slot - bw) / 2} y={H - h} width={bw} height={h} rx={2}
               className={i + 1 === currentMonth ? 'fill-expense-strong' : 'fill-expense'} data-testid={`bar-${i + 1}`}>
               <title>{`${MONTHS_SHORT[i]}: ${formatMoney(expenses[i])}`}</title>
             </rect>
-            <text x={x + bw / 2} y={H - 8} textAnchor="middle" fontSize="8" className="fill-fg-muted">{MONTHS_SHORT[i]}</text>
-          </g>
-        )
-      })}
-    </svg>
+          )
+        })}
+      </svg>
+      <div aria-hidden className="@container mt-1 grid grid-cols-12 text-center text-[11px] leading-4 tracking-tight text-fg-muted">
+        {MONTHS_SHORT.map((m, i) => <span key={m} className={i % 2 ? '@max-[300px]:invisible' : undefined}>{m}</span>)}
+      </div>
+    </div>
   )
 }
 
@@ -63,8 +70,8 @@ export default function AnalyticsPage() {
         </button>
       </div>
 
-      <div className="rounded-2xl bg-zinc-900 p-4">
-        <p className="mb-2 text-sm text-fg-muted">Расходы по месяцам</p>
+      <div className="rounded-2xl bg-zinc-900 p-3">
+        <p className="mb-2 px-1 text-sm text-fg-muted">Расходы по месяцам</p>
         <ExpenseChart expenses={rows.map((r) => r.expense)} currentMonth={y === current.year ? current.month : undefined} />
       </div>
 

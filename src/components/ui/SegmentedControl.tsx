@@ -59,7 +59,8 @@ export function SegmentedControl<T extends string>({
       role={tabs ? 'tablist' : 'radiogroup'}
       aria-label={label}
       onKeyDown={onKeyDown}
-      className={cn('flex rounded-xl bg-zinc-900', className)}
+      // flex-wrap: при крупном шрифте сегменты переносятся на вторую строку, а не вылезают за экран
+      className={cn('flex flex-wrap rounded-xl bg-zinc-900', className)}
     >
       {options.map((o) => {
         const selected = o.value === value
