@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { AlertTriangle, ChevronDown } from 'lucide-react'
+import { OnboardingChecklist } from '../components/onboarding/OnboardingChecklist'
 import { TransactionRow } from '../components/transactions/TransactionRow'
 import { db, type Transaction } from '../db/schema'
 import { addDays, daysInMonth, daysLeftInMonth, monthStart, parseDate } from '../domain/dates'
@@ -8,11 +9,13 @@ import {
   accountsMissingRates, calculateDailyAllowance, calculateExpensesKzt, calculateNetWorth,
   getAllowanceStatus, sumPlannedLimits, type AllowanceStatus,
 } from '../domain/finance'
+import { isOnboardingComplete, onboardingSteps } from '../domain/onboarding'
 import { cn } from '../lib/cn'
 import { formatMoney } from '../lib/format'
 import { useRates } from '../lib/useRates'
 import { useToday } from '../lib/useToday'
 import { useDeleteTransaction } from '../lib/useDeleteTransaction'
+import { dismissOnboarding, getOnboardingState } from '../services/onboardingService'
 
 const STATUS_STYLES: Record<AllowanceStatus, { card: string; text: string; label: string }> = {
   green: { card: 'border-success/40 bg-success/10', text: 'text-success', label: 'Всё в порядке' },
@@ -20,7 +23,7 @@ const STATUS_STYLES: Record<AllowanceStatus, { card: string; text: string; label
   red: { card: 'border-danger/40 bg-danger/10', text: 'text-danger', label: 'Лимит исчерпан' },
 }
 
-export default function DashboardPage({ onEdit }: { onEdit: (t: Transaction) => void }) {
+export default function DashboardPage({ onEdit, onAdd }: { onEdit: (t: Transaction) => void; onAdd: () => void }) {
   const today = useToday()
   const yesterday = addDays(today, -1)
   const { year, month } = parseDate(today)
@@ -39,6 +42,18 @@ export default function DashboardPage({ onEdit }: { onEdit: (t: Transaction) => 
     () => db.transactions.where('date').anyOf(today, yesterday).toArray(),
     [today, yesterday],
   )
+
+  // Чек-лист первых шагов: только на свежей установке; шаги отмечаются по данным
+  const onboarding = useLiveQuery(getOnboardingState, [])
+  const limitsCount = useLiveQuery(() => db.budgetLimits.count(), [])
+  const transactionsCount = useLiveQuery(() => db.transactions.count(), [])
+  const steps = onboardingSteps({ accounts: accounts ?? [], limitsCount: limitsCount ?? 0, transactionsCount: transactionsCount ?? 0 })
+  const onboardingReady = accounts !== undefined && limitsCount !== undefined && transactionsCount !== undefined
+  const onboardingDone = onboardingReady && isOnboardingComplete(steps)
+  // Все шаги выполнены — фиксируем, чтобы чек-лист не вернулся, если потом удалят лимит
+  useEffect(() => {
+    if (onboarding === 'active' && onboardingDone) void dismissOnboarding()
+  }, [onboarding, onboardingDone])
 
   const [expanded, setExpanded] = useState(false)
   const { remove, error: deleteError } = useDeleteTransaction()
@@ -74,6 +89,9 @@ export default function DashboardPage({ onEdit }: { onEdit: (t: Transaction) => 
 
   return (
     <section className="space-y-4 p-4">
+      {onboarding === 'active' && onboardingReady && !onboardingDone && (
+        <OnboardingChecklist steps={steps} onAdd={onAdd} onDismiss={() => void dismissOnboarding()} />
+      )}
       <div data-selectable className={cn('rounded-2xl border p-5', planned > 0 ? status.card : 'border-zinc-800 bg-zinc-900')} data-testid="allowance-card" data-status={planned > 0 ? getAllowanceStatus(allowance) : 'none'}>
         <p className="text-sm font-medium text-zinc-300">Лимит на сегодня</p>
         {planned > 0 ? (

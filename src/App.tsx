@@ -12,9 +12,9 @@ import GoalsAndDebtsPage from './pages/GoalsAndDebtsPage'
 import SettingsPage from './pages/SettingsPage'
 import TransactionsPage from './pages/TransactionsPage'
 
-function renderPage(route: Route, onEdit: (t: Transaction) => void) {
+function renderPage(route: Route, onEdit: (t: Transaction) => void, onAdd: () => void) {
   switch (route) {
-    case 'home': return <DashboardPage onEdit={onEdit} />
+    case 'home': return <DashboardPage onEdit={onEdit} onAdd={onAdd} />
     case 'budget': return <BudgetPage />
     case 'goals': return <GoalsAndDebtsPage />
     case 'analytics': return <AnalyticsPage />
@@ -31,7 +31,7 @@ export default function App() {
   return (
     <ToastProvider>
       <AppLayout route={route} onNavigate={navigate} onAdd={() => setAdding(true)}>
-        {renderPage(route, setEditing)}
+        {renderPage(route, setEditing, () => setAdding(true))}
       </AppLayout>
       <QuickAddModal open={adding || !!editing} editing={editing} onClose={closeForm} />
       <UpdatePrompt />

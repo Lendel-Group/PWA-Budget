@@ -86,6 +86,8 @@ export type ConfigKey =
   | 'fx_rates'
   /** Счёт, выбранный при последнем добавлении операции; в бэкап не попадает. */
   | 'last_account_id'
+  /** Чек-лист первых шагов: 'active' | 'dismissed'; в бэкап не попадает. */
+  | 'onboarding'
 
 export interface AppConfig {
   key: ConfigKey
