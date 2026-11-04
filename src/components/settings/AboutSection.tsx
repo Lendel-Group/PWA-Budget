@@ -65,7 +65,7 @@ export function AboutSection() {
       {status && <p role="status" className="text-xs text-zinc-400">{status}</p>}
       <p className="text-xs leading-relaxed text-zinc-500">
         Конфиденциальность: все данные хранятся только на вашем устройстве, аккаунта и сервера нет.
-        Единственный внешний запрос — курсы валют Нацбанка РК (раз в день, если доступны).
+        Единственный внешний запрос — загрузка курсов валют (копия официальных курсов Нацбанка РК на al-writer.github.io/nbk-rates).
       </p>
       <a
         href={APP_INFO.repoUrl}

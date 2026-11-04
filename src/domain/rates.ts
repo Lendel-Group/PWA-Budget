@@ -3,24 +3,27 @@ import type { Rates } from './finance'
 
 const SUPPORTED: Exclude<Currency, 'KZT'>[] = ['USD', 'EUR', 'RUB']
 
-/** YYYY-MM-DD → DD.MM.YYYY (формат запроса Нацбанка РК). */
-export function toNbkDate(date: string): string {
-  const [y, m, d] = date.split('-')
-  return `${d}.${m}.${y}`
+export interface RatesFile {
+  /** YYYY-MM-DD — дата, на которую действуют курсы (по Алматы). */
+  date: string
+  rates: Rates
 }
 
-export const nbkRatesUrl = (date: string) =>
-  `https://nationalbank.kz/rss/get_rates.cfm?fdate=${toNbkDate(date)}`
+/**
+ * Разбирает latest.json из репозитория nbk-rates: { date, rates: { USD: 453.26, ... } },
+ * где курс — тенге за 1 единицу валюты. Возвращает null, если формат неверный
+ * или нет ни одной поддерживаемой валюты.
+ */
+export function parseRatesFile(data: unknown): RatesFile | null {
+  if (typeof data !== 'object' || data === null) return null
+  const { date, rates } = data as { date?: unknown; rates?: unknown }
+  if (typeof date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return null
+  if (typeof rates !== 'object' || rates === null) return null
 
-/** Разбирает XML официальных курсов НБ РК → курсы к KZT за 1 единицу валюты. */
-export function parseNbkRates(xml: string): Rates {
-  const rates: Rates = {}
-  for (const item of xml.match(/<item>[\s\S]*?<\/item>/g) ?? []) {
-    const code = /<title>\s*([A-Z]{3})\s*<\/title>/.exec(item)?.[1] as Currency | undefined
-    if (!code || !SUPPORTED.includes(code as (typeof SUPPORTED)[number])) continue
-    const value = Number(/<description>\s*([\d.,]+)\s*<\/description>/.exec(item)?.[1]?.replace(',', '.'))
-    const quant = Number(/<quant>\s*(\d+)\s*<\/quant>/.exec(item)?.[1] ?? 1)
-    if (Number.isFinite(value) && value > 0 && quant > 0) rates[code] = value / quant
+  const result: Rates = {}
+  for (const code of SUPPORTED) {
+    const value = (rates as Record<string, unknown>)[code]
+    if (typeof value === 'number' && Number.isFinite(value) && value > 0) result[code] = value
   }
-  return rates
+  return Object.keys(result).length === 0 ? null : { date, rates: result }
 }
