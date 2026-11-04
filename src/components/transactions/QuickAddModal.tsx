@@ -5,7 +5,7 @@ import { db, type Transaction } from '../../db/schema'
 import { formatDateChip, toLocalDateString } from '../../domain/dates'
 import { applyNumpadKey, displayAmount, parseAmount, type NumpadKey } from '../../domain/numpad'
 import { cn } from '../../lib/cn'
-import { formatMoney } from '../../lib/format'
+import { currencySymbol, formatMoney } from '../../lib/format'
 import { CategoryIcon } from '../../lib/icons'
 import type { NewTransaction } from '../../domain/finance'
 import { Dialog } from '../ui/Dialog'
@@ -223,7 +223,7 @@ function QuickAddForm({ editing, onClose }: { editing?: Transaction; onClose: ()
             )}
           >
             {displayAmount(amount).replace('.', ',')}
-            <span className="ml-1 text-2xl text-fg-muted">{fromAccount ? formatMoney(0, fromAccount.currency).slice(-1) : ''}</span>
+            <span className="ml-1 text-2xl text-fg-muted">{fromAccount ? currencySymbol(fromAccount.currency) : ''}</span>
           </div>
         </div>
 

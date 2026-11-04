@@ -5,7 +5,7 @@ import { db } from '../db/schema'
 import { barFractions, calculateYearSummary, compactAmount, sumYear } from '../domain/analytics'
 import { parseDate } from '../domain/dates'
 import { cn } from '../lib/cn'
-import { formatMoney } from '../lib/format'
+import { formatMoney, formatNumber } from '../lib/format'
 import { useRates } from '../lib/useRates'
 import { useToday } from '../lib/useToday'
 
@@ -56,7 +56,7 @@ export default function AnalyticsPage() {
 
   const rows = calculateYearSummary(txs, accounts, rates, y)
   const total = sumYear(rows)
-  const money = (n: number) => formatMoney(n).replace(' ₸', '')
+  const money = formatNumber
 
   return (
     <section className="space-y-4 p-4">
