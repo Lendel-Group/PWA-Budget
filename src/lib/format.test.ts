@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { currencySymbol, formatMoney, formatNumber, pluralRu } from './format'
+import { currencySymbol, formatMoney, formatNumber, formatShare, pluralRu } from './format'
 
 describe('currencySymbol', () => {
   it.each([
@@ -44,5 +44,19 @@ describe('pluralRu', () => {
   it('отрицательные числа склоняются по модулю', () => {
     expect(day(-1)).toBe('-1 день')
     expect(day(-3)).toBe('-3 дня')
+  })
+})
+
+describe('formatShare', () => {
+  it('округляет до целых процентов', () => {
+    expect(formatShare(0.374)).toBe('37%')
+    expect(formatShare(0.375)).toBe('38%')
+    expect(formatShare(1)).toBe('100%')
+    expect(formatShare(0)).toBe('0%')
+  })
+  it('ненулевая доля меньше полупроцента — «<1%»', () => {
+    expect(formatShare(0.001)).toBe('<1%')
+    expect(formatShare(0.0049)).toBe('<1%')
+    expect(formatShare(0.005)).toBe('1%')
   })
 })

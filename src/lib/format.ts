@@ -39,3 +39,9 @@ export function pluralRu(n: number, forms: readonly [one: string, few: string, m
   if (last >= 2 && last <= 4) return forms[1]
   return forms[2]
 }
+
+/** Доля 0..1 в процентах: 0,374 → «37%»; ненулевая доля меньше полупроцента — «<1%». */
+export function formatShare(share: number): string {
+  if (share > 0 && share < 0.005) return '<1%'
+  return `${Math.round(share * 100)}%`
+}

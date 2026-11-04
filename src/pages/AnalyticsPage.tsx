@@ -1,6 +1,7 @@
 import { useRef, useState, type PointerEvent } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { CategoryBreakdown } from '../components/analytics/CategoryBreakdown'
 import { NoSpendTab } from '../components/challenge/NoSpendTab'
 import { SegmentedControl, TabPanel } from '../components/ui/SegmentedControl'
 import { db } from '../db/schema'
@@ -141,8 +142,9 @@ function YearOverview() {
   const selected = picked?.year === y ? picked.month : y === current.year ? current.month : undefined
   const { rates } = useRates()
   const accounts = useLiveQuery(() => db.accounts.toArray(), [])
+  const categories = useLiveQuery(() => db.categories.toArray(), [])
   const txs = useLiveQuery(() => db.transactions.where('date').between(`${y}-01-01`, `${y}-12-31`, true, true).toArray(), [y])
-  if (!accounts || !txs) return null
+  if (!accounts || !categories || !txs) return null
 
   const rows = calculateYearSummary(txs, accounts, rates, y)
   const total = sumYear(rows)
@@ -175,7 +177,9 @@ function YearOverview() {
         />
       </div>
 
-      <div className="overflow-hidden rounded-2xl bg-zinc-900">
+      <CategoryBreakdown year={y} month={selected} transactions={txs} accounts={accounts} categories={categories} rates={rates} />
+
+      <div className="overflow-x-auto rounded-2xl bg-zinc-900">
         <table className="w-full text-xs tabular-nums" data-testid="summary">
           <caption className="sr-only">Доходы, расходы и сбережения по месяцам, ₸</caption>
           <thead className="text-fg-muted">
