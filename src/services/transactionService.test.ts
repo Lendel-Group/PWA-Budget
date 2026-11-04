@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { db, type Account } from '../db/schema'
-import { addTransaction, deleteTransaction, updateTransaction } from './transactionService'
+import { addTransaction, deleteTransaction, restoreTransaction, updateTransaction } from './transactionService'
 
 const account = (id: string, balance = 1000, currency: Account['currency'] = 'KZT'): Account => ({
   id, name: id, type: 'card', currency, initialBalance: balance, currentBalance: balance,
@@ -82,6 +82,54 @@ describe('transactionService', () => {
   it('missing goal fails; deleting unknown id is a no-op', async () => {
     await expect(addTransaction({ ...base, type: 'expense', accountId: 'a', amount: 1, goalId: 'nope' })).rejects.toThrow(/Цель/)
     await expect(deleteTransaction('nope')).resolves.toBeUndefined()
+  })
+
+  describe('restoreTransaction', () => {
+    it('возвращает расход: тот же id/timestamp, баланс как до удаления', async () => {
+      const id = await addTransaction({ ...base, type: 'expense', accountId: 'a', amount: 250.5 })
+      const before = (await db.transactions.get(id))!
+      const deleted = (await deleteTransaction(id))!
+      expect(deleted).toEqual(before)
+      expect(await balance('a')).toBe(1000)
+      await restoreTransaction(deleted)
+      expect(await balance('a')).toBe(749.5)
+      expect(await db.transactions.get(id)).toEqual(before)
+    })
+
+    it('возвращает кросс-валютный перевод', async () => {
+      const id = await addTransaction({ ...base, type: 'transfer', accountId: 'a', toAccountId: 'b', amount: 500, toAmount: 1 })
+      await restoreTransaction((await deleteTransaction(id))!)
+      expect([await balance('a'), await balance('b')]).toEqual([500, 1])
+    })
+
+    it('возвращает платёж по долгу и пополнение цели', async () => {
+      await db.debts.add({ id: 'd', name: 'D', totalAmount: 1000, remainingAmount: 1000, monthlyPayment: 100, dueDay: 5, createdAt: '', isClosed: false })
+      await db.goals.add({ id: 'g', title: 'G', targetAmount: 300, currentAmount: 0, targetDate: '2027-01-01', icon: '', color: '', isAchieved: false })
+      const d = await addTransaction({ ...base, type: 'expense', accountId: 'a', amount: 400, debtId: 'd', isExcludedFromNoSpend: true })
+      const g = await addTransaction({ ...base, type: 'expense', accountId: 'a', amount: 300, goalId: 'g', isExcludedFromNoSpend: true })
+      await restoreTransaction((await deleteTransaction(d))!)
+      await restoreTransaction((await deleteTransaction(g))!)
+      expect(await balance('a')).toBe(300)
+      expect((await db.debts.get('d'))!.remainingAmount).toBe(600)
+      expect(await db.goals.get('g')).toMatchObject({ currentAmount: 300, isAchieved: true })
+    })
+
+    it('повторный вызов не применяет эффект дважды', async () => {
+      const id = await addTransaction({ ...base, type: 'expense', accountId: 'a', amount: 100 })
+      const deleted = (await deleteTransaction(id))!
+      await restoreTransaction(deleted)
+      await restoreTransaction(deleted)
+      expect(await balance('a')).toBe(900)
+      expect(await db.transactions.count()).toBe(1)
+    })
+
+    it('если счёта уже нет — ошибка и ничего не меняется', async () => {
+      const id = await addTransaction({ ...base, type: 'expense', accountId: 'a', amount: 100 })
+      const deleted = (await deleteTransaction(id))!
+      await db.accounts.delete('a')
+      await expect(restoreTransaction(deleted)).rejects.toThrow(/Счёт/)
+      expect(await db.transactions.count()).toBe(0)
+    })
   })
 
   describe('updateTransaction', () => {
