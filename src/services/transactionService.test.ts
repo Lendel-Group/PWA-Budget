@@ -7,7 +7,7 @@ const account = (id: string, balance = 1000, currency: Account['currency'] = 'KZ
   id, name: id, type: 'card', currency, initialBalance: balance, currentBalance: balance,
   isArchived: false, createdAt: '',
 })
-const base = { date: '2026-11-04', isExcludedFromNoSpend: false }
+const base = { date: '2026-11-04', isExcludedFromNoSpend: false, categoryId: 'cat' }
 
 beforeEach(async () => {
   await Promise.all([db.accounts.clear(), db.transactions.clear(), db.debts.clear(), db.goals.clear()])
@@ -45,6 +45,14 @@ describe('transactionService', () => {
 
   it('rolls back everything if a step fails', async () => {
     await expect(addTransaction({ ...base, type: 'expense', accountId: 'a', amount: 10, debtId: 'missing' })).rejects.toThrow()
+    expect(await balance('a')).toBe(1000)
+    expect(await db.transactions.count()).toBe(0)
+  })
+
+  it('rejects expense and income without a category, without touching balances', async () => {
+    const noCategory = { date: base.date, isExcludedFromNoSpend: false, accountId: 'a', amount: 10 }
+    await expect(addTransaction({ ...noCategory, type: 'expense' })).rejects.toThrow(/категорию/)
+    await expect(addTransaction({ ...noCategory, type: 'income' })).rejects.toThrow(/категорию/)
     expect(await balance('a')).toBe(1000)
     expect(await db.transactions.count()).toBe(0)
   })

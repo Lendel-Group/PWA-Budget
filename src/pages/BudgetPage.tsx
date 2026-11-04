@@ -3,7 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { ChevronLeft, ChevronRight, Copy } from 'lucide-react'
 import { db, type BudgetLimit, type Category } from '../db/schema'
 import {
-  calculateCategoryTotalsKzt, limitId, monthLabel, nextMonth, parsePlanInput, planCopy, previousMonth,
+  calculateCategoryTotalsKzt, calculateUncategorizedKzt, limitId, monthLabel, nextMonth, parsePlanInput, planCopy, previousMonth,
 } from '../domain/budget'
 import { addDays, daysInMonth, parseDate } from '../domain/dates'
 import { calculateExpensesKzt, sumPlannedLimits } from '../domain/finance'
@@ -112,6 +112,7 @@ export default function BudgetPage() {
 
   const plannedById = new Map(limits.map((l) => [l.categoryId, l.plannedAmount]))
   const totals = calculateCategoryTotalsKzt(txs, accounts, rates)
+  const uncategorized = calculateUncategorizedKzt(txs, accounts, rates)
   const totalPlanned = sumPlannedLimits(limits)
   const totalSpent = calculateExpensesKzt(txs, accounts, rates)
   const prev = previousMonth(year, month)
@@ -170,6 +171,12 @@ export default function BudgetPage() {
         {categories.map((c) => (
           <CategoryRow key={c.id} category={c} planned={plannedById.get(c.id) ?? 0} actual={totals[c.id] ?? 0} year={year} month={month} />
         ))}
+        {uncategorized > 0 && (
+          <li className="flex items-center justify-between rounded-2xl bg-zinc-900 p-3 text-sm" data-testid="uncategorized">
+            <span>Без категории</span>
+            <span className="tabular-nums text-zinc-400">Факт: {formatMoney(uncategorized)}</span>
+          </li>
+        )}
       </ul>
     </section>
   )

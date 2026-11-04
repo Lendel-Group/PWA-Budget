@@ -16,7 +16,7 @@ const tx = (o: Partial<Transaction>): Transaction => ({
   isExcludedFromNoSpend: false, ...o,
 })
 const ntx = (o: Partial<NewTransaction>): NewTransaction => ({
-  date: '2026-11-01', type: 'expense', accountId: 'a', amount: 10, isExcludedFromNoSpend: false, ...o,
+  date: '2026-11-01', type: 'expense', accountId: 'a', amount: 10, isExcludedFromNoSpend: false, categoryId: 'c', ...o,
 })
 
 describe('round2', () => {
@@ -107,6 +107,14 @@ describe('calculateNetWorth', () => {
 
 describe('validateNewTransaction', () => {
   it('accepts valid', () => expect(() => validateNewTransaction(ntx({}))).not.toThrow())
+  it('requires a category for expense and income, not for transfer, debt or goal payments', () => {
+    const none = { categoryId: undefined }
+    expect(() => validateNewTransaction(ntx(none))).toThrow(/категорию/)
+    expect(() => validateNewTransaction(ntx({ ...none, type: 'income' }))).toThrow(/категорию/)
+    expect(() => validateNewTransaction(ntx({ ...none, type: 'transfer', toAccountId: 'b' }))).not.toThrow()
+    expect(() => validateNewTransaction(ntx({ ...none, debtId: 'd' }))).not.toThrow()
+    expect(() => validateNewTransaction(ntx({ ...none, goalId: 'g' }))).not.toThrow()
+  })
   it.each([0, -5, NaN, Infinity])('rejects amount %s', (amount) => {
     expect(() => validateNewTransaction(ntx({ amount }))).toThrow()
   })

@@ -93,6 +93,9 @@ export function validateNewTransaction(tx: NewTransaction): void {
   if ((tx.debtId || tx.goalId) && tx.type !== 'expense') {
     throw new Error('Платёж по долгу или цели должен быть расходом')
   }
+  if (tx.type !== 'transfer' && !tx.categoryId && !tx.debtId && !tx.goalId) {
+    throw new Error('Выберите категорию')
+  }
 }
 
 /** Изменения балансов счетов от транзакции (sign = -1 для отката). */

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Account, BudgetLimit, Transaction } from '../db/schema'
 import {
-  calculateCategoryTotalsKzt, limitId, monthLabel, nextMonth, parsePlanInput, planCopy, previousMonth,
+  calculateCategoryTotalsKzt, calculateUncategorizedKzt, limitId, monthLabel, nextMonth, parsePlanInput, planCopy, previousMonth,
 } from './budget'
 
 const lim = (categoryId: string, plannedAmount: number, year = 2026, month = 10): BudgetLimit => ({
@@ -59,5 +59,22 @@ describe('calculateCategoryTotalsKzt', () => {
     ]
     expect(calculateCategoryTotalsKzt(txs, accounts, { USD: 450 })).toEqual({ food: 1000, fun: 5 })
     expect(calculateCategoryTotalsKzt(txs, accounts)).toEqual({ food: 100, fun: 5 })
+  })
+})
+
+describe('calculateUncategorizedKzt', () => {
+  const accounts = [{ id: 'k', currency: 'KZT' }, { id: 'u', currency: 'USD' }] as Account[]
+  const tx = (o: Partial<Transaction>): Transaction => ({
+    id: 't', date: '2026-11-01', timestamp: 0, type: 'expense', accountId: 'k', amount: 1,
+    isExcludedFromNoSpend: false, ...o,
+  })
+  it('empty', () => expect(calculateUncategorizedKzt([], accounts)).toBe(0))
+  it('sums only uncategorized expenses (debt payments count, goals, income and categorized do not)', () => {
+    const txs = [
+      tx({ amount: 100 }), tx({ amount: 2, accountId: 'u' }), tx({ amount: 5, debtId: 'd' }),
+      tx({ categoryId: 'food' }), tx({ goalId: 'g' }), tx({ type: 'income' }), tx({ accountId: 'ghost' }),
+    ]
+    expect(calculateUncategorizedKzt(txs, accounts, { USD: 450 })).toBe(1005)
+    expect(calculateUncategorizedKzt(txs, accounts)).toBe(105)
   })
 })
