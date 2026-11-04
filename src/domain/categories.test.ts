@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { CATEGORY_NAME_MAX, resolveExcludedFromNoSpend, sortByDefaultOrder, sortCategoriesByUsage, validateCategoryInput } from './categories'
+import { CATEGORY_NAME_MAX, categoryFieldErrors, resolveExcludedFromNoSpend, sortByDefaultOrder, sortCategoriesByUsage, validateCategoryInput } from './categories'
 
 const cats = ['a', 'b', 'c', 'd'].map((id) => ({ id }))
 const ids = (list: { id: string }[]) => list.map((c) => c.id)
@@ -107,5 +107,15 @@ describe('resolveExcludedFromNoSpend', () => {
     expect(resolveExcludedFromNoSpend({ isExcludedFromNoSpend: true }, false)).toBe(false)
     expect(resolveExcludedFromNoSpend({ isExcludedFromNoSpend: false }, true)).toBe(true)
     expect(resolveExcludedFromNoSpend(undefined, true)).toBe(true)
+  })
+})
+
+describe('categoryFieldErrors', () => {
+  const input = { name: 'Подарки', type: 'expense' as const, icon: 'Gift', color: '#22c55e' }
+  const existing = [{ id: 'c1', name: 'Продукты', type: 'expense' as const }]
+  it('нет ошибок — пустой объект', () => expect(categoryFieldErrors(input, existing)).toEqual({}))
+  it('название, иконка и цвет проверяются независимо', () => {
+    expect(Object.keys(categoryFieldErrors({ ...input, name: '', icon: '', color: 'red' }, existing))).toEqual(['name', 'icon', 'color'])
+    expect(Object.keys(categoryFieldErrors({ ...input, name: 'продукты' }, existing))).toEqual(['name'])
   })
 })

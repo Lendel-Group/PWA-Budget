@@ -3,17 +3,21 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { CheckCircle2, Plus, Trash2 } from 'lucide-react'
 import { AccountSelect } from '../ui/AccountSelect'
 import { ColorPicker } from '../ui/ColorPicker'
+import { FormField, SubmitButton } from '../ui/FormField'
 import { Field, Sheet } from '../ui/Sheet'
-import { inputClass, primaryButton, toNumber } from '../ui/form'
+import { inputClass, toNumber } from '../ui/form'
 import { db, type FinancialGoal } from '../../db/schema'
-import { calculateGoalPlan } from '../../domain/planning'
+import { amountFieldError, calculateGoalPlan, goalFieldErrors, type GoalField } from '../../domain/planning'
 import { formatMoney } from '../../lib/format'
 import { COLOR_CHOICES } from '../../lib/palette'
+import { useFormValidation } from '../../lib/useFormValidation'
 import { useToday } from '../../lib/useToday'
 import { createGoal, deleteGoal, topUpGoal } from '../../services/planningService'
 
 /** Палитра целей — первые шесть цветов общей палитры. */
 const COLORS = COLOR_CHOICES.slice(0, 6)
+
+const GOAL_FIELD_LABELS: Record<GoalField, string> = { title: 'название', targetAmount: 'сумма', targetDate: 'дата' }
 
 function AddGoalSheet({ onClose }: { onClose: () => void }) {
   const today = useToday()
@@ -22,10 +26,12 @@ function AddGoalSheet({ onClose }: { onClose: () => void }) {
   const [date, setDate] = useState('')
   const [color, setColor] = useState<string>(COLORS[0].value)
   const [error, setError] = useState<string>()
+  const input = { title, targetAmount: toNumber(target), targetDate: date }
+  const v = useFormValidation(goalFieldErrors(input, today))
 
   async function submit() {
     try {
-      await createGoal({ title, targetAmount: toNumber(target), targetDate: date, color }, today)
+      await createGoal({ ...input, color }, today)
       onClose()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Не удалось сохранить')
@@ -34,14 +40,20 @@ function AddGoalSheet({ onClose }: { onClose: () => void }) {
 
   return (
     <Sheet title="Новая цель" onClose={onClose}>
-      <Field label="Название"><input className={inputClass} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Отпуск" /></Field>
-      <div className="grid grid-cols-2 gap-3">
-        <Field label="Сумма, ₸"><input className={inputClass} inputMode="decimal" value={target} onChange={(e) => setTarget(e.target.value)} /></Field>
-        <Field label="Дата"><input className={inputClass} type="date" min={today} value={date} onChange={(e) => setDate(e.target.value)} /></Field>
+      <FormField label="Название" {...v.field('title')}>
+        {(a11y) => <input {...a11y} data-autofocus className={inputClass} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Отпуск" />}
+      </FormField>
+      <div className="grid grid-cols-2 items-start gap-3">
+        <FormField label="Сумма, ₸" {...v.field('targetAmount')}>
+          {(a11y) => <input {...a11y} className={inputClass} inputMode="decimal" value={target} onChange={(e) => setTarget(e.target.value)} />}
+        </FormField>
+        <FormField label="Дата" {...v.field('targetDate')}>
+          {(a11y) => <input {...a11y} className={inputClass} type="date" min={today} value={date} onChange={(e) => setDate(e.target.value)} />}
+        </FormField>
       </div>
       <ColorPicker choices={COLORS} value={color} onChange={setColor} />
       {error && <p role="alert" className="text-sm text-danger">{error}</p>}
-      <button type="button" className={primaryButton} onClick={submit}>Добавить цель</button>
+      <SubmitButton missing={v.invalid.map((k) => GOAL_FIELD_LABELS[k])} onClick={submit}>Добавить цель</SubmitButton>
     </Sheet>
   )
 }
@@ -54,6 +66,7 @@ function TopUpSheet({ goal, onClose }: { goal: FinancialGoal; onClose: () => voi
   const [error, setError] = useState<string>()
   const [busy, setBusy] = useState(false)
   const selected = accountId ?? accounts?.[0]?.id
+  const v = useFormValidation({ amount: amountFieldError(toNumber(amount)) })
 
   async function submit() {
     if (!selected) return
@@ -70,12 +83,14 @@ function TopUpSheet({ goal, onClose }: { goal: FinancialGoal; onClose: () => voi
 
   return (
     <Sheet title={`Пополнить: ${goal.title}`} onClose={onClose}>
-      <Field label="Сумма, ₸"><input className={inputClass} inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} autoFocus /></Field>
+      <FormField label="Сумма, ₸" {...v.field('amount')}>
+        {(a11y) => <input {...a11y} data-autofocus className={inputClass} inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} />}
+      </FormField>
       <Field label="Списать со счёта">
         {accounts?.length ? <AccountSelect accounts={accounts} value={selected ?? ''} onChange={setAccountId} /> : <p className="text-sm text-warning">Нет счёта в тенге</p>}
       </Field>
       {error && <p role="alert" className="text-sm text-danger">{error}</p>}
-      <button type="button" className={primaryButton} disabled={busy || !selected} onClick={submit}>Пополнить</button>
+      <SubmitButton missing={v.invalid.map(() => 'сумма')} disabled={busy || !selected} onClick={submit}>Пополнить</SubmitButton>
     </Sheet>
   )
 }

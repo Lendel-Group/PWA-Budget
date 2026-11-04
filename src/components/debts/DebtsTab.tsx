@@ -2,12 +2,14 @@ import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Plus, Trash2 } from 'lucide-react'
 import { AccountSelect } from '../ui/AccountSelect'
+import { FormField, SubmitButton } from '../ui/FormField'
 import { Field, Sheet } from '../ui/Sheet'
-import { inputClass, primaryButton, toNumber } from '../ui/form'
+import { inputClass, toNumber } from '../ui/form'
 import { db, type Debt } from '../../db/schema'
-import { daysBetween, nextDueDate } from '../../domain/planning'
+import { amountFieldError, daysBetween, debtFieldErrors, nextDueDate, type DebtField, type DebtInput } from '../../domain/planning'
 import { cn } from '../../lib/cn'
 import { formatMoney } from '../../lib/format'
+import { useFormValidation } from '../../lib/useFormValidation'
 import { useToday } from '../../lib/useToday'
 import { createDebt, deleteDebt, payDebt } from '../../services/planningService'
 
@@ -16,22 +18,28 @@ function dueText(today: string, dueDay: number): string {
   return days === 0 ? 'платёж сегодня' : `платёж через ${days} дн.`
 }
 
+const DEBT_FIELD_LABELS: Record<DebtField, string> = {
+  name: 'название', totalAmount: 'сумма долга', remainingAmount: 'остаток', monthlyPayment: 'платёж', dueDay: 'день платежа', interestRate: 'ставка',
+}
+
 function AddDebtSheet({ onClose }: { onClose: () => void }) {
   const [f, setF] = useState({ name: '', total: '', remaining: '', monthly: '', dueDay: '', rate: '' })
   const [error, setError] = useState<string>()
   const set = (k: keyof typeof f) => (e: { target: { value: string } }) => setF((p) => ({ ...p, [k]: e.target.value }))
+  const total = toNumber(f.total)
+  const input: DebtInput = {
+    name: f.name,
+    totalAmount: total,
+    remainingAmount: f.remaining.trim() === '' ? total : toNumber(f.remaining),
+    monthlyPayment: toNumber(f.monthly),
+    dueDay: toNumber(f.dueDay),
+    ...(f.rate.trim() !== '' ? { interestRate: toNumber(f.rate) } : {}),
+  }
+  const v = useFormValidation(debtFieldErrors(input))
 
   async function submit() {
-    const total = toNumber(f.total)
     try {
-      await createDebt({
-        name: f.name,
-        totalAmount: total,
-        remainingAmount: f.remaining.trim() === '' ? total : toNumber(f.remaining),
-        monthlyPayment: toNumber(f.monthly),
-        dueDay: toNumber(f.dueDay),
-        ...(f.rate.trim() !== '' ? { interestRate: toNumber(f.rate) } : {}),
-      })
+      await createDebt(input)
       onClose()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Не удалось сохранить')
@@ -40,16 +48,28 @@ function AddDebtSheet({ onClose }: { onClose: () => void }) {
 
   return (
     <Sheet title="Новый долг" onClose={onClose}>
-      <Field label="Название"><input className={inputClass} value={f.name} onChange={set('name')} placeholder="Кредит на авто" /></Field>
-      <div className="grid grid-cols-2 gap-3">
-        <Field label="Сумма долга, ₸"><input className={inputClass} inputMode="decimal" value={f.total} onChange={set('total')} /></Field>
-        <Field label="Остаток, ₸"><input className={inputClass} inputMode="decimal" value={f.remaining} onChange={set('remaining')} placeholder="= сумма" /></Field>
-        <Field label="Платёж в месяц, ₸"><input className={inputClass} inputMode="decimal" value={f.monthly} onChange={set('monthly')} /></Field>
-        <Field label="День платежа (1–31)"><input className={inputClass} inputMode="numeric" value={f.dueDay} onChange={set('dueDay')} /></Field>
+      <FormField label="Название" {...v.field('name')}>
+        {(a11y) => <input {...a11y} data-autofocus className={inputClass} value={f.name} onChange={set('name')} placeholder="Кредит на авто" />}
+      </FormField>
+      <div className="grid grid-cols-2 items-start gap-3">
+        <FormField label="Сумма долга, ₸" {...v.field('totalAmount')}>
+          {(a11y) => <input {...a11y} className={inputClass} inputMode="decimal" value={f.total} onChange={set('total')} />}
+        </FormField>
+        <FormField label="Остаток, ₸" {...v.field('remainingAmount')}>
+          {(a11y) => <input {...a11y} className={inputClass} inputMode="decimal" value={f.remaining} onChange={set('remaining')} placeholder="= сумма" />}
+        </FormField>
+        <FormField label="Платёж в месяц, ₸" {...v.field('monthlyPayment')}>
+          {(a11y) => <input {...a11y} className={inputClass} inputMode="decimal" value={f.monthly} onChange={set('monthly')} />}
+        </FormField>
+        <FormField label="День платежа (1–31)" {...v.field('dueDay')}>
+          {(a11y) => <input {...a11y} className={inputClass} inputMode="numeric" value={f.dueDay} onChange={set('dueDay')} />}
+        </FormField>
       </div>
-      <Field label="Ставка, % годовых (необязательно)"><input className={inputClass} inputMode="decimal" value={f.rate} onChange={set('rate')} /></Field>
+      <FormField label="Ставка, % годовых (необязательно)" {...v.field('interestRate')}>
+        {(a11y) => <input {...a11y} className={inputClass} inputMode="decimal" value={f.rate} onChange={set('rate')} />}
+      </FormField>
       {error && <p role="alert" className="text-sm text-danger">{error}</p>}
-      <button type="button" className={primaryButton} onClick={submit}>Добавить долг</button>
+      <SubmitButton missing={v.invalid.map((k) => DEBT_FIELD_LABELS[k])} onClick={submit}>Добавить долг</SubmitButton>
     </Sheet>
   )
 }
@@ -62,6 +82,7 @@ function PaySheet({ debt, onClose }: { debt: Debt; onClose: () => void }) {
   const [error, setError] = useState<string>()
   const [busy, setBusy] = useState(false)
   const selected = accountId ?? accounts?.[0]?.id
+  const v = useFormValidation({ amount: amountFieldError(toNumber(amount), debt.remainingAmount) })
 
   async function submit() {
     if (!selected) return
@@ -79,13 +100,15 @@ function PaySheet({ debt, onClose }: { debt: Debt; onClose: () => void }) {
   return (
     <Sheet title={`Платёж: ${debt.name}`} onClose={onClose}>
       <p className="text-sm text-zinc-400">Остаток долга: {formatMoney(debt.remainingAmount)}</p>
-      <Field label="Сумма платежа, ₸"><input className={inputClass} inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} /></Field>
+      <FormField label="Сумма платежа, ₸" {...v.field('amount')}>
+        {(a11y) => <input {...a11y} data-autofocus className={inputClass} inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} />}
+      </FormField>
       <Field label="Списать со счёта">
         {accounts?.length ? <AccountSelect accounts={accounts} value={selected ?? ''} onChange={setAccountId} /> : <p className="text-sm text-warning">Нет счёта в тенге</p>}
       </Field>
       <p className="text-xs text-fg-muted">Платёж не нарушает «дни без трат».</p>
       {error && <p role="alert" className="text-sm text-danger">{error}</p>}
-      <button type="button" className={primaryButton} disabled={busy || !selected} onClick={submit}>Внести платёж</button>
+      <SubmitButton missing={v.invalid.map(() => 'сумма платежа')} disabled={busy || !selected} onClick={submit}>Внести платёж</SubmitButton>
     </Sheet>
   )
 }
