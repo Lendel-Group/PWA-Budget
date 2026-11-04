@@ -4,7 +4,7 @@ import {
   accountsMissingRates, applyToDebt, applyToGoal, calculateCategoryTotals, calculateDailyAllowance,
   calculateNetWorth, calculateNoSpendStreak, getBalanceDeltas, getDatesWithExpenses, round2,
   MAX_STREAK_DAYS, validateNewTransaction, type NewTransaction, convertToKzt, calculateExpensesKzt,
-  sumPlannedLimits, getAllowanceStatus,
+  sumPlannedLimits, getAllowanceStatus, breaksNoSpendDay,
 } from './finance'
 import { resolveExcludedFromNoSpend } from './categories'
 
@@ -227,5 +227,14 @@ describe('sumPlannedLimits', () => {
 describe('getAllowanceStatus', () => {
   it.each([[5000, 'green'], [2001, 'green'], [2000, 'yellow'], [1, 'yellow'], [0, 'red']])('%s → %s', (v, s) => {
     expect(getAllowanceStatus(v)).toBe(s)
+  })
+})
+
+describe('breaksNoSpendDay', () => {
+  it('нарушает только расход без отметки «Исключить»', () => {
+    expect(breaksNoSpendDay(tx({}))).toBe(true)
+    expect(breaksNoSpendDay(tx({ isExcludedFromNoSpend: true }))).toBe(false)
+    expect(breaksNoSpendDay(tx({ type: 'income' }))).toBe(false)
+    expect(breaksNoSpendDay(tx({ type: 'transfer' }))).toBe(false)
   })
 })

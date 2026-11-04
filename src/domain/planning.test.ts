@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import type { Account, FinancialGoal, Transaction } from '../db/schema'
 import {
-  buildCalendar, calculateGoalPlan, daysBetween, getFirstTrackedDate, nextDueDate, validateDebtInput,
-  validateGoalInput, type DebtInput,
+  buildCalendar, calculateGoalPlan, daysBetween, getFirstTrackedDate, isCalendarDayInteractive, nextCalendarDate,
+  nextDueDate, validateDebtInput, validateGoalInput, type DebtInput,
 } from './planning'
 
 describe('daysBetween / nextDueDate', () => {
@@ -110,5 +110,51 @@ describe('buildCalendar', () => {
     const weeks = buildCalendar(2026, 6, '2026-06-30', new Set(), '2026-01-01')
     expect(weeks[0][0]).toMatchObject({ day: 1 })
     expect(weeks.at(-1)!.at(-1)).toBeNull()
+  })
+})
+
+describe('isCalendarDayInteractive', () => {
+  it('только clean и spent', () => {
+    expect(isCalendarDayInteractive('clean')).toBe(true)
+    expect(isCalendarDayInteractive('spent')).toBe(true)
+    expect(isCalendarDayInteractive('future')).toBe(false)
+    expect(isCalendarDayInteractive('untracked')).toBe(false)
+  })
+})
+
+describe('nextCalendarDate', () => {
+  // ноябрь 2026: учёт с 3-го, сегодня 10-е
+  const first = '2026-11-01'
+  const last = '2026-11-30'
+  const ok = (d: string) => d >= '2026-11-03' && d <= '2026-11-10'
+  const go = (from: string, key: string) => nextCalendarDate(from, key, ok, first, last)
+
+  it('стрелки влево и вправо — соседний день', () => {
+    expect(go('2026-11-05', 'ArrowRight')).toBe('2026-11-06')
+    expect(go('2026-11-05', 'ArrowLeft')).toBe('2026-11-04')
+  })
+  it('вверх и вниз — неделя назад и вперёд', () => {
+    expect(go('2026-11-10', 'ArrowUp')).toBe('2026-11-03')
+    expect(go('2026-11-03', 'ArrowDown')).toBe('2026-11-10')
+  })
+  it('на краю доступных дней остаётся на месте (undefined)', () => {
+    expect(go('2026-11-10', 'ArrowRight')).toBeUndefined()
+    expect(go('2026-11-03', 'ArrowLeft')).toBeUndefined()
+    expect(go('2026-11-05', 'ArrowDown')).toBeUndefined() // 12-е — будущее
+    expect(go('2026-11-05', 'ArrowUp')).toBeUndefined() // 29 октября — вне месяца
+  })
+  it('неинтерактивные дни пропускаются в том же направлении', () => {
+    const gaps = (d: string) => ok(d) && d !== '2026-11-06'
+    expect(nextCalendarDate('2026-11-05', 'ArrowRight', gaps, first, last)).toBe('2026-11-07')
+    expect(nextCalendarDate('2026-11-07', 'ArrowLeft', gaps, first, last)).toBe('2026-11-05')
+  })
+  it('Home и End — первый и последний доступный день месяца', () => {
+    expect(go('2026-11-05', 'Home')).toBe('2026-11-03')
+    expect(go('2026-11-05', 'End')).toBe('2026-11-10')
+    expect(nextCalendarDate('2026-11-05', 'Home', () => false, first, last)).toBeUndefined()
+  })
+  it('другие клавиши — undefined', () => {
+    expect(go('2026-11-05', 'Enter')).toBeUndefined()
+    expect(go('2026-11-05', 'a')).toBeUndefined()
   })
 })

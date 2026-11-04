@@ -91,3 +91,33 @@ export function buildCalendar(
   for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7))
   return weeks
 }
+
+/** Открыть можно только день с данными: уже наступивший и после начала учёта. */
+export const isCalendarDayInteractive = (state: DayState): boolean => state === 'clean' || state === 'spent'
+
+const CALENDAR_STEPS: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 }
+
+/**
+ * Куда переходит фокус в календаре по клавише: стрелки идут на день/неделю назад или вперёд, неинтерактивные дни
+ * (будущие, до начала учёта) пропускаются в том же направлении; Home и End — первый и последний доступный день месяца.
+ * Границы — `[first, last]` текущего месяца; если идти некуда или клавиша другая — `undefined`.
+ */
+export function nextCalendarDate(
+  from: string,
+  key: string,
+  isInteractive: (date: string) => boolean,
+  first: string,
+  last: string,
+): string | undefined {
+  if (key === 'Home' || key === 'End') {
+    const days: string[] = []
+    for (let d = first; d <= last; d = addDays(d, 1)) if (isInteractive(d)) days.push(d)
+    return key === 'Home' ? days[0] : days[days.length - 1]
+  }
+  const step = CALENDAR_STEPS[key]
+  if (step === undefined) return undefined
+  for (let d = addDays(from, step); d >= first && d <= last; d = addDays(d, step)) {
+    if (isInteractive(d)) return d
+  }
+  return undefined
+}
