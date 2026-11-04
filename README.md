@@ -40,6 +40,19 @@ npm run preview    # проверка production-сборки (в т.ч. офл�
 - **Лимит на сегодня** = (план месяца − траты месяца) / оставшиеся дни, включая сегодня.
 - Даты — по локальному часовому поясу устройства.
 
+## Публикация (GitHub Pages)
+Деплой запускается автоматически при каждом push в `main` (`.github/workflows/deploy.yml`:
+lint → test → build → публикация). Адрес: `https://<owner>.github.io/<repo>/`.
+
+Один раз в репозитории: **Settings → Pages → Build and deployment → Source: GitHub Actions**.
+
+Подпуть задаётся переменной `BASE_PATH` (в workflow — `/<repo>/`, локально — `/`):
+```bash
+BASE_PATH=/PWA-Budget/ npm run build && BASE_PATH=/PWA-Budget/ npm run preview
+```
+Навигация на хэшах (`#/budget`), поэтому SPA-fallback не нужен. Данные привязаны к адресу сайта
+(origin), поэтому при смене домена перенесите их через экспорт/импорт JSON.
+
 ## Git
 GitHub Flow: ветка на фазу (`feat/<subsystem>-<name>`), Conventional Commits, merge в `main` через PR
 с обязательным прохождением CI (`lint`, `test`, `build`).
