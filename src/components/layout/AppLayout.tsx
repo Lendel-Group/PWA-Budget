@@ -1,7 +1,8 @@
-import { useEffect, type ReactNode } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 import { BarChart3, Home, PiggyBank, Plus, Settings, Wallet, type LucideIcon } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import type { Route } from '../../lib/useHashRoute'
+import { useRouteAnnounce } from '../../lib/useRouteAnnounce'
 import { installViewportNudge } from '../../lib/viewport'
 import { InstallBanner } from '../pwa/InstallBanner'
 import { AutoBackupBanner } from './AutoBackupBanner'
@@ -31,6 +32,8 @@ interface Props {
 
 export function AppLayout({ route, onNavigate, onAdd, children }: Props) {
   useEffect(() => installViewportNudge(), [])
+  const heading = useRef<HTMLHeadingElement>(null)
+  useRouteAnnounce(route, TITLES[route], heading)
 
   const left = TABS.slice(0, 2)
   const right = TABS.slice(2)
@@ -59,7 +62,7 @@ export function AppLayout({ route, onNavigate, onAdd, children }: Props) {
       <InstallBanner />
       <AutoBackupBanner />
       <header className="sticky top-[env(safe-area-inset-top)] z-30 flex h-14 items-center justify-between bg-zinc-950/95 px-4 backdrop-blur">
-        <h1 className="truncate text-2xl font-bold tracking-tight text-zinc-50">{TITLES[route]}</h1>
+        <h1 ref={heading} tabIndex={-1} className="truncate text-2xl font-bold tracking-tight text-zinc-50 outline-none">{TITLES[route]}</h1>
         <button
           type="button"
           onClick={() => onNavigate('settings')}
