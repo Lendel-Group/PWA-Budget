@@ -25,9 +25,10 @@ export async function setManualRates(rates: Rates, date: string): Promise<void> 
 export async function refreshRates(
   today: string,
   fetchImpl: typeof fetch = fetch,
+  force = false,
 ): Promise<StoredRates | undefined> {
   const stored = await getStoredRates()
-  if (stored?.date === today) return stored
+  if (!force && stored?.date === today) return stored
   try {
     const res = await fetchImpl(nbkRatesUrl(today), { signal: AbortSignal.timeout(8000) })
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
