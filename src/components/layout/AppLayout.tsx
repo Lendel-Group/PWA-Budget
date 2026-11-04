@@ -9,7 +9,6 @@ const TABS: { route: Route; label: string; icon: LucideIcon }[] = [
   { route: 'budget', label: 'Бюджет', icon: Wallet },
   { route: 'analytics', label: 'Аналитика', icon: BarChart3 },
   { route: 'goals', label: 'Цели', icon: PiggyBank },
-  { route: 'settings', label: 'Настройки', icon: Settings },
 ]
 
 interface Props {
@@ -42,6 +41,21 @@ export function AppLayout({ route, onNavigate, onAdd, children }: Props) {
   return (
     <div className="mx-auto min-h-screen max-w-md bg-zinc-950 pb-20 text-zinc-100">
       <AutoBackupBanner />
+      <header className="sticky top-0 z-30 flex h-12 items-center justify-between bg-zinc-950/95 px-4 backdrop-blur">
+        <span className="text-sm font-medium text-zinc-500">My Budget 2026</span>
+        <button
+          type="button"
+          onClick={() => onNavigate('settings')}
+          aria-label="Настройки"
+          aria-current={route === 'settings' ? 'page' : undefined}
+          className={cn(
+            'grid size-10 place-items-center rounded-xl active:bg-zinc-900',
+            route === 'settings' ? 'bg-zinc-900 text-emerald-400' : 'text-zinc-400',
+          )}
+        >
+          <Settings className="size-5" aria-hidden />
+        </button>
+      </header>
       <main>{children}</main>
       <nav
         aria-label="Основная навигация"
