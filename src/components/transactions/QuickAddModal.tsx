@@ -2,7 +2,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { CalendarDays, Delete, SlidersHorizontal, X } from 'lucide-react'
 import { db, type Transaction } from '../../db/schema'
-import { formatDateChip, toLocalDateString } from '../../domain/dates'
+import { DEFAULT_CATEGORIES } from '../../db/seed'
+import { sortByDefaultOrder, sortCategoriesByUsage, USAGE_WINDOW_DAYS } from '../../domain/categories'
+import { pickAccount } from '../../domain/accounts'
+import { addDays, formatDateChip, toLocalDateString } from '../../domain/dates'
 import { applyNumpadKey, displayAmount, parseAmount, type NumpadKey } from '../../domain/numpad'
 import { cn } from '../../lib/cn'
 import { currencySymbol, formatMoney } from '../../lib/format'
@@ -12,7 +15,7 @@ import { Dialog } from '../ui/Dialog'
 import { SegmentedControl } from '../ui/SegmentedControl'
 import { useToast } from '../../lib/toastContext'
 import { savedMessage } from '../../lib/savedMessage'
-import { addTransaction, updateTransaction } from '../../services/transactionService'
+import { addTransaction, getLastAccountId, updateTransaction } from '../../services/transactionService'
 
 const TYPES: { value: Transaction['type']; label: string }[] = [
   { value: 'expense', label: 'Расход' },
@@ -52,6 +55,9 @@ export function QuickAddModal({ open, editing, onClose }: ModalProps) {
   return open ? <QuickAddForm editing={editing} onClose={onClose} /> : null
 }
 
+/** Порядок категорий из сида: при равной частоте использования категории идут в нём. */
+const DEFAULT_IDS = DEFAULT_CATEGORIES.map((c) => c.id)
+
 function QuickAddForm({ editing, onClose }: { editing?: Transaction; onClose: () => void }) {
   /** Платёж по долгу / пополнение цели: тип, категория и связь не меняются, счёт — только в тенге. */
   const linked = !!editing && (!!editing.debtId || !!editing.goalId)
@@ -63,6 +69,7 @@ function QuickAddForm({ editing, onClose }: { editing?: Transaction; onClose: ()
     [linked, editing?.accountId, editing?.toAccountId],
   )
   const categories = useLiveQuery(() => db.categories.toArray(), [])
+  const lastAccountId = useLiveQuery(getLastAccountId, [])
   const toast = useToast()
 
   const [type, setType] = useState<Transaction['type']>(editing?.type ?? 'expense')
@@ -76,17 +83,23 @@ function QuickAddForm({ editing, onClose }: { editing?: Transaction; onClose: ()
   const [toAmount, setToAmount] = useState(editing?.toAmount !== undefined ? String(editing.toAmount) : '')
   const [today] = useState(() => toLocalDateString(new Date()))
   const [date, setDate] = useState(editing?.date ?? today)
+  // Операции за окно частоты: из них категории сортируются по использованию
+  const recent = useLiveQuery(() => db.transactions.where('date').aboveOrEqual(addDays(today, -USAGE_WINDOW_DAYS)).toArray(), [today])
   const [error, setError] = useState<string>()
   const [saving, setSaving] = useState(false)
   const { ref: scrollRef, more: moreBelow, update: updateMore } = useMoreBelow()
 
-  const fromAccount = accounts?.find((a) => a.id === accountId) ?? accounts?.[0]
+  // Явный выбор → счёт последней операции → первый активный (архивный последний счёт в список не попадает)
+  const fromAccount = accounts && pickAccount(accounts, accountId, lastAccountId)
   const targets = useMemo(
     () => accounts?.filter((a) => a.id !== fromAccount?.id) ?? [],
     [accounts, fromAccount?.id],
   )
   const toAccount = targets.find((a) => a.id === toAccountId) ?? targets[0]
-  const visibleCategories = categories?.filter((c) => c.type === type) ?? []
+  const visibleCategories = useMemo(
+    () => sortCategoriesByUsage(sortByDefaultOrder(categories?.filter((c) => c.type === type) ?? [], DEFAULT_IDS), recent ?? [], today),
+    [categories, recent, today, type],
+  )
   const crossCurrency =
     type === 'transfer' && !!toAccount && !!fromAccount && toAccount.currency !== fromAccount.currency
 

@@ -8,7 +8,7 @@ import {
   type NewTransaction,
 } from '../domain/finance'
 
-const TX_TABLES = [db.accounts, db.transactions, db.debts, db.goals]
+const TX_TABLES = [db.accounts, db.transactions, db.debts, db.goals, db.config]
 
 async function applyAccountDeltas(deltas: { accountId: string; delta: number }[]) {
   for (const { accountId, delta } of deltas) {
@@ -39,8 +39,15 @@ export async function addTransaction(tx: NewTransaction): Promise<string> {
     await applyAccountDeltas(getBalanceDeltas(record))
     await applyLinked(record, 1)
     await db.transactions.add(record)
+    await db.config.put({ key: 'last_account_id', value: record.accountId })
   })
   return record.id
+}
+
+/** Счёт последней добавленной операции (форма «+» предвыбирает его); `undefined`, если операций ещё не было. */
+export async function getLastAccountId(): Promise<string | undefined> {
+  const value = (await db.config.get('last_account_id'))?.value
+  return typeof value === 'string' ? value : undefined
 }
 
 /**

@@ -78,6 +78,8 @@ export type ConfigKey =
   | 'last_backup_date'
   | 'seeded'
   | 'fx_rates'
+  /** Счёт, выбранный при последнем добавлении операции; в бэкап не попадает. */
+  | 'last_account_id'
 
 export interface AppConfig {
   key: ConfigKey

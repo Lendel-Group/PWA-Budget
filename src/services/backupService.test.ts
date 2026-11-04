@@ -59,10 +59,16 @@ describe('export / import', () => {
   it('does not export local config (handle, persisted)', async () => {
     await db.config.bulkPut([
       { key: 'auto_backup_handle', value: 'h' }, { key: 'storage_persisted', value: true },
-      { key: 'fx_rates', value: {} },
+      { key: 'last_account_id', value: 'acc-1' }, { key: 'fx_rates', value: {} },
     ])
     const keys = JSON.parse(await exportDatabaseToJson()).data.config.map((c: { key: string }) => c.key)
     expect(keys).toEqual(['fx_rates'])
+  })
+
+  it('импорт сбрасывает запомненный счёт: id счетов из файла другие', async () => {
+    await db.config.put({ key: 'last_account_id', value: 'old-account' })
+    await importDatabaseFromJson(await exportDatabaseToJson())
+    expect(await db.config.get('last_account_id')).toBeUndefined()
   })
 
   it('import keeps local config and leaves DB intact on invalid input', async () => {
