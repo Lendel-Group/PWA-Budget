@@ -70,13 +70,27 @@ export async function updateTransaction(id: string, next: NewTransaction): Promi
   })
 }
 
-/** Атомарно откатывает баланс(ы), долг/цель и удаляет транзакцию. */
-export async function deleteTransaction(id: string): Promise<void> {
-  await db.transaction('rw', TX_TABLES, async () => {
+/** Атомарно откатывает баланс(ы), долг/цель и удаляет транзакцию; возвращает удалённую запись (для отмены). */
+export async function deleteTransaction(id: string): Promise<Transaction | undefined> {
+  return db.transaction('rw', TX_TABLES, async () => {
     const tx = await db.transactions.get(id)
-    if (!tx) return
+    if (!tx) return undefined
     await applyAccountDeltas(getBalanceDeltas(tx, -1))
     await applyLinked(tx, -1)
     await db.transactions.delete(id)
+    return tx
+  })
+}
+
+/**
+ * Возвращает удалённую операцию как была (тот же id и timestamp) и заново применяет её эффект
+ * к балансам, долгу и цели — в одной транзакции БД. Если операция уже на месте, ничего не делает.
+ */
+export async function restoreTransaction(tx: Transaction): Promise<void> {
+  await db.transaction('rw', TX_TABLES, async () => {
+    if (await db.transactions.get(tx.id)) return
+    await applyAccountDeltas(getBalanceDeltas(tx))
+    await applyLinked(tx, 1)
+    await db.transactions.add(tx)
   })
 }
