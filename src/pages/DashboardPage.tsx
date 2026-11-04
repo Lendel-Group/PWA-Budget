@@ -74,16 +74,30 @@ export default function DashboardPage({ onEdit }: { onEdit: (t: Transaction) => 
 
   return (
     <section className="space-y-4 p-4">
-      <div className="rounded-2xl bg-zinc-900 p-4">
+      <div data-selectable className={cn('rounded-2xl border p-5', planned > 0 ? status.card : 'border-zinc-800 bg-zinc-900')} data-testid="allowance-card" data-status={planned > 0 ? getAllowanceStatus(allowance) : 'none'}>
+        <p className="text-sm font-medium text-zinc-300">Лимит на сегодня</p>
+        {planned > 0 ? (
+          <>
+            <p className={cn('mt-1 text-[clamp(2.25rem,12vw,3rem)] font-semibold leading-tight tabular-nums [overflow-wrap:anywhere]', status.text)} data-testid="allowance">{formatMoney(allowance)}</p>
+            <p className="mt-1 text-xs text-zinc-400">{status.label} · дней до конца месяца: {daysLeftInMonth(today)}</p>
+          </>
+        ) : (
+          <p className="mt-1 text-sm text-zinc-400">
+            Задайте плановые лимиты на вкладке <a className="text-accent-fg underline" href="#/budget">«Бюджет»</a>, чтобы увидеть дневной лимит.
+          </p>
+        )}
+      </div>
+
+      <div className="rounded-2xl bg-zinc-900 px-4 py-2">
         <button
           type="button"
-          className="flex w-full items-center justify-between text-left"
+          className="flex min-h-11 w-full items-center justify-between gap-3 text-left"
           aria-expanded={expanded}
           onClick={() => setExpanded((v) => !v)}
         >
-          <span className="min-w-0 text-left">
-            <span className="block text-sm text-fg-muted">Общий капитал</span>
-            <span className="text-3xl font-semibold tabular-nums [overflow-wrap:anywhere]" data-testid="net-worth">{formatMoney(netWorth)}</span>
+          <span className="flex min-w-0 flex-1 flex-wrap items-baseline justify-between gap-x-3 text-left">
+            <span className="text-sm text-fg-muted">Общий капитал</span>
+            <span className="text-xl font-semibold tabular-nums [overflow-wrap:anywhere]" data-testid="net-worth">{formatMoney(netWorth)}</span>
           </span>
           <ChevronDown className={cn('size-5 shrink-0 text-fg-muted transition-transform', expanded && 'rotate-180')} aria-hidden />
         </button>
@@ -102,20 +116,6 @@ export default function DashboardPage({ onEdit }: { onEdit: (t: Transaction) => 
             <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden />
             Нет курса для {[...new Set(missing.map((a) => a.currency))].join(', ')} — эти счета не вошли в капитал.
             Задайте курсы в настройках.
-          </p>
-        )}
-      </div>
-
-      <div data-selectable className={cn('rounded-2xl border p-4', planned > 0 ? status.card : 'border-zinc-800 bg-zinc-900')} data-testid="allowance-card" data-status={planned > 0 ? getAllowanceStatus(allowance) : 'none'}>
-        <p className="text-sm text-zinc-400">Лимит на сегодня</p>
-        {planned > 0 ? (
-          <>
-            <p className={cn('text-4xl font-semibold tabular-nums', status.text)} data-testid="allowance">{formatMoney(allowance)}</p>
-            <p className="mt-1 text-xs text-zinc-400">{status.label} · дней до конца месяца: {daysLeftInMonth(today)}</p>
-          </>
-        ) : (
-          <p className="mt-1 text-sm text-zinc-400">
-            Задайте плановые лимиты на вкладке <a className="text-accent-fg underline" href="#/budget">«Бюджет»</a>, чтобы увидеть дневной лимит.
           </p>
         )}
       </div>
