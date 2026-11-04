@@ -105,7 +105,7 @@ function QuickAddForm({ onClose }: { onClose: () => void }) {
             aria-checked={a.id === selectedId}
             onClick={() => onPick(a.id)}
             className={cn(
-              'shrink-0 rounded-xl border px-3 py-2 text-left text-sm',
+              'shrink-0 rounded-xl border px-3 py-1.5 text-left text-sm',
               a.id === selectedId ? 'border-emerald-500 bg-emerald-500/10' : 'border-zinc-800 bg-zinc-900',
             )}
           >
@@ -120,7 +120,7 @@ function QuickAddForm({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true" aria-label="Новая операция">
       <button type="button" aria-label="Закрыть" className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <div className="relative flex max-h-[calc(100dvh-env(safe-area-inset-top)-0.5rem)] w-full max-w-md flex-col gap-3 overflow-y-auto rounded-t-3xl bg-zinc-950 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+      <div className="relative flex h-[calc(100dvh-env(safe-area-inset-top)-0.5rem)] w-full max-w-md flex-col gap-2.5 rounded-t-3xl bg-zinc-950 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
         <div className="flex items-center gap-2">
           <div className="flex flex-1 rounded-xl bg-zinc-900 p-1" role="tablist">
             {TYPES.map((t) => (
@@ -156,7 +156,7 @@ function QuickAddForm({ onClose }: { onClose: () => void }) {
           <div
             data-testid="amount"
             className={cn(
-              'text-right text-5xl font-semibold tabular-nums',
+              'text-right text-4xl font-semibold tabular-nums',
               type === 'income' ? 'text-emerald-400' : type === 'transfer' ? 'text-sky-400' : 'text-zinc-100',
             )}
           >
@@ -180,62 +180,67 @@ function QuickAddForm({ onClose }: { onClose: () => void }) {
           </label>
         )}
 
-        {type !== 'transfer' && (
-          <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Категория">
-            {visibleCategories.map((c) => (
+        {/* Категории прокручиваются, а цифровая клавиатура и «Сохранить» всегда остаются на экране */}
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          {type !== 'transfer' && (
+            <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Категория">
+              {visibleCategories.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={c.id === categoryId}
+                  onClick={() => setCategoryId(c.id)}
+                  className={cn(
+                    'flex min-h-[4.5rem] flex-col items-center justify-center gap-1 rounded-2xl border p-2 text-center text-xs',
+                    c.id === categoryId ? 'border-emerald-500 bg-emerald-500/10' : 'border-zinc-800 bg-zinc-900',
+                  )}
+                >
+                  <span className="grid size-9 place-items-center rounded-full" style={{ background: `${c.color}33`, color: c.color }}>
+                    <CategoryIcon name={c.icon} className="size-5" />
+                  </span>
+                  {c.name}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="shrink-0 space-y-2">
+          {type === 'expense' && (
+            <label className="flex items-center justify-between rounded-xl bg-zinc-900 px-3 py-2 text-sm">
+              <span>
+                Исключить из дней без трат
+                <span className="block text-xs text-zinc-500">коммуналка, кредит, аренда</span>
+              </span>
+              <input type="checkbox" checked={excluded} onChange={(e) => setExcluded(e.target.checked)} className="size-5 accent-emerald-500" />
+            </label>
+          )}
+
+          <div className="grid grid-cols-3 gap-2">
+            {KEYS.map((k) => (
               <button
-                key={c.id}
+                key={k}
                 type="button"
-                role="radio"
-                aria-checked={c.id === categoryId}
-                onClick={() => setCategoryId(c.id)}
-                className={cn(
-                  'flex min-h-20 flex-col items-center justify-center gap-1 rounded-2xl border p-2 text-center text-xs',
-                  c.id === categoryId ? 'border-emerald-500 bg-emerald-500/10' : 'border-zinc-800 bg-zinc-900',
-                )}
+                aria-label={k === 'backspace' ? 'Стереть' : k === '.' ? 'Точка' : k}
+                onClick={() => setAmount((a) => applyNumpadKey(a, k))}
+                className="grid h-12 place-items-center rounded-2xl bg-zinc-900 text-2xl active:bg-zinc-800 [@media(max-height:700px)]:h-10"
               >
-                <span className="grid size-9 place-items-center rounded-full" style={{ background: `${c.color}33`, color: c.color }}>
-                  <CategoryIcon name={c.icon} className="size-5" />
-                </span>
-                {c.name}
+                {k === 'backspace' ? <Delete className="size-6" aria-hidden /> : k === '.' ? ',' : k}
               </button>
             ))}
           </div>
-        )}
 
-        {type === 'expense' && (
-          <label className="flex items-center justify-between rounded-xl bg-zinc-900 px-3 py-3 text-sm">
-            <span>
-              Исключить из дней без трат
-              <span className="block text-xs text-zinc-500">коммуналка, кредит, аренда</span>
-            </span>
-            <input type="checkbox" checked={excluded} onChange={(e) => setExcluded(e.target.checked)} className="size-5 accent-emerald-500" />
-          </label>
-        )}
-
-        <div className="grid grid-cols-3 gap-2">
-          {KEYS.map((k) => (
-            <button
-              key={k}
-              type="button"
-              aria-label={k === 'backspace' ? 'Стереть' : k === '.' ? 'Точка' : k}
-              onClick={() => setAmount((a) => applyNumpadKey(a, k))}
-              className="grid h-14 place-items-center rounded-2xl bg-zinc-900 text-2xl active:bg-zinc-800"
-            >
-              {k === 'backspace' ? <Delete className="size-6" aria-hidden /> : k === '.' ? ',' : k}
-            </button>
-          ))}
+          {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
+          <button
+            type="button"
+            onClick={save}
+            disabled={!canSave}
+            className="h-12 w-full rounded-2xl bg-emerald-500 text-lg font-semibold text-zinc-950 disabled:opacity-40"
+          >
+            Сохранить
+          </button>
         </div>
-
-        {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
-        <button
-          type="button"
-          onClick={save}
-          disabled={!canSave}
-          className="h-14 rounded-2xl bg-emerald-500 text-lg font-semibold text-zinc-950 disabled:opacity-40"
-        >
-          Сохранить
-        </button>
       </div>
     </div>
   )
