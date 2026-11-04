@@ -40,10 +40,12 @@ export function AppLayout({ route, onNavigate, onAdd, children }: Props) {
   )
 
   return (
-    <div className="mx-auto min-h-screen max-w-md bg-zinc-950 pb-20 text-zinc-100">
+    <div className="mx-auto min-h-dvh max-w-md bg-zinc-950 pt-[env(safe-area-inset-top)] pb-[calc(5rem+env(safe-area-inset-bottom))] text-zinc-100">
+      {/* Закрывает область под статус-баром (iOS black-translucent), чтобы контент не просвечивал */}
+      <div aria-hidden className="fixed inset-x-0 top-0 z-40 h-[env(safe-area-inset-top)] bg-zinc-950" />
       <InstallBanner />
       <AutoBackupBanner />
-      <header className="sticky top-0 z-30 flex h-12 items-center justify-between bg-zinc-950/95 px-4 backdrop-blur">
+      <header className="sticky top-[env(safe-area-inset-top)] z-30 flex h-12 items-center justify-between bg-zinc-950/95 px-4 backdrop-blur">
         <span className="text-sm font-medium text-zinc-500">My Budget 2026</span>
         <button
           type="button"

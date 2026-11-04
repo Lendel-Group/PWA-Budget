@@ -13,3 +13,28 @@ body,
   min-height: 100%;
   background: var(--color-surface);
 }
+
+/*
+ * Мобильные/iOS-доработки. Правила вне @layer перекрывают утилиты Tailwind.
+ */
+html {
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation; /* без задержки и зума двойным тапом */
+  overscroll-behavior-y: none; /* без «резиновой» прокрутки и pull-to-refresh */
+}
+
+body {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none; /* интерфейс не выделяется долгим нажатием */
+}
+
+/* Поля: текст можно выделять, а шрифт ≥ 16px — иначе iOS Safari приближает страницу при фокусе */
+input,
+select,
+textarea {
+  -webkit-user-select: text;
+  user-select: text;
+  font-size: 16px;
+}
