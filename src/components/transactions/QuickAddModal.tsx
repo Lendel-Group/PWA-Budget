@@ -120,7 +120,7 @@ function QuickAddForm({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true" aria-label="Новая операция">
       <button type="button" aria-label="Закрыть" className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <div className="relative flex max-h-[96dvh] w-full max-w-md flex-col gap-3 overflow-y-auto rounded-t-3xl bg-zinc-950 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+      <div className="relative flex max-h-[calc(100dvh-env(safe-area-inset-top)-0.5rem)] w-full max-w-md flex-col gap-3 overflow-y-auto rounded-t-3xl bg-zinc-950 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
         <div className="flex items-center gap-2">
           <div className="flex flex-1 rounded-xl bg-zinc-900 p-1" role="tablist">
             {TYPES.map((t) => (
