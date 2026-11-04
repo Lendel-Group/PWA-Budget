@@ -1,11 +1,13 @@
-import { useState } from 'react'
+import { useRef, useState, type PointerEvent } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { NoSpendTab } from '../components/challenge/NoSpendTab'
 import { SegmentedControl, TabPanel } from '../components/ui/SegmentedControl'
 import { db } from '../db/schema'
 import { barFractions, calculateYearSummary, compactAmount, sumYear } from '../domain/analytics'
+import { monthLabel } from '../domain/budget'
 import { parseDate } from '../domain/dates'
+import { slotAt, stepIndex } from '../domain/roving'
 import type { AnalyticsRoute } from '../domain/routes'
 import { cn } from '../lib/cn'
 import type { Route } from '../lib/useHashRoute'
@@ -15,34 +17,114 @@ import { useToday } from '../lib/useToday'
 
 const MONTHS_SHORT = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек']
 
+const BAR_AREA_PX = 104
+
 /**
- * Столбцы рисует SVG, а подписи — обычный HTML: при масштабировании `viewBox` текст внутри SVG
- * уменьшался до ~7 px, а HTML-подписи всегда 11 px и растут вместе с системным размером шрифта.
- * 12 колонок сетки совпадают со слотами столбцов, поэтому подписи лежат точно под ними.
- * Если ячейки уже ~25 px (узкий экран или крупный системный шрифт), подписи показываются через одну.
+ * Столбцы — кнопки-слоты на всю высоту графика (радиогруппа «месяц»): выбираются тапом, скольжением пальца
+ * по графику (скраб), стрелками/Home/End; сумма выбранного месяца — в строке над графиком (`role="status"`
+ * озвучивает её) и в `aria-label` каждого столбца. Слотов 12, поэтому на телефоне каждый ~25 px шириной
+ * (но всей высоты графика); скраб снимает требование точного попадания.
+ * Подписи месяцев — обычный HTML 11 px, они растут вместе с системным шрифтом; если ячейки уже ~25 px,
+ * подписи показываются через одну.
  */
-function ExpenseChart({ expenses, currentMonth }: { expenses: number[]; currentMonth?: number }) {
+function ExpenseChart({ year, expenses, selected, defaultStop, onSelect }: {
+  year: number
+  expenses: number[]
+  /** Выбранный месяц 1–12 или `undefined`. */
+  selected?: number
+  /** Месяц (1–12), на котором стоит Tab, пока ничего не выбрано. */
+  defaultStop: number
+  onSelect: (month: number) => void
+}) {
+  const group = useRef<HTMLDivElement>(null)
   const fractions = barFractions(expenses)
-  const max = Math.max(...expenses)
-  const W = 336, H = 120, top = 4, slot = W / 12, bw = slot * 0.6
-  const plot = H - top
+  const stop = (selected ?? defaultStop) - 1
+
+  const choose = (i: number, focus = false) => {
+    onSelect(i + 1)
+    if (focus) group.current?.querySelectorAll<HTMLElement>('button')[i]?.focus()
+  }
+  const slotFromPointer = (e: PointerEvent<HTMLDivElement>) => {
+    const r = e.currentTarget.getBoundingClientRect()
+    return slotAt(e.clientX, r.left, r.width, 12)
+  }
+
   return (
-    <div role="img" aria-label="Расходы по месяцам">
-      <p aria-hidden className="h-4 text-[11px] leading-4 text-fg-muted">{max > 0 ? `${compactAmount(max)} ₸` : ''}</p>
-      <svg viewBox={`0 0 ${W} ${H}`} aria-hidden className="w-full">
-        <line x1={0} x2={W} y1={H - 0.5} y2={H - 0.5} className="stroke-zinc-700" />
+    <div>
+      <div className="flex items-center justify-between gap-1">
+        <button
+          type="button"
+          aria-label="Предыдущий месяц"
+          disabled={selected === undefined || selected <= 1}
+          onClick={() => choose((selected ?? 1) - 2)}
+          className="grid size-11 shrink-0 place-items-center rounded-xl bg-zinc-800 disabled:opacity-40"
+        >
+          <ChevronLeft className="size-5" aria-hidden />
+        </button>
+        <p role="status" className="min-w-0 text-center text-sm">
+          {selected !== undefined ? (
+            <>
+              <span className="text-fg-muted">{monthLabel(year, selected)} · </span>
+              <span className="font-medium tabular-nums" data-testid="chart-value">{formatMoney(expenses[selected - 1])}</span>
+            </>
+          ) : (
+            <span className="text-xs text-fg-muted">Коснитесь столбца, чтобы увидеть сумму</span>
+          )}
+        </p>
+        <button
+          type="button"
+          aria-label="Следующий месяц"
+          disabled={selected !== undefined && selected >= 12}
+          onClick={() => choose(selected ?? 0)}
+          className="grid size-11 shrink-0 place-items-center rounded-xl bg-zinc-800 disabled:opacity-40"
+        >
+          <ChevronRight className="size-5" aria-hidden />
+        </button>
+      </div>
+      <div
+        ref={group}
+        role="radiogroup"
+        aria-label="Расходы по месяцам"
+        className="@container mt-1 grid touch-pan-y grid-cols-12"
+        onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId); choose(slotFromPointer(e)) }}
+        onPointerMove={(e) => { if (e.buttons !== 0) choose(slotFromPointer(e)) }}
+        onKeyDown={(e) => {
+          const next = stepIndex(stop, e.key, 12)
+          if (next === undefined) return
+          e.preventDefault()
+          choose(next, true)
+        }}
+      >
         {fractions.map((f, i) => {
-          const h = Math.max(f * plot, expenses[i] > 0 ? 2 : 0)
+          const isSelected = selected === i + 1
+          const h = Math.max(f * BAR_AREA_PX, expenses[i] > 0 ? 2 : 0)
           return (
-            <rect key={i} x={i * slot + (slot - bw) / 2} y={H - h} width={bw} height={h} rx={2}
-              className={i + 1 === currentMonth ? 'fill-expense-strong' : 'fill-expense'} data-testid={`bar-${i + 1}`}>
-              <title>{`${MONTHS_SHORT[i]}: ${formatMoney(expenses[i])}`}</title>
-            </rect>
+            <button
+              key={i}
+              type="button"
+              role="radio"
+              aria-checked={isSelected}
+              aria-label={`${monthLabel(year, i + 1)}: ${formatMoney(expenses[i])}`}
+              tabIndex={i === stop ? 0 : -1}
+              onClick={() => choose(i)}
+              data-testid={`bar-${i + 1}`}
+              className={cn(
+                'flex flex-col items-center justify-end rounded-lg px-0.5 pb-1 pt-2 outline-none focus-visible:ring-2 focus-visible:ring-accent',
+                isSelected && 'bg-zinc-800',
+              )}
+            >
+              <span className="flex w-full items-end justify-center border-b border-zinc-700" style={{ height: BAR_AREA_PX }}>
+                <span aria-hidden className={cn('w-3/5 rounded-t-sm', isSelected ? 'bg-expense-strong' : 'bg-expense')} style={{ height: h }} />
+              </span>
+              <span
+                aria-hidden
+                className={cn('mt-1 text-[11px] leading-4 tracking-tight', isSelected ? 'text-zinc-100' : 'text-fg-muted', i % 2 && '@max-[300px]:invisible')}
+              >
+                {MONTHS_SHORT[i]}
+              </span>
+            </button>
           )
         })}
-      </svg>
-      <div aria-hidden className="@container mt-1 grid grid-cols-12 text-center text-[11px] leading-4 tracking-tight text-fg-muted">
-        {MONTHS_SHORT.map((m, i) => <span key={m} className={i % 2 ? '@max-[300px]:invisible' : undefined}>{m}</span>)}
       </div>
     </div>
   )
@@ -54,6 +136,9 @@ function YearOverview() {
   const current = parseDate(today)
   const [year, setYear] = useState<number | null>(null)
   const y = year ?? current.year
+  // Выбранный месяц привязан к году: при смене года выбор сбрасывается к текущему месяцу (в текущем году) или пустому
+  const [picked, setPicked] = useState<{ year: number; month: number } | null>(null)
+  const selected = picked?.year === y ? picked.month : y === current.year ? current.month : undefined
   const { rates } = useRates()
   const accounts = useLiveQuery(() => db.accounts.toArray(), [])
   const txs = useLiveQuery(() => db.transactions.where('date').between(`${y}-01-01`, `${y}-12-31`, true, true).toArray(), [y])
@@ -61,6 +146,7 @@ function YearOverview() {
 
   const rows = calculateYearSummary(txs, accounts, rates, y)
   const total = sumYear(rows)
+  const max = Math.max(...rows.map((r) => r.expense))
   const money = formatNumber
 
   return (
@@ -76,8 +162,17 @@ function YearOverview() {
       </div>
 
       <div className="rounded-2xl bg-zinc-900 p-3">
-        <p className="mb-2 px-1 text-sm text-fg-muted">Расходы по месяцам</p>
-        <ExpenseChart expenses={rows.map((r) => r.expense)} currentMonth={y === current.year ? current.month : undefined} />
+        <p className="mb-1 flex items-baseline justify-between gap-2 px-1 text-sm text-fg-muted">
+          Расходы по месяцам
+          {max > 0 && <span className="shrink-0 text-[11px]">макс. {compactAmount(max)} ₸</span>}
+        </p>
+        <ExpenseChart
+          year={y}
+          expenses={rows.map((r) => r.expense)}
+          selected={selected}
+          defaultStop={y === current.year ? current.month : 1}
+          onSelect={(month) => setPicked({ year: y, month })}
+        />
       </div>
 
       <div className="overflow-hidden rounded-2xl bg-zinc-900">
@@ -93,7 +188,7 @@ function YearOverview() {
           </thead>
           <tbody className="divide-y divide-zinc-800">
             {rows.map((r) => (
-              <tr key={r.month} className={cn(y === current.year && r.month === current.month && 'bg-accent/10')}>
+              <tr key={r.month} data-selected={r.month === selected || undefined} className={cn(r.month === selected && 'bg-accent/10')}>
                 <th scope="row" className="px-3 py-2 text-left font-normal text-zinc-300">{MONTHS_SHORT[r.month - 1]}</th>
                 <td className={cn('px-2 py-2 text-right', r.income ? 'text-income' : 'text-fg-muted')}>{r.income ? money(r.income) : '—'}</td>
                 <td className="px-2 py-2 text-right">{r.expense ? money(r.expense) : '—'}</td>

@@ -1,4 +1,5 @@
 import { useRef, type KeyboardEvent, type ReactNode } from 'react'
+import { stepIndex } from '../../domain/roving'
 import { cn } from '../../lib/cn'
 
 export interface Segment<T extends string> {
@@ -39,15 +40,8 @@ export function SegmentedControl<T extends string>({
   const tabs = variant === 'tabs'
 
   function onKeyDown(e: KeyboardEvent) {
-    const current = options.findIndex((o) => o.value === value)
-    const last = options.length - 1
-    const next =
-      e.key === 'ArrowRight' || e.key === 'ArrowDown' ? (current + 1) % options.length
-      : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? (current + last) % options.length
-      : e.key === 'Home' ? 0
-      : e.key === 'End' ? last
-      : -1
-    if (next < 0) return
+    const next = stepIndex(options.findIndex((o) => o.value === value), e.key, options.length)
+    if (next === undefined) return
     e.preventDefault()
     onChange(options[next].value)
     group.current?.querySelectorAll<HTMLElement>('button')[next]?.focus()
