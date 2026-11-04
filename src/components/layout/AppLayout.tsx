@@ -1,7 +1,8 @@
-import type { ReactNode } from 'react'
+import { useEffect, type ReactNode } from 'react'
 import { BarChart3, Home, PiggyBank, Plus, Settings, Wallet, type LucideIcon } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import type { Route } from '../../lib/useHashRoute'
+import { installViewportNudge } from '../../lib/viewport'
 import { InstallBanner } from '../pwa/InstallBanner'
 import { AutoBackupBanner } from './AutoBackupBanner'
 
@@ -28,6 +29,8 @@ interface Props {
 }
 
 export function AppLayout({ route, onNavigate, onAdd, children }: Props) {
+  useEffect(() => installViewportNudge(), [])
+
   const left = TABS.slice(0, 2)
   const right = TABS.slice(2)
 

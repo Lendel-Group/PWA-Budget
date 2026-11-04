@@ -4,6 +4,7 @@ import { db } from '../../db/schema'
 import { BACKUP_SCHEMA_VERSION } from '../../domain/backupValidation'
 import { APP_INFO } from '../../lib/appInfo'
 import { isStandalone, promptInstall, useCanInstall } from '../../lib/install'
+import { launchViewport } from '../../lib/viewport'
 
 const formatDate = (iso: string) => (iso ? new Date(iso).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }) : '—')
 
@@ -16,7 +17,9 @@ function measureScreen(): string {
   const top = Math.round(parseFloat(cs.paddingTop) || 0)
   const bottom = Math.round(parseFloat(cs.paddingBottom) || 0)
   probe.remove()
-  return `${window.innerWidth}×${window.innerHeight}, зоны: ↑${top} ↓${bottom}`
+  const nav = document.querySelector('nav[aria-label="Основная навигация"]')
+  const gap = nav ? Math.round(window.innerHeight - nav.getBoundingClientRect().bottom) : '—'
+  return `${window.innerWidth}×${window.innerHeight}, зоны: ↑${top} ↓${bottom}, панель от низа: ${gap}`
 }
 
 export function AboutSection() {
@@ -48,6 +51,7 @@ export function AboutSection() {
     ['Сборка', APP_INFO.commit],
     ['Режим', isStandalone() ? 'Установленное приложение' : 'В браузере'],
     ['Экран', screen],
+    ['Окно при запуске', `${launchViewport.atStart} → ${launchViewport.later ?? '…'}`],
     ['Версия базы данных', String(db.verno)],
     ['Формат резервной копии', String(BACKUP_SCHEMA_VERSION)],
   ]
