@@ -1,17 +1,12 @@
 import { useEffect, useState } from 'react'
+import { parseRoute, type Route } from '../domain/routes'
 
-export type Route = 'home' | 'budget' | 'analytics' | 'goals' | 'transactions' | 'settings'
-export const ROUTES: Route[] = ['home', 'budget', 'analytics', 'goals', 'transactions', 'settings']
-
-const read = (): Route => {
-  const h = window.location.hash.replace(/^#\/?/, '') as Route
-  return ROUTES.includes(h) ? h : 'home'
-}
+export type { Route }
 
 export function useHashRoute(): [Route, (r: Route) => void] {
-  const [route, setRoute] = useState<Route>(read)
+  const [route, setRoute] = useState<Route>(() => parseRoute(window.location.hash))
   useEffect(() => {
-    const onChange = () => setRoute(read())
+    const onChange = () => setRoute(parseRoute(window.location.hash))
     window.addEventListener('hashchange', onChange)
     return () => window.removeEventListener('hashchange', onChange)
   }, [])
