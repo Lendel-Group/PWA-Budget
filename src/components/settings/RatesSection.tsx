@@ -35,9 +35,9 @@ export function RatesSection() {
     const result = await refreshRates(today, fetch, true)
     setBusy(false)
     setDraft({})
-    setMessage(result?.source === 'nbk' && result.date === today
-      ? { ok: true, text: 'Курсы Нацбанка РК обновлены' }
-      : { ok: false, text: 'Не удалось получить курсы (нет сети или сайт Нацбанка недоступен из браузера). Введите их вручную.' })
+    setMessage(result.fetched
+      ? { ok: true, text: `Курсы Нацбанка РК обновлены (на ${result.rates?.date})` }
+      : { ok: false, text: 'Не удалось получить курсы (нет сети?). Остаются сохранённые или введённые вручную.' })
   }
 
   return (
@@ -58,7 +58,7 @@ export function RatesSection() {
       <div className="grid grid-cols-2 gap-2">
         <button type="button" onClick={saveManual} className="h-11 rounded-xl bg-emerald-500 text-sm font-medium text-zinc-950">Сохранить</button>
         <button type="button" onClick={fetchNbk} disabled={busy} className="h-11 rounded-xl bg-zinc-800 text-sm disabled:opacity-50">
-          {busy ? 'Загрузка…' : 'Обновить с сайта НБ РК'}
+          {busy ? 'Загрузка…' : 'Обновить курсы'}
         </button>
       </div>
       {message && <p role="status" className={message.ok ? 'text-xs text-emerald-400' : 'text-xs text-amber-400'}>{message.text}</p>}
