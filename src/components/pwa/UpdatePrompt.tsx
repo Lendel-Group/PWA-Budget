@@ -1,8 +1,14 @@
 import { useRegisterSW } from 'virtual:pwa-register/react'
 
 const HOUR = 60 * 60 * 1000
+/** Не чаще одной проверки в 5 минут при возвратах в приложение. */
+const MIN_GAP_MS = 5 * 60 * 1000
 
-/** Показывает баннер, когда опубликована новая версия сервис-воркера, и «готово к офлайн» после первой установки. */
+/**
+ * Показывает баннер, когда опубликована новая версия сервис-воркера, и «готово к офлайн» после первой установки.
+ * Проверка обновлений: раз в час, при каждом возвращении в приложение и при появлении сети —
+ * мобильные браузеры усыпляют страницу в фоне, и без этого новая версия находилась бы только после перезагрузки.
+ */
 export function UpdatePrompt() {
   const {
     needRefresh: [needRefresh, setNeedRefresh],
@@ -10,7 +16,17 @@ export function UpdatePrompt() {
     updateServiceWorker,
   } = useRegisterSW({
     onRegisteredSW(_url, registration) {
-      if (registration) setInterval(() => void registration.update(), HOUR)
+      if (!registration) return
+      let lastCheck = Date.now()
+      const check = () => {
+        lastCheck = Date.now()
+        registration.update().catch(() => {}) // офлайн — просто попробуем позже
+      }
+      setInterval(check, HOUR)
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && Date.now() - lastCheck >= MIN_GAP_MS) check()
+      })
+      window.addEventListener('online', check)
     },
     onRegisterError(error) {
       console.warn('[pwa] регистрация сервис-воркера не удалась', error)
