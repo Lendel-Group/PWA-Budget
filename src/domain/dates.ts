@@ -36,3 +36,13 @@ export function monthStart(date: string): string {
   const { year, month } = parseDate(date)
   return `${year}-${pad(month)}-01`
 }
+
+const MONTHS_SHORT_GEN = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек']
+
+/** Короткая подпись даты для чипа: «Сегодня», «Вчера» или «12 ноя». */
+export function formatDateChip(date: string, today: string): string {
+  if (date === today) return 'Сегодня'
+  if (date === addDays(today, -1)) return 'Вчера'
+  const { day, month } = parseDate(date)
+  return `${day} ${MONTHS_SHORT_GEN[month - 1]}`
+}
