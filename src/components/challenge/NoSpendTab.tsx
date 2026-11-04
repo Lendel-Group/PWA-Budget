@@ -1,12 +1,10 @@
 import { useState } from 'react'
-import { useLiveQuery } from 'dexie-react-hooks'
 import { ChevronLeft, ChevronRight, Flame } from 'lucide-react'
-import { db } from '../../db/schema'
 import { monthLabel, nextMonth, previousMonth } from '../../domain/budget'
 import { parseDate } from '../../domain/dates'
-import { calculateNoSpendStreak, getDatesWithExpenses } from '../../domain/finance'
-import { buildCalendar, getFirstTrackedDate, type DayState } from '../../domain/planning'
+import { buildCalendar, type DayState } from '../../domain/planning'
 import { cn } from '../../lib/cn'
+import { useNoSpendStats } from '../../lib/useNoSpendStats'
 import { useToday } from '../../lib/useToday'
 
 const WEEKDAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
@@ -26,14 +24,10 @@ export function NoSpendTab() {
   const current = parseDate(today)
   const { year, month } = period ?? current
 
-  const accounts = useLiveQuery(() => db.accounts.toArray(), [])
-  const expenses = useLiveQuery(() => db.transactions.where('type').equals('expense').toArray(), [])
-  const all = useLiveQuery(() => db.transactions.orderBy('date').limit(1).toArray(), [])
-  if (!accounts || !expenses || !all) return null
+  const stats = useNoSpendStats()
+  if (!stats) return null
 
-  const dates = getDatesWithExpenses(expenses)
-  const firstTracked = getFirstTrackedDate(accounts, all, today)
-  const { currentStreak, cleanDaysThisMonth } = calculateNoSpendStreak(dates, today, firstTracked)
+  const { dates, firstTracked, currentStreak, cleanDaysThisMonth } = stats
   const weeks = buildCalendar(year, month, today, dates, firstTracked)
   const isCurrent = year === current.year && month === current.month
   const monthClean = weeks.flat().filter((c) => c?.state === 'clean').length
@@ -42,7 +36,7 @@ export function NoSpendTab() {
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-2xl bg-zinc-900 p-4">
-          <p className="flex items-center gap-1 text-xs text-fg-muted"><Flame className="size-4 text-orange-400" aria-hidden /> Страйк</p>
+          <p className="flex items-center gap-1 text-xs text-fg-muted"><Flame className="size-4 text-orange-400" aria-hidden /> Серия</p>
           <p className="mt-1 text-3xl font-semibold tabular-nums" data-testid="streak">{currentStreak}</p>
           <p className="text-xs text-fg-muted">дней подряд без трат</p>
         </div>

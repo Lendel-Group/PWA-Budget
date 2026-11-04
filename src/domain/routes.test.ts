@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isPlansRoute, parseRoute, PLANS_ROUTES, ROUTES, screenOf } from './routes'
+import { ANALYTICS_ROUTES, defaultRoute, isAnalyticsRoute, isPlansRoute, parseRoute, PLANS_ROUTES, ROUTES, screenOf, type Screen } from './routes'
 
 describe('parseRoute', () => {
   it('разбирает хэш с «#/» и без слэша', () => {
@@ -26,15 +26,29 @@ describe('parseRoute', () => {
   })
 })
 
-describe('screenOf / isPlansRoute', () => {
-  it('три подраздела — один экран «plans», остальные маршруты — свои экраны', () => {
+describe('screenOf / isPlansRoute / isAnalyticsRoute', () => {
+  it('«Планы» — цели и долги; «Аналитика» — обзор и дни без трат', () => {
     for (const r of PLANS_ROUTES) {
       expect(isPlansRoute(r)).toBe(true)
+      expect(isAnalyticsRoute(r)).toBe(false)
       expect(screenOf(r)).toBe('plans')
     }
-    for (const r of ROUTES.filter((x) => !isPlansRoute(x))) {
+    for (const r of ANALYTICS_ROUTES) {
+      expect(isAnalyticsRoute(r)).toBe(true)
       expect(isPlansRoute(r)).toBe(false)
-      expect(screenOf(r)).toBe(r)
+      expect(screenOf(r)).toBe('analytics')
     }
+  })
+
+  it('остальные маршруты — собственные экраны', () => {
+    for (const r of ROUTES.filter((x) => !isPlansRoute(x) && !isAnalyticsRoute(x))) expect(screenOf(r)).toBe(r)
+  })
+})
+
+describe('defaultRoute', () => {
+  it('«Планы» открываются на целях, остальные экраны — на своём маршруте', () => {
+    expect(defaultRoute('plans')).toBe('goals')
+    const screens: Screen[] = ['home', 'budget', 'analytics', 'transactions', 'settings']
+    for (const s of screens) expect(defaultRoute(s)).toBe(s)
   })
 })

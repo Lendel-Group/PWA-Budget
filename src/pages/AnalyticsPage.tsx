@@ -1,10 +1,14 @@
 import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { NoSpendTab } from '../components/challenge/NoSpendTab'
+import { SegmentedControl, TabPanel } from '../components/ui/SegmentedControl'
 import { db } from '../db/schema'
 import { barFractions, calculateYearSummary, compactAmount, sumYear } from '../domain/analytics'
 import { parseDate } from '../domain/dates'
+import type { AnalyticsRoute } from '../domain/routes'
 import { cn } from '../lib/cn'
+import type { Route } from '../lib/useHashRoute'
 import { formatMoney, formatNumber } from '../lib/format'
 import { useRates } from '../lib/useRates'
 import { useToday } from '../lib/useToday'
@@ -44,7 +48,8 @@ function ExpenseChart({ expenses, currentMonth }: { expenses: number[]; currentM
   )
 }
 
-export default function AnalyticsPage() {
+/** Годовой обзор: расходы по месяцам и таблица доходов, расходов и сбережений. */
+function YearOverview() {
   const today = useToday()
   const current = parseDate(today)
   const [year, setYear] = useState<number | null>(null)
@@ -59,7 +64,7 @@ export default function AnalyticsPage() {
   const money = formatNumber
 
   return (
-    <section className="space-y-4 p-4">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
         <button type="button" aria-label="Предыдущий год" onClick={() => setYear(y - 1)} className="grid size-11 place-items-center rounded-xl bg-zinc-900">
           <ChevronLeft className="size-5" aria-hidden />
@@ -109,6 +114,32 @@ export default function AnalyticsPage() {
         </table>
       </div>
       <p className="text-xs text-fg-muted">Суммы в тенге. Сбережения = доходы − расходы; пополнения целей остаются сбережениями.</p>
+    </div>
+  )
+}
+
+const TABS: readonly { value: AnalyticsRoute; label: string }[] = [
+  { value: 'analytics', label: 'Обзор' },
+  { value: 'nospend', label: 'Дни без трат' },
+]
+
+/** «Аналитика»: обзор по годам и календарь дней без трат. Подраздел — маршрут (`#/analytics`, `#/nospend`). */
+export default function AnalyticsPage({ route, onNavigate }: { route: AnalyticsRoute; onNavigate: (r: Route) => void }) {
+  return (
+    <section className="space-y-4 p-4">
+      <SegmentedControl
+        variant="tabs"
+        id="analytics-tabs"
+        label="Раздел аналитики"
+        options={TABS}
+        value={route}
+        onChange={onNavigate}
+        className="p-1"
+        itemClassName="text-sm"
+      />
+      <TabPanel id="analytics-tabs" value={route}>
+        {route === 'analytics' ? <YearOverview /> : <NoSpendTab />}
+      </TabPanel>
     </section>
   )
 }
