@@ -137,7 +137,7 @@ export default function BudgetPage() {
         <button type="button" aria-label="Предыдущий месяц" onClick={() => go(prev)} className="grid size-10 place-items-center rounded-xl bg-zinc-900">
           <ChevronLeft className="size-5" aria-hidden />
         </button>
-        <h1 className="text-lg font-semibold" data-testid="period">{monthLabel(year, month)}</h1>
+        <h2 className="text-lg font-semibold" data-testid="period">{monthLabel(year, month)}</h2>
         <button type="button" aria-label="Следующий месяц" onClick={() => go(nextMonth(year, month))} className="grid size-10 place-items-center rounded-xl bg-zinc-900">
           <ChevronRight className="size-5" aria-hidden />
         </button>
