@@ -17,9 +17,9 @@ function renderPage(route: Route, onNavigate: (r: Route) => void, onEdit: (t: Tr
     case 'home': return <DashboardPage onEdit={onEdit} onAdd={onAdd} />
     case 'budget': return <BudgetPage />
     case 'goals':
-    case 'debts':
-    case 'nospend': return <PlansPage route={route} onNavigate={onNavigate} />
-    case 'analytics': return <AnalyticsPage />
+    case 'debts': return <PlansPage route={route} onNavigate={onNavigate} />
+    case 'analytics':
+    case 'nospend': return <AnalyticsPage route={route} onNavigate={onNavigate} />
     case 'transactions': return <TransactionsPage onEdit={onEdit} />
     case 'settings': return <SettingsPage />
   }

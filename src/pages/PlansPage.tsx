@@ -1,4 +1,3 @@
-import { NoSpendTab } from '../components/challenge/NoSpendTab'
 import { DebtsTab } from '../components/debts/DebtsTab'
 import { GoalsTab } from '../components/goals/GoalsTab'
 import { SegmentedControl, TabPanel } from '../components/ui/SegmentedControl'
@@ -8,10 +7,9 @@ import type { Route } from '../lib/useHashRoute'
 const TABS: readonly { value: PlansRoute; label: string }[] = [
   { value: 'goals', label: 'Цели' },
   { value: 'debts', label: 'Долги' },
-  { value: 'nospend', label: 'Дни без трат' },
 ]
 
-/** «Планы»: цели, долги и дни без трат. Подраздел — это маршрут (`#/goals`, `#/debts`, `#/nospend`). */
+/** «Планы»: цели и долги. Подраздел — это маршрут (`#/goals`, `#/debts`). */
 export default function PlansPage({ route, onNavigate }: { route: PlansRoute; onNavigate: (r: Route) => void }) {
   return (
     <section className="space-y-4 p-4">
@@ -28,7 +26,6 @@ export default function PlansPage({ route, onNavigate }: { route: PlansRoute; on
       <TabPanel id="plans-tabs" value={route}>
         {route === 'goals' && <GoalsTab />}
         {route === 'debts' && <DebtsTab />}
-        {route === 'nospend' && <NoSpendTab />}
       </TabPanel>
     </section>
   )

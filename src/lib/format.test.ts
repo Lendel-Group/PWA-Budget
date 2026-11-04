@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { currencySymbol, formatMoney, formatNumber } from './format'
+import { currencySymbol, formatMoney, formatNumber, pluralRu } from './format'
 
 describe('currencySymbol', () => {
   it.each([
@@ -31,5 +31,18 @@ describe('formatMoney', () => {
     expect(formatMoney(12.5, 'USD')).toBe('12,50 $')
     expect(formatMoney(100, 'EUR')).toBe('100 €')
     expect(formatMoney(100, 'RUB')).toBe('100 ₽')
+  })
+})
+
+describe('pluralRu', () => {
+  const day = (n: number) => `${n} ${pluralRu(n, ['день', 'дня', 'дней'])}`
+  it('1, 2–4, 5–20 и составные числа', () => {
+    expect(['0', '1', '2', '4', '5', '11', '12', '14', '20', '21', '22', '25', '101', '111', '112'].map((n) => day(Number(n)))).toEqual([
+      '0 дней', '1 день', '2 дня', '4 дня', '5 дней', '11 дней', '12 дней', '14 дней', '20 дней', '21 день', '22 дня', '25 дней', '101 день', '111 дней', '112 дней',
+    ])
+  })
+  it('отрицательные числа склоняются по модулю', () => {
+    expect(day(-1)).toBe('-1 день')
+    expect(day(-3)).toBe('-3 дня')
   })
 })

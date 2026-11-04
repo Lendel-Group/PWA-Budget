@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { AlertTriangle, ChevronDown } from 'lucide-react'
+import { AlertTriangle, ChevronDown, ChevronRight, Flame } from 'lucide-react'
 import { OnboardingChecklist } from '../components/onboarding/OnboardingChecklist'
 import { TransactionRow } from '../components/transactions/TransactionRow'
 import { db, type Transaction } from '../db/schema'
@@ -11,7 +11,8 @@ import {
 } from '../domain/finance'
 import { isOnboardingComplete, onboardingSteps } from '../domain/onboarding'
 import { cn } from '../lib/cn'
-import { formatMoney } from '../lib/format'
+import { formatMoney, pluralRu } from '../lib/format'
+import { useNoSpendStats } from '../lib/useNoSpendStats'
 import { useRates } from '../lib/useRates'
 import { useToday } from '../lib/useToday'
 import { useDeleteTransaction } from '../lib/useDeleteTransaction'
@@ -31,6 +32,7 @@ export default function DashboardPage({ onEdit, onAdd }: { onEdit: (t: Transacti
   const nextStart = addDays(start, daysInMonth(year, month))
 
   const { rates } = useRates()
+  const noSpend = useNoSpendStats()
   const accounts = useLiveQuery(() => db.accounts.filter((a) => !a.isArchived).toArray(), [])
   const categories = useLiveQuery(() => db.categories.toArray(), [])
   const limits = useLiveQuery(() => db.budgetLimits.where('[year+month]').equals([year, month]).toArray(), [year, month])
@@ -137,6 +139,18 @@ export default function DashboardPage({ onEdit, onAdd }: { onEdit: (t: Transacti
           </p>
         )}
       </div>
+
+      {noSpend && (
+        <a href="#/nospend" data-testid="streak-widget" className="flex min-h-11 flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-2xl bg-zinc-900 px-4 py-2 active:bg-zinc-800">
+          <span className="flex items-center gap-2 text-sm text-fg-muted">
+            <Flame className="size-5 shrink-0 text-orange-400" aria-hidden /> Серия без трат
+          </span>
+          <span className="ml-auto flex items-center gap-1 text-sm font-semibold tabular-nums">
+            <span data-testid="home-streak">{noSpend.currentStreak}</span> {pluralRu(noSpend.currentStreak, ['день', 'дня', 'дней'])}
+            <ChevronRight className="size-4 text-fg-muted" aria-hidden />
+          </span>
+        </a>
+      )}
 
       <div className="rounded-2xl bg-zinc-900 p-4">
         <p className="mb-3 text-sm text-fg-muted">Месячный бюджет</p>

@@ -1,6 +1,6 @@
 import { useEffect, useRef, type ReactNode } from 'react'
 import { BarChart3, Home, Plus, Settings, Target, Wallet, type LucideIcon } from 'lucide-react'
-import { isPlansRoute, screenOf, type Screen } from '../../domain/routes'
+import { defaultRoute, screenOf, type Screen } from '../../domain/routes'
 import { cn } from '../../lib/cn'
 import type { Route } from '../../lib/useHashRoute'
 import { useRouteAnnounce } from '../../lib/useRouteAnnounce'
@@ -18,8 +18,8 @@ const SCREEN_TITLES: Record<Screen, string> = {
   settings: 'Настройки',
 }
 
-/** Заголовок вкладки браузера уточняет подраздел «Планов». */
-const PLANS_LABELS: Partial<Record<Route, string>> = { goals: 'Цели', debts: 'Долги', nospend: 'Дни без трат' }
+/** Заголовок вкладки браузера уточняет подраздел «Планов» и «Аналитики». */
+const SUB_LABELS: Partial<Record<Route, string>> = { goals: 'Цели', debts: 'Долги', nospend: 'Дни без трат' }
 
 const TABS: { screen: Screen; label: string; icon: LucideIcon }[] = [
   { screen: 'home', label: 'Главная', icon: Home },
@@ -39,11 +39,11 @@ export function AppLayout({ route, onNavigate, onAdd, children }: Props) {
   useEffect(() => installViewportNudge(), [])
   const heading = useRef<HTMLHeadingElement>(null)
   const screen = screenOf(route)
-  // Анонсируем смену экрана, а не подраздела «Планов»: иначе переключение вкладок цели/долги уводило бы фокус с них на h1
-  useRouteAnnounce(screen, PLANS_LABELS[route] ?? SCREEN_TITLES[screen], heading)
-  // Вкладка «Планы» возвращает на подраздел, где пользователь был в последний раз
-  const lastPlans = useRef<Route>('goals')
-  useEffect(() => { if (isPlansRoute(route)) lastPlans.current = route }, [route])
+  // Анонсируем смену экрана, а не подраздела: иначе переключение вкладок внутри «Планов» или «Аналитики» уводило бы фокус с них на h1
+  useRouteAnnounce(screen, SUB_LABELS[route] ?? SCREEN_TITLES[screen], heading)
+  // Вкладка экрана возвращает на подраздел, где пользователь был в последний раз
+  const lastRoute = useRef<Partial<Record<Screen, Route>>>({})
+  useEffect(() => { lastRoute.current[screen] = route }, [screen, route])
 
   const left = TABS.slice(0, 2)
   const right = TABS.slice(2)
@@ -52,7 +52,7 @@ export function AppLayout({ route, onNavigate, onAdd, children }: Props) {
     <button
       key={s}
       type="button"
-      onClick={() => onNavigate(s === 'plans' ? lastPlans.current : s)}
+      onClick={() => onNavigate(lastRoute.current[s] ?? defaultRoute(s))}
       aria-current={screen === s ? 'page' : undefined}
       className={cn(
         // Подписи вкладок — фиксированные 12 px (как у системных таб-баров): при увеличении шрифта четыре подписи и «+» иначе не помещаются
