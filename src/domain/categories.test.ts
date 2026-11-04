@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { CATEGORY_NAME_MAX, sortByDefaultOrder, sortCategoriesByUsage, validateCategoryInput } from './categories'
+import { CATEGORY_NAME_MAX, resolveExcludedFromNoSpend, sortByDefaultOrder, sortCategoriesByUsage, validateCategoryInput } from './categories'
 
 const cats = ['a', 'b', 'c', 'd'].map((id) => ({ id }))
 const ids = (list: { id: string }[]) => list.map((c) => c.id)
@@ -91,5 +91,21 @@ describe('validateCategoryInput', () => {
   it('своё же название при редактировании допустимо', () => {
     expect(validateCategoryInput({ ...input, name: 'Продукты' }, existing, 'c1')).toBeUndefined()
     expect(validateCategoryInput({ ...input, name: 'Продукты' }, existing, 'c2')).toMatch(/уже есть/)
+  })
+})
+
+describe('resolveExcludedFromNoSpend', () => {
+  it('без категории и без флага — false', () => {
+    expect(resolveExcludedFromNoSpend(undefined)).toBe(false)
+    expect(resolveExcludedFromNoSpend({})).toBe(false)
+    expect(resolveExcludedFromNoSpend({ isExcludedFromNoSpend: false })).toBe(false)
+  })
+  it('флаг категории включает исключение автоматически', () => {
+    expect(resolveExcludedFromNoSpend({ isExcludedFromNoSpend: true })).toBe(true)
+  })
+  it('ручной выбор переопределяет категорию в обе стороны', () => {
+    expect(resolveExcludedFromNoSpend({ isExcludedFromNoSpend: true }, false)).toBe(false)
+    expect(resolveExcludedFromNoSpend({ isExcludedFromNoSpend: false }, true)).toBe(true)
+    expect(resolveExcludedFromNoSpend(undefined, true)).toBe(true)
   })
 })

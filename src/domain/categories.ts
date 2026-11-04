@@ -45,6 +45,8 @@ export interface CategoryInput {
   type: Category['type']
   icon: string
   color: string
+  /** Расходы в категории не нарушают «дни без трат» (только для расходных). */
+  isExcludedFromNoSpend?: boolean
 }
 
 /**
@@ -66,4 +68,15 @@ export function validateCategoryInput(
   )
   if (same) return same.isArchived ? 'Категория с таким названием есть среди скрытых' : 'Категория с таким названием уже есть'
   return undefined
+}
+
+/**
+ * Значение `isExcludedFromNoSpend` для новой операции: ручной выбор пользователя (переопределение) важнее,
+ * иначе — настройка категории (нет категории или флага — false).
+ */
+export function resolveExcludedFromNoSpend(
+  category: Pick<Category, 'isExcludedFromNoSpend'> | undefined,
+  override?: boolean,
+): boolean {
+  return override ?? !!category?.isExcludedFromNoSpend
 }

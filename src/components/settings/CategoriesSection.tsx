@@ -25,6 +25,7 @@ function CategorySheet({ category, onClose }: { category?: Category; onClose: ()
   const [name, setName] = useState(category?.name ?? '')
   const [icon, setIcon] = useState(category?.icon ?? 'ShoppingBag')
   const [color, setColor] = useState<string>(category?.color ?? COLOR_CHOICES[0].value)
+  const [exempt, setExempt] = useState(!!category?.isExcludedFromNoSpend)
   const [error, setError] = useState<string>()
 
   async function run(action: () => Promise<unknown>) {
@@ -52,11 +53,20 @@ function CategorySheet({ category, onClose }: { category?: Category; onClose: ()
         <p className="text-xs text-fg-muted">Цвет</p>
         <ColorPicker choices={COLOR_CHOICES} value={color} onChange={setColor} />
       </div>
+      {type === 'expense' && (
+        <label className="flex items-center justify-between gap-3 rounded-xl bg-zinc-900 px-3 py-2 text-sm">
+          <span>
+            Не нарушает дни без трат
+            <span className="block text-xs text-fg-muted">Расходы в этой категории не прерывают серию. Для коммуналки, кредита, аренды.</span>
+          </span>
+          <input type="checkbox" checked={exempt} onChange={(e) => setExempt(e.target.checked)} className="size-5 shrink-0 accent-[var(--color-accent)]" />
+        </label>
+      )}
       {error && <p role="alert" className="text-sm text-danger">{error}</p>}
       <button
         type="button"
         className={primaryButton}
-        onClick={() => run(() => (category ? updateCategory(category.id, { name, icon, color }) : createCategory({ name, type, icon, color })))}
+        onClick={() => run(() => (category ? updateCategory(category.id, { name, icon, color, isExcludedFromNoSpend: exempt }) : createCategory({ name, type, icon, color, isExcludedFromNoSpend: exempt })))}
       >
         {category ? 'Сохранить' : 'Добавить категорию'}
       </button>
@@ -101,7 +111,10 @@ function CategoryList({ title, items, onEdit }: { title: string; items: Category
               <span className="grid size-9 shrink-0 place-items-center rounded-full" style={{ background: `${c.color}33`, color: c.color }}>
                 <CategoryIcon name={c.icon} className="size-5" />
               </span>
-              <span className="min-w-0 flex-1 truncate text-sm">{c.name}</span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm">{c.name}</span>
+                {c.isExcludedFromNoSpend && <span className="block truncate text-xs text-fg-muted">не нарушает дни без трат</span>}
+              </span>
               {c.isArchived && <span className="shrink-0 text-xs text-fg-muted">скрыта</span>}
             </button>
           </li>
