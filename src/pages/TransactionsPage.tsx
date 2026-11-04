@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { HistoryFilters, type PeriodState } from '../components/transactions/HistoryFilters'
 import { TransactionRow } from '../components/transactions/TransactionRow'
-import { db } from '../db/schema'
+import { db, type Transaction } from '../db/schema'
 import { formatDayHeading } from '../domain/dates'
 import {
   EMPTY_FILTER, filterTransactions, groupByDay, periodRange, takeGroups, type HistoryFilter,
@@ -17,7 +17,7 @@ import { useToday } from '../lib/useToday'
 const PAGE_SIZE = 100
 const DEFAULT_PERIOD: PeriodState = { preset: 'all', from: '', to: '' }
 
-export default function TransactionsPage() {
+export default function TransactionsPage({ onEdit }: { onEdit: (t: Transaction) => void }) {
   const today = useToday()
   const { rates } = useRates()
   const { remove, error } = useDeleteTransaction()
@@ -73,7 +73,7 @@ export default function TransactionsPage() {
               </div>
               <ul className="space-y-2" aria-label={formatDayHeading(g.date, today)}>
                 {g.items.map((t) => (
-                  <TransactionRow key={t.id} transaction={t} accounts={accounts} categories={categories} onDelete={remove} />
+                  <TransactionRow key={t.id} transaction={t} accounts={accounts} categories={categories} onDelete={remove} onEdit={onEdit} />
                 ))}
               </ul>
             </div>

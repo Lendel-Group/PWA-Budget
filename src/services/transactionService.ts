@@ -43,6 +43,33 @@ export async function addTransaction(tx: NewTransaction): Promise<string> {
   return record.id
 }
 
+/**
+ * Атомарно заменяет содержимое операции: откатывает эффект старой версии (балансы, долг/цель)
+ * и применяет новую — всё в одной транзакции БД, при любой ошибке не меняется ничего.
+ * id и timestamp сохраняются (порядок внутри дня). Связь с долгом/целью менять нельзя;
+ * такие операции остаются расходом со счёта в тенге.
+ */
+export async function updateTransaction(id: string, next: NewTransaction): Promise<void> {
+  validateNewTransaction(next)
+  await db.transaction('rw', TX_TABLES, async () => {
+    const old = await db.transactions.get(id)
+    if (!old) throw new Error('Операция не найдена')
+    if (next.debtId !== old.debtId || next.goalId !== old.goalId) {
+      throw new Error('Связь с долгом или целью изменить нельзя')
+    }
+    if (next.debtId || next.goalId) {
+      const account = await db.accounts.get(next.accountId)
+      if (account && account.currency !== 'KZT') throw new Error('Долги и цели ведутся в тенге — выберите счёт в KZT')
+    }
+    await applyAccountDeltas(getBalanceDeltas(old, -1))
+    await applyLinked(old, -1)
+    const record: Transaction = { ...next, id, timestamp: old.timestamp }
+    await applyAccountDeltas(getBalanceDeltas(record))
+    await applyLinked(record, 1)
+    await db.transactions.put(record)
+  })
+}
+
 /** Атомарно откатывает баланс(ы), долг/цель и удаляет транзакцию. */
 export async function deleteTransaction(id: string): Promise<void> {
   await db.transaction('rw', TX_TABLES, async () => {

@@ -7,7 +7,8 @@ import { applyNumpadKey, displayAmount, parseAmount, type NumpadKey } from '../.
 import { cn } from '../../lib/cn'
 import { formatMoney } from '../../lib/format'
 import { CategoryIcon } from '../../lib/icons'
-import { addTransaction } from '../../services/transactionService'
+import type { NewTransaction } from '../../domain/finance'
+import { addTransaction, updateTransaction } from '../../services/transactionService'
 
 const TYPES: { value: Transaction['type']; label: string }[] = [
   { value: 'expense', label: 'Расход' },
@@ -35,28 +36,41 @@ function useMoreBelow() {
 
 const KEYS: NumpadKey[] = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', 'backspace']
 
-export function QuickAddModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  // Форма монтируется только на время показа — состояние сбрасывается само.
-  return open ? <QuickAddForm onClose={onClose} /> : null
+interface ModalProps {
+  open: boolean
+  /** Если задана — форма редактирует эту операцию, иначе создаёт новую. */
+  editing?: Transaction
+  onClose: () => void
 }
 
-function QuickAddForm({ onClose }: { onClose: () => void }) {
+export function QuickAddModal({ open, editing, onClose }: ModalProps) {
+  // Форма монтируется только на время показа — состояние сбрасывается само.
+  return open ? <QuickAddForm editing={editing} onClose={onClose} /> : null
+}
+
+function QuickAddForm({ editing, onClose }: { editing?: Transaction; onClose: () => void }) {
+  /** Платёж по долгу / пополнение цели: тип, категория и связь не меняются, счёт — только в тенге. */
+  const linked = !!editing && (!!editing.debtId || !!editing.goalId)
+  // При редактировании архивные счета самой операции остаются в списке, иначе выбор молча сменился бы
   const accounts = useLiveQuery(
-    () => db.accounts.filter((a) => !a.isArchived).toArray(),
-    [],
+    () => db.accounts
+      .filter((a) => (!linked || a.currency === 'KZT') && (!a.isArchived || a.id === editing?.accountId || a.id === editing?.toAccountId))
+      .toArray(),
+    [linked, editing?.accountId, editing?.toAccountId],
   )
   const categories = useLiveQuery(() => db.categories.toArray(), [])
 
-  const [type, setType] = useState<Transaction['type']>('expense')
-  const [amount, setAmount] = useState('')
-  const [accountId, setAccountId] = useState<string>()
-  const [toAccountId, setToAccountId] = useState<string>()
-  const [categoryId, setCategoryId] = useState<string>()
-  const [excluded, setExcluded] = useState(false)
-  const [moreOpen, setMoreOpen] = useState(false)
-  const [toAmount, setToAmount] = useState('')
+  const [type, setType] = useState<Transaction['type']>(editing?.type ?? 'expense')
+  const [amount, setAmount] = useState(editing ? String(editing.amount) : '')
+  const [accountId, setAccountId] = useState<string | undefined>(editing?.accountId)
+  const [toAccountId, setToAccountId] = useState<string | undefined>(editing?.toAccountId)
+  const [categoryId, setCategoryId] = useState<string | undefined>(editing?.categoryId)
+  const [excluded, setExcluded] = useState(editing?.isExcludedFromNoSpend ?? false)
+  const [comment, setComment] = useState(editing?.comment ?? '')
+  const [moreOpen, setMoreOpen] = useState(!!editing?.comment)
+  const [toAmount, setToAmount] = useState(editing?.toAmount !== undefined ? String(editing.toAmount) : '')
   const [today] = useState(() => toLocalDateString(new Date()))
-  const [date, setDate] = useState(today)
+  const [date, setDate] = useState(editing?.date ?? today)
   const [error, setError] = useState<string>()
   const [saving, setSaving] = useState(false)
   const { ref: scrollRef, more: moreBelow, update: updateMore } = useMoreBelow()
@@ -83,7 +97,9 @@ function QuickAddForm({ onClose }: { onClose: () => void }) {
     type === 'transfer' && !!toAccount && !!fromAccount && toAccount.currency !== fromAccount.currency
 
   const value = parseAmount(amount)
-  const needsCategory = type !== 'transfer' && !categoryId
+  const showExcluded = type === 'expense' && !linked
+  const hasExtras = (showExcluded && excluded) || comment.trim() !== ''
+  const needsCategory = type !== 'transfer' && !linked && !categoryId
   const canSave =
     !saving && value > 0 && !!fromAccount && !needsCategory &&
     (type === 'transfer' ? !!toAccount && (!crossCurrency || parseAmount(toAmount) > 0) : true)
@@ -93,16 +109,21 @@ function QuickAddForm({ onClose }: { onClose: () => void }) {
     setSaving(true)
     setError(undefined)
     try {
-      await addTransaction({
+      const payload: NewTransaction = {
         date,
         type,
         accountId: fromAccount.id,
         amount: value,
-        isExcludedFromNoSpend: type === 'expense' && excluded,
+        isExcludedFromNoSpend: linked ? editing.isExcludedFromNoSpend : type === 'expense' && excluded,
+        ...(comment.trim() ? { comment: comment.trim() } : {}),
+        ...(editing?.debtId ? { debtId: editing.debtId } : {}),
+        ...(editing?.goalId ? { goalId: editing.goalId } : {}),
         ...(type === 'transfer'
           ? { toAccountId: toAccount!.id, ...(crossCurrency ? { toAmount: parseAmount(toAmount) } : {}) }
-          : { categoryId }),
-      })
+          : categoryId ? { categoryId } : {}),
+      }
+      if (editing) await updateTransaction(editing.id, payload)
+      else await addTransaction(payload)
       onClose()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Не удалось сохранить')
@@ -142,10 +163,15 @@ function QuickAddForm({ onClose }: { onClose: () => void }) {
   )
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true" aria-label="Новая операция">
+    <div className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true" aria-label={editing ? 'Редактирование операции' : 'Новая операция'}>
       <button type="button" aria-label="Закрыть" className="absolute inset-0 bg-black/60" onClick={onClose} />
       <div className="relative flex h-[calc(100dvh-env(safe-area-inset-top)-0.5rem)] w-full max-w-md flex-col gap-2.5 rounded-t-3xl [@media(max-height:700px)]:gap-2 bg-zinc-950 p-4 pb-[max(1rem,var(--safe-bottom))]">
         <div className="flex items-center gap-2">
+          {linked ? (
+            <p className="flex min-h-11 flex-1 items-center rounded-xl bg-zinc-900 px-3 text-sm font-medium">
+              {editing.debtId ? 'Платёж по долгу' : 'Пополнение цели'}
+            </p>
+          ) : (
           <div className="flex flex-1 rounded-xl bg-zinc-900 p-1" role="tablist">
             {TYPES.map((t) => (
               <button
@@ -163,6 +189,7 @@ function QuickAddForm({ onClose }: { onClose: () => void }) {
               </button>
             ))}
           </div>
+          )}
           <button type="button" aria-label="Закрыть" onClick={onClose} className="grid size-10 place-items-center rounded-xl bg-zinc-900">
             <X className="size-5" aria-hidden />
           </button>
@@ -183,22 +210,20 @@ function QuickAddForm({ onClose }: { onClose: () => void }) {
                 className="absolute inset-0 size-full cursor-pointer opacity-0"
               />
             </label>
-            {type === 'expense' && (
-              <button
-                type="button"
-                aria-expanded={moreOpen}
-                aria-controls={moreOpen ? 'quick-add-more' : undefined}
-                aria-label={excluded ? 'Ещё: включена настройка «Исключить из дней без трат»' : 'Ещё'}
-                onClick={() => setMoreOpen((v) => !v)}
-                className={cn(
-                  'relative grid size-11 place-items-center rounded-xl bg-zinc-900 text-zinc-400',
-                  moreOpen && 'bg-zinc-800 text-zinc-100',
-                )}
-              >
-                <SlidersHorizontal className="size-5" aria-hidden />
-                {excluded && <span aria-hidden className="absolute right-2 top-2 size-2 rounded-full bg-emerald-400" />}
-              </button>
-            )}
+            <button
+              type="button"
+              aria-expanded={moreOpen}
+              aria-controls={moreOpen ? 'quick-add-more' : undefined}
+              aria-label={hasExtras ? 'Ещё: есть комментарий или особая настройка' : 'Ещё'}
+              onClick={() => setMoreOpen((v) => !v)}
+              className={cn(
+                'relative grid size-11 place-items-center rounded-xl bg-zinc-900 text-zinc-400',
+                moreOpen && 'bg-zinc-800 text-zinc-100',
+              )}
+            >
+              <SlidersHorizontal className="size-5" aria-hidden />
+              {hasExtras && <span aria-hidden className="absolute right-2 top-2 size-2 rounded-full bg-emerald-400" />}
+            </button>
           </div>
           <div
             data-testid="amount"
@@ -230,7 +255,7 @@ function QuickAddForm({ onClose }: { onClose: () => void }) {
         {/* Категории прокручиваются, а цифровая клавиатура и «Сохранить» всегда остаются на экране */}
         <div className="relative min-h-0 flex-1">
         <div ref={scrollRef} onScroll={updateMore} className="h-full overflow-y-auto">
-          {type !== 'transfer' && (
+          {type !== 'transfer' && !linked && (
             <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Категория">
               {visibleCategories.map((c) => (
                 <button
@@ -259,14 +284,26 @@ function QuickAddForm({ onClose }: { onClose: () => void }) {
         </div>
 
         <div className="shrink-0 space-y-2">
-          {type === 'expense' && moreOpen && (
-            <label id="quick-add-more" className="flex items-center justify-between rounded-xl bg-zinc-900 px-3 py-2 text-sm">
-              <span>
-                Исключить из дней без трат
-                <span className="block text-xs text-zinc-500">коммуналка, кредит, аренда</span>
-              </span>
-              <input type="checkbox" checked={excluded} onChange={(e) => setExcluded(e.target.checked)} className="size-5 accent-emerald-500" />
-            </label>
+          {moreOpen && (
+            <div id="quick-add-more" className="space-y-2">
+              <input
+                aria-label="Комментарий"
+                placeholder="Комментарий"
+                maxLength={100}
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                className="min-h-11 w-full rounded-xl bg-zinc-900 px-3 text-base outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+              {showExcluded && (
+                <label className="flex items-center justify-between rounded-xl bg-zinc-900 px-3 py-2 text-sm">
+                  <span>
+                    Исключить из дней без трат
+                    <span className="block text-xs text-zinc-500">коммуналка, кредит, аренда</span>
+                  </span>
+                  <input type="checkbox" checked={excluded} onChange={(e) => setExcluded(e.target.checked)} className="size-5 accent-emerald-500" />
+                </label>
+              )}
+            </div>
           )}
 
           <div className="grid grid-cols-3 gap-2">
@@ -291,7 +328,7 @@ function QuickAddForm({ onClose }: { onClose: () => void }) {
             disabled={!canSave}
             className="h-12 w-full rounded-2xl bg-emerald-500 text-lg font-semibold text-zinc-950 disabled:opacity-40"
           >
-            Сохранить
+            {editing ? 'Сохранить изменения' : 'Сохранить'}
           </button>
         </div>
       </div>
