@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { Delete, X } from 'lucide-react'
+import { CalendarDays, Delete, SlidersHorizontal, X } from 'lucide-react'
 import { db, type Transaction } from '../../db/schema'
-import { toLocalDateString } from '../../domain/dates'
+import { formatDateChip, toLocalDateString } from '../../domain/dates'
 import { applyNumpadKey, displayAmount, parseAmount, type NumpadKey } from '../../domain/numpad'
 import { cn } from '../../lib/cn'
 import { formatMoney } from '../../lib/format'
@@ -14,6 +14,25 @@ const TYPES: { value: Transaction['type']; label: string }[] = [
   { value: 'income', label: 'Доход' },
   { value: 'transfer', label: 'Перевод' },
 ]
+/** Следит, есть ли у прокручиваемого блока непоказанное содержимое снизу (для подсказки-градиента). */
+function useMoreBelow() {
+  const ref = useRef<HTMLDivElement>(null)
+  const [more, setMore] = useState(false)
+  const update = useCallback(() => {
+    const el = ref.current
+    if (el) setMore(el.scrollHeight - el.scrollTop - el.clientHeight > 4)
+  }, [])
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    update()
+    const ro = new ResizeObserver(update)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [update])
+  return { ref, more, update }
+}
+
 const KEYS: NumpadKey[] = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', 'backspace']
 
 export function QuickAddModal({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -34,11 +53,13 @@ function QuickAddForm({ onClose }: { onClose: () => void }) {
   const [toAccountId, setToAccountId] = useState<string>()
   const [categoryId, setCategoryId] = useState<string>()
   const [excluded, setExcluded] = useState(false)
+  const [moreOpen, setMoreOpen] = useState(false)
   const [toAmount, setToAmount] = useState('')
   const [today] = useState(() => toLocalDateString(new Date()))
   const [date, setDate] = useState(today)
   const [error, setError] = useState<string>()
   const [saving, setSaving] = useState(false)
+  const { ref: scrollRef, more: moreBelow, update: updateMore } = useMoreBelow()
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
@@ -94,9 +115,11 @@ function QuickAddForm({ onClose }: { onClose: () => void }) {
     selectedId: string | undefined,
     onPick: (id: string) => void,
     label: string,
+    /** На низких экранах подпись скрыта визуально (остаётся в aria-label группы), если она очевидна из контекста */
+    hideLabelWhenShort = false,
   ) => (
     <div>
-      <p className="mb-1 px-1 text-xs text-zinc-500">{label}</p>
+      <p className={cn('mb-1 px-1 text-xs text-zinc-500', hideLabelWhenShort && '[@media(max-height:700px)]:hidden')}>{label}</p>
       <div className="flex gap-2 overflow-x-auto pb-1" role="radiogroup" aria-label={label}>
         {list?.map((a) => (
           <button
@@ -106,7 +129,7 @@ function QuickAddForm({ onClose }: { onClose: () => void }) {
             aria-checked={a.id === selectedId}
             onClick={() => onPick(a.id)}
             className={cn(
-              'shrink-0 rounded-xl border px-3 py-1.5 text-left text-sm',
+              'shrink-0 rounded-xl border px-3 py-1.5 text-left text-sm [@media(max-height:700px)]:flex [@media(max-height:700px)]:items-baseline [@media(max-height:700px)]:gap-2 [@media(max-height:700px)]:py-1',
               a.id === selectedId ? 'border-emerald-500 bg-emerald-500/10' : 'border-zinc-800 bg-zinc-900',
             )}
           >
@@ -121,7 +144,7 @@ function QuickAddForm({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true" aria-label="Новая операция">
       <button type="button" aria-label="Закрыть" className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <div className="relative flex h-[calc(100dvh-env(safe-area-inset-top)-0.5rem)] w-full max-w-md flex-col gap-2.5 rounded-t-3xl bg-zinc-950 p-4 pb-[max(1rem,var(--safe-bottom))]">
+      <div className="relative flex h-[calc(100dvh-env(safe-area-inset-top)-0.5rem)] w-full max-w-md flex-col gap-2.5 rounded-t-3xl [@media(max-height:700px)]:gap-2 bg-zinc-950 p-4 pb-[max(1rem,var(--safe-bottom))]">
         <div className="flex items-center gap-2">
           <div className="flex flex-1 rounded-xl bg-zinc-900 p-1" role="tablist">
             {TYPES.map((t) => (
@@ -145,19 +168,42 @@ function QuickAddForm({ onClose }: { onClose: () => void }) {
           </button>
         </div>
 
-        <div className="flex items-end justify-between px-1">
-          <input
-            type="date"
-            aria-label="Дата"
-            value={date}
-            max={today}
-            onChange={(e) => e.target.value && setDate(e.target.value)}
-            className="rounded-lg bg-zinc-900 px-2 py-1 text-xs text-zinc-300"
-          />
+        <div className="flex items-center justify-between gap-2 px-1">
+          <div className="flex items-center gap-2">
+            {/* Нативный выбор даты скрыт под чипом: нажатие по чипу открывает системный календарь */}
+            <label className="relative flex min-h-11 items-center gap-1.5 rounded-xl bg-zinc-900 px-3 text-sm text-zinc-300 focus-within:ring-2 focus-within:ring-emerald-500">
+              <CalendarDays className="size-4 text-zinc-500" aria-hidden />
+              <span>{formatDateChip(date, today)}</span>
+              <input
+                type="date"
+                aria-label="Дата"
+                value={date}
+                max={today}
+                onChange={(e) => e.target.value && setDate(e.target.value)}
+                className="absolute inset-0 size-full cursor-pointer opacity-0"
+              />
+            </label>
+            {type === 'expense' && (
+              <button
+                type="button"
+                aria-expanded={moreOpen}
+                aria-controls={moreOpen ? 'quick-add-more' : undefined}
+                aria-label={excluded ? 'Ещё: включена настройка «Исключить из дней без трат»' : 'Ещё'}
+                onClick={() => setMoreOpen((v) => !v)}
+                className={cn(
+                  'relative grid size-11 place-items-center rounded-xl bg-zinc-900 text-zinc-400',
+                  moreOpen && 'bg-zinc-800 text-zinc-100',
+                )}
+              >
+                <SlidersHorizontal className="size-5" aria-hidden />
+                {excluded && <span aria-hidden className="absolute right-2 top-2 size-2 rounded-full bg-emerald-400" />}
+              </button>
+            )}
+          </div>
           <div
             data-testid="amount"
             className={cn(
-              'text-right text-4xl font-semibold tabular-nums',
+              'min-w-0 truncate text-right text-4xl font-semibold tabular-nums',
               type === 'income' ? 'text-emerald-400' : type === 'transfer' ? 'text-sky-400' : 'text-zinc-100',
             )}
           >
@@ -166,7 +212,7 @@ function QuickAddForm({ onClose }: { onClose: () => void }) {
           </div>
         </div>
 
-        {accountChips(accounts, fromAccount?.id, setAccountId, type === 'income' ? 'Счёт зачисления' : 'Счёт списания')}
+        {accountChips(accounts, fromAccount?.id, setAccountId, type === 'income' ? 'Счёт зачисления' : 'Счёт списания', type !== 'transfer')}
         {type === 'transfer' && accountChips(targets, toAccount?.id, setToAccountId, 'Счёт зачисления')}
 
         {crossCurrency && (
@@ -182,7 +228,8 @@ function QuickAddForm({ onClose }: { onClose: () => void }) {
         )}
 
         {/* Категории прокручиваются, а цифровая клавиатура и «Сохранить» всегда остаются на экране */}
-        <div className="min-h-0 flex-1 overflow-y-auto">
+        <div className="relative min-h-0 flex-1">
+        <div ref={scrollRef} onScroll={updateMore} className="h-full overflow-y-auto">
           {type !== 'transfer' && (
             <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Категория">
               {visibleCategories.map((c) => (
@@ -193,12 +240,12 @@ function QuickAddForm({ onClose }: { onClose: () => void }) {
                   aria-checked={c.id === categoryId}
                   onClick={() => setCategoryId(c.id)}
                   className={cn(
-                    'flex min-h-[4.5rem] flex-col items-center justify-center gap-1 rounded-2xl border p-2 text-center text-xs',
+                    'flex min-h-[4.5rem] flex-col items-center justify-center gap-1 rounded-2xl border p-2 text-center text-xs [@media(max-height:600px)]:min-h-16 [@media(max-height:600px)]:gap-0.5 [@media(max-height:600px)]:p-1.5',
                     c.id === categoryId ? 'border-emerald-500 bg-emerald-500/10' : 'border-zinc-800 bg-zinc-900',
                   )}
                 >
-                  <span className="grid size-9 place-items-center rounded-full" style={{ background: `${c.color}33`, color: c.color }}>
-                    <CategoryIcon name={c.icon} className="size-5" />
+                  <span className="grid size-9 place-items-center rounded-full [@media(max-height:600px)]:size-7" style={{ background: `${c.color}33`, color: c.color }}>
+                    <CategoryIcon name={c.icon} className="size-5 [@media(max-height:600px)]:size-4" />
                   </span>
                   {c.name}
                 </button>
@@ -206,10 +253,14 @@ function QuickAddForm({ onClose }: { onClose: () => void }) {
             </div>
           )}
         </div>
+        {moreBelow && (
+          <div aria-hidden data-testid="more-categories" className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-zinc-950 to-transparent" />
+        )}
+        </div>
 
         <div className="shrink-0 space-y-2">
-          {type === 'expense' && (
-            <label className="flex items-center justify-between rounded-xl bg-zinc-900 px-3 py-2 text-sm">
+          {type === 'expense' && moreOpen && (
+            <label id="quick-add-more" className="flex items-center justify-between rounded-xl bg-zinc-900 px-3 py-2 text-sm">
               <span>
                 Исключить из дней без трат
                 <span className="block text-xs text-zinc-500">коммуналка, кредит, аренда</span>
