@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { UpdatePrompt } from './components/pwa/UpdatePrompt'
 import { AppLayout } from './components/layout/AppLayout'
+import { ToastProvider } from './components/ui/Toast'
 import { QuickAddModal } from './components/transactions/QuickAddModal'
 import type { Transaction } from './db/schema'
 import { useHashRoute, type Route } from './lib/useHashRoute'
@@ -28,12 +29,12 @@ export default function App() {
   const [editing, setEditing] = useState<Transaction>()
   const closeForm = () => { setAdding(false); setEditing(undefined) }
   return (
-    <>
+    <ToastProvider>
       <AppLayout route={route} onNavigate={navigate} onAdd={() => setAdding(true)}>
         {renderPage(route, setEditing)}
       </AppLayout>
       <QuickAddModal open={adding || !!editing} editing={editing} onClose={closeForm} />
       <UpdatePrompt />
-    </>
+    </ToastProvider>
   )
 }

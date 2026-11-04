@@ -8,6 +8,8 @@ import { cn } from '../../lib/cn'
 import { formatMoney } from '../../lib/format'
 import { CategoryIcon } from '../../lib/icons'
 import type { NewTransaction } from '../../domain/finance'
+import { useToast } from '../../lib/toastContext'
+import { savedMessage } from '../../lib/savedMessage'
 import { addTransaction, updateTransaction } from '../../services/transactionService'
 
 const TYPES: { value: Transaction['type']; label: string }[] = [
@@ -59,6 +61,7 @@ function QuickAddForm({ editing, onClose }: { editing?: Transaction; onClose: ()
     [linked, editing?.accountId, editing?.toAccountId],
   )
   const categories = useLiveQuery(() => db.categories.toArray(), [])
+  const toast = useToast()
 
   const [type, setType] = useState<Transaction['type']>(editing?.type ?? 'expense')
   const [amount, setAmount] = useState(editing ? String(editing.amount) : '')
@@ -124,6 +127,7 @@ function QuickAddForm({ editing, onClose }: { editing?: Transaction; onClose: ()
       }
       if (editing) await updateTransaction(editing.id, payload)
       else await addTransaction(payload)
+      toast(savedMessage(payload, fromAccount.currency, !!editing))
       onClose()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Не удалось сохранить')
