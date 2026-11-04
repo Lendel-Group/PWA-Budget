@@ -187,6 +187,11 @@ export function triggerDebouncedAutoBackup(): void {
   debouncedFlush()
 }
 
+/** Отменяет запланированную запись (нужно при полном сбросе). */
+export function cancelPendingAutoBackup(): void {
+  debouncedFlush.cancel()
+}
+
 let hooksInstalled = false
 const watchedTx = new WeakSet<object>()
 

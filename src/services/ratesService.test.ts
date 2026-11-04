@@ -23,6 +23,11 @@ describe('ratesService', () => {
     expect((await refreshRates('2026-11-04', f))?.source).toBe('manual')
     expect(f).not.toHaveBeenCalled()
   })
+  it('force refetches even if rates are from today', async () => {
+    await setManualRates({ USD: 400 }, '2026-11-04')
+    const r = await refreshRates('2026-11-04', ok(xml), true)
+    expect(r).toMatchObject({ source: 'nbk', rates: { USD: 450 } })
+  })
   it('keeps cached rates on network error, HTTP error and junk', async () => {
     await setManualRates({ USD: 400 }, '2026-11-03')
     const failing = vi.fn(async () => { throw new Error('CORS') }) as unknown as typeof fetch
