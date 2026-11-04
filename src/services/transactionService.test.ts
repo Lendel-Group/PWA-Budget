@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { db, type Account } from '../db/schema'
-import { addTransaction, deleteTransaction, restoreTransaction, updateTransaction } from './transactionService'
+import { addTransaction, deleteTransaction, getLastAccountId, restoreTransaction, updateTransaction } from './transactionService'
 
 const account = (id: string, balance = 1000, currency: Account['currency'] = 'KZT'): Account => ({
   id, name: id, type: 'card', currency, initialBalance: balance, currentBalance: balance,
@@ -10,7 +10,7 @@ const account = (id: string, balance = 1000, currency: Account['currency'] = 'KZ
 const base = { date: '2026-11-04', isExcludedFromNoSpend: false, categoryId: 'cat' }
 
 beforeEach(async () => {
-  await Promise.all([db.accounts.clear(), db.transactions.clear(), db.debts.clear(), db.goals.clear()])
+  await Promise.all([db.accounts.clear(), db.transactions.clear(), db.debts.clear(), db.goals.clear(), db.config.clear()])
   await db.accounts.bulkAdd([account('a'), account('b', 0, 'USD')])
 })
 
@@ -82,6 +82,27 @@ describe('transactionService', () => {
   it('missing goal fails; deleting unknown id is a no-op', async () => {
     await expect(addTransaction({ ...base, type: 'expense', accountId: 'a', amount: 1, goalId: 'nope' })).rejects.toThrow(/Цель/)
     await expect(deleteTransaction('nope')).resolves.toBeUndefined()
+  })
+
+  describe('getLastAccountId', () => {
+    it('до первой операции — undefined, потом счёт последней добавленной', async () => {
+      expect(await getLastAccountId()).toBeUndefined()
+      await addTransaction({ ...base, type: 'expense', accountId: 'a', amount: 10 })
+      expect(await getLastAccountId()).toBe('a')
+      await addTransaction({ ...base, type: 'income', accountId: 'b', amount: 1 })
+      expect(await getLastAccountId()).toBe('b')
+    })
+
+    it('для перевода запоминается счёт списания', async () => {
+      await addTransaction({ ...base, type: 'transfer', accountId: 'b', toAccountId: 'a', amount: 1, toAmount: 1 })
+      expect(await getLastAccountId()).toBe('b')
+    })
+
+    it('неудачное добавление не меняет запомненный счёт', async () => {
+      await addTransaction({ ...base, type: 'expense', accountId: 'a', amount: 10 })
+      await expect(addTransaction({ ...base, type: 'expense', accountId: 'zzz', amount: 1 })).rejects.toThrow()
+      expect(await getLastAccountId()).toBe('a')
+    })
   })
 
   describe('restoreTransaction', () => {
