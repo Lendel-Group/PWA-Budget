@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import type { Account, Debt, FinancialGoal, Transaction } from '../db/schema'
+import type { Account, BudgetLimit, Debt, FinancialGoal, Transaction } from '../db/schema'
 import {
   accountsMissingRates, applyToDebt, applyToGoal, calculateCategoryTotals, calculateDailyAllowance,
   calculateNetWorth, calculateNoSpendStreak, getBalanceDeltas, getDatesWithExpenses, round2,
-  MAX_STREAK_DAYS, validateNewTransaction, type NewTransaction,
+  MAX_STREAK_DAYS, validateNewTransaction, type NewTransaction, convertToKzt, calculateExpensesKzt,
+  sumPlannedLimits, getAllowanceStatus,
 } from './finance'
 
 const acc = (o: Partial<Account>): Account => ({
@@ -163,5 +164,44 @@ describe('applyToGoal', () => {
   it('achieves at target', () => expect(applyToGoal(goal({ currentAmount: 90 }), 10).isAchieved).toBe(true))
   it('rollback un-achieves', () => {
     expect(applyToGoal(goal({ currentAmount: 100, isAchieved: true }), -10).isAchieved).toBe(false)
+  })
+})
+
+describe('convertToKzt', () => {
+  it('KZT passthrough, converts, or undefined without rate', () => {
+    expect(convertToKzt(5, 'KZT')).toBe(5)
+    expect(convertToKzt(2, 'USD', { USD: 450 })).toBe(900)
+    expect(convertToKzt(2, 'USD')).toBeUndefined()
+  })
+})
+
+describe('calculateExpensesKzt', () => {
+  const accounts = [acc({ id: 'k' }), acc({ id: 'u', currency: 'USD' })]
+  it('empty', () => expect(calculateExpensesKzt([], accounts)).toBe(0))
+  it('sums expenses with conversion; skips income, transfers, goals, unknown accounts, missing rates', () => {
+    const txs = [
+      tx({ accountId: 'k', amount: 100 }),
+      tx({ accountId: 'u', amount: 2 }),
+      tx({ accountId: 'k', type: 'income', amount: 999 }),
+      tx({ accountId: 'k', type: 'transfer', amount: 999 }),
+      tx({ accountId: 'k', amount: 500, goalId: 'g' }),
+      tx({ accountId: 'ghost', amount: 7 }),
+    ]
+    expect(calculateExpensesKzt(txs, accounts, { USD: 450 })).toBe(1000)
+    expect(calculateExpensesKzt(txs, accounts)).toBe(100)
+  })
+})
+
+describe('sumPlannedLimits', () => {
+  it('sums', () => {
+    const l = (plannedAmount: number): BudgetLimit => ({ id: 'x', year: 2026, month: 11, categoryId: 'c', plannedAmount })
+    expect(sumPlannedLimits([])).toBe(0)
+    expect(sumPlannedLimits([l(0.1), l(0.2)])).toBe(0.3)
+  })
+})
+
+describe('getAllowanceStatus', () => {
+  it.each([[5000, 'green'], [2001, 'green'], [2000, 'yellow'], [1, 'yellow'], [0, 'red']])('%s → %s', (v, s) => {
+    expect(getAllowanceStatus(v)).toBe(s)
   })
 })

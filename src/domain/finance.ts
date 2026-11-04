@@ -1,4 +1,4 @@
-import type { Account, Currency, Debt, FinancialGoal, Transaction } from '../db/schema'
+import type { Account, BudgetLimit, Currency, Debt, FinancialGoal, Transaction } from '../db/schema'
 import { addDays, monthStart } from './dates'
 
 export type Rates = Partial<Record<Currency, number>>
@@ -121,3 +121,44 @@ export function applyToGoal(goal: FinancialGoal, amount: number): FinancialGoal 
   return { ...goal, currentAmount, isAchieved: currentAmount >= goal.targetAmount }
 }
 
+
+/** Сумма в KZT; undefined, если для валюты нет курса. */
+export function convertToKzt(amount: number, currency: Currency, rates: Rates = {}): number | undefined {
+  if (currency === 'KZT') return amount
+  const rate = rates[currency]
+  return rate === undefined ? undefined : amount * rate
+}
+
+/**
+ * Расходы за период в KZT. Пополнения целей — это накопления, а не траты,
+ * поэтому не учитываются; платежи по долгам учитываются.
+ * Операции в валюте без курса пропускаются.
+ */
+export function calculateExpensesKzt(
+  transactions: Transaction[],
+  accounts: Account[],
+  rates: Rates = {},
+): number {
+  const currencyById = new Map(accounts.map((a) => [a.id, a.currency]))
+  let total = 0
+  for (const t of transactions) {
+    if (t.type !== 'expense' || t.goalId) continue
+    const currency = currencyById.get(t.accountId)
+    if (!currency) continue
+    total += convertToKzt(t.amount, currency, rates) ?? 0
+  }
+  return round2(total)
+}
+
+export function sumPlannedLimits(limits: BudgetLimit[]): number {
+  return round2(limits.reduce((sum, l) => sum + l.plannedAmount, 0))
+}
+
+export type AllowanceStatus = 'green' | 'yellow' | 'red'
+export const ALLOWANCE_GREEN_THRESHOLD = 2000
+
+/** Зелёный > 2 000 ₸, жёлтый 1–2 000 ₸, красный — лимит исчерпан. */
+export function getAllowanceStatus(allowance: number): AllowanceStatus {
+  if (allowance > ALLOWANCE_GREEN_THRESHOLD) return 'green'
+  return allowance >= 1 ? 'yellow' : 'red'
+}
