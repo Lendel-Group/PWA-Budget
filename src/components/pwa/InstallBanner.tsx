@@ -41,12 +41,12 @@ export function InstallBanner() {
         <button
           type="button"
           onClick={async () => { if (!(await promptInstall())) dismiss() }}
-          className="flex shrink-0 items-center gap-1.5 rounded-lg bg-emerald-500 px-3 py-1.5 font-medium text-zinc-950"
+          className="flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg bg-emerald-500 px-3 font-medium text-zinc-950"
         >
           <Download className="size-4" aria-hidden /> Установить
         </button>
       )}
-      <button type="button" aria-label="Скрыть" onClick={dismiss} className="grid size-8 shrink-0 place-items-center rounded-lg text-emerald-200/80">
+      <button type="button" aria-label="Скрыть" onClick={dismiss} className="-my-1 grid size-11 shrink-0 place-items-center rounded-lg text-emerald-200/80">
         <X className="size-4" aria-hidden />
       </button>
     </div>

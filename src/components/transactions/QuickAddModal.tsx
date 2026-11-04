@@ -150,7 +150,7 @@ function QuickAddForm({ editing, onClose }: { editing?: Transaction; onClose: ()
             aria-checked={a.id === selectedId}
             onClick={() => onPick(a.id)}
             className={cn(
-              'shrink-0 rounded-xl border px-3 py-1.5 text-left text-sm [@media(max-height:700px)]:flex [@media(max-height:700px)]:items-baseline [@media(max-height:700px)]:gap-2 [@media(max-height:700px)]:py-1',
+              'shrink-0 rounded-xl border px-3 py-1.5 text-left text-sm [@media(max-height:700px)]:flex [@media(max-height:700px)]:min-h-11 [@media(max-height:700px)]:items-center [@media(max-height:700px)]:gap-2 [@media(max-height:700px)]:py-1',
               a.id === selectedId ? 'border-emerald-500 bg-emerald-500/10' : 'border-zinc-800 bg-zinc-900',
             )}
           >
@@ -172,7 +172,7 @@ function QuickAddForm({ editing, onClose }: { editing?: Transaction; onClose: ()
               {editing.debtId ? 'Платёж по долгу' : 'Пополнение цели'}
             </p>
           ) : (
-          <div className="flex flex-1 rounded-xl bg-zinc-900 p-1" role="tablist">
+          <div className="flex flex-1 rounded-xl bg-zinc-900 p-0.5" role="tablist">
             {TYPES.map((t) => (
               <button
                 key={t.value}
@@ -181,7 +181,7 @@ function QuickAddForm({ editing, onClose }: { editing?: Transaction; onClose: ()
                 aria-selected={type === t.value}
                 onClick={() => { setType(t.value); setCategoryId(undefined) }}
                 className={cn(
-                  'flex-1 rounded-lg py-2 text-sm font-medium',
+                  'min-h-11 flex-1 rounded-lg text-sm font-medium',
                   type === t.value ? 'bg-zinc-700 text-white' : 'text-zinc-400',
                 )}
               >
@@ -190,7 +190,7 @@ function QuickAddForm({ editing, onClose }: { editing?: Transaction; onClose: ()
             ))}
           </div>
           )}
-          <button type="button" aria-label="Закрыть" onClick={onClose} className="grid size-10 place-items-center rounded-xl bg-zinc-900">
+          <button type="button" aria-label="Закрыть" onClick={onClose} className="grid size-11 place-items-center rounded-xl bg-zinc-900">
             <X className="size-5" aria-hidden />
           </button>
         </div>
@@ -313,7 +313,7 @@ function QuickAddForm({ editing, onClose }: { editing?: Transaction; onClose: ()
                 type="button"
                 aria-label={k === 'backspace' ? 'Стереть' : k === '.' ? 'Точка' : k}
                 onClick={() => setAmount((a) => applyNumpadKey(a, k))}
-                className="grid h-12 place-items-center rounded-2xl bg-zinc-900 text-2xl active:bg-zinc-800 [@media(max-height:700px)]:h-10"
+                className="grid h-12 place-items-center rounded-2xl bg-zinc-900 text-2xl active:bg-zinc-800 [@media(max-height:700px)]:h-11"
               >
                 {k === 'backspace' ? <Delete className="size-6" aria-hidden /> : k === '.' ? ',' : k}
               </button>

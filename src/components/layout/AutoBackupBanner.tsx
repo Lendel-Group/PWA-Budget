@@ -28,7 +28,7 @@ export function AutoBackupBanner() {
       <span>Автобэкап приостановлен</span>
       <button
         type="button"
-        className="rounded-lg bg-amber-500 px-3 py-1.5 font-medium text-zinc-950"
+        className="min-h-11 rounded-lg bg-amber-500 px-3 font-medium text-zinc-950"
         onClick={async () => {
           await resumeAutoBackup()
           await check()

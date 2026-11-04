@@ -54,11 +54,11 @@ export default function AnalyticsPage() {
   return (
     <section className="space-y-4 p-4">
       <div className="flex items-center justify-between">
-        <button type="button" aria-label="Предыдущий год" onClick={() => setYear(y - 1)} className="grid size-10 place-items-center rounded-xl bg-zinc-900">
+        <button type="button" aria-label="Предыдущий год" onClick={() => setYear(y - 1)} className="grid size-11 place-items-center rounded-xl bg-zinc-900">
           <ChevronLeft className="size-5" aria-hidden />
         </button>
         <h2 className="text-lg font-semibold" data-testid="year">{y}</h2>
-        <button type="button" aria-label="Следующий год" onClick={() => setYear(y + 1)} className="grid size-10 place-items-center rounded-xl bg-zinc-900">
+        <button type="button" aria-label="Следующий год" onClick={() => setYear(y + 1)} className="grid size-11 place-items-center rounded-xl bg-zinc-900">
           <ChevronRight className="size-5" aria-hidden />
         </button>
       </div>

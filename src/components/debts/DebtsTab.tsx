@@ -119,7 +119,7 @@ export function DebtsTab() {
                 </div>
                 <button
                   type="button" aria-label={`Удалить долг ${d.name}`}
-                  className="grid size-8 place-items-center text-fg-muted hover:text-red-400"
+                  className="-mr-2 -mt-2 grid size-11 shrink-0 place-items-center text-fg-muted hover:text-red-400"
                   onClick={async () => {
                     if (!window.confirm(`Удалить долг «${d.name}»?`)) return
                     setError(undefined)

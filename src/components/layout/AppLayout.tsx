@@ -65,7 +65,7 @@ export function AppLayout({ route, onNavigate, onAdd, children }: Props) {
           aria-label="Настройки"
           aria-current={route === 'settings' ? 'page' : undefined}
           className={cn(
-            'grid size-10 place-items-center rounded-xl active:bg-zinc-900',
+            'grid size-11 place-items-center rounded-xl active:bg-zinc-900',
             route === 'settings' ? 'bg-zinc-900 text-emerald-400' : 'text-zinc-400',
           )}
         >

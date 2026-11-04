@@ -96,7 +96,7 @@ export function AboutSection() {
         href={APP_INFO.repoUrl}
         target="_blank"
         rel="noreferrer noopener"
-        className="flex items-center gap-1.5 text-xs text-emerald-400 underline"
+        className="flex min-h-11 items-center gap-1.5 text-xs text-emerald-400 underline"
       >
         Исходный код на GitHub <ExternalLink className="size-3" aria-hidden />
       </a>

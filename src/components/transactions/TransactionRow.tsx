@@ -71,7 +71,7 @@ export function TransactionRow({ transaction: t, accounts, categories, onDelete,
     <li className="relative overflow-hidden rounded-xl bg-red-600/80">
       <Trash2 className="absolute right-5 top-1/2 size-5 -translate-y-1/2 text-white" aria-hidden />
       <div
-        className="relative flex touch-pan-y items-center gap-3 bg-zinc-900 px-3 py-3"
+        className="relative flex touch-pan-y items-center gap-3 bg-zinc-900 px-3"
         style={{ transform: `translateX(${dx}px)`, transition: dragging ? undefined : 'transform .2s' }}
         // Захват указателя — только после сдвига: иначе обычное нажатие по кнопке «Изменить» не дойдёт до click
         onPointerDown={(e) => { startX.current = e.clientX }}
@@ -89,11 +89,11 @@ export function TransactionRow({ transaction: t, accounts, categories, onDelete,
         onPointerCancel={end}
       >
         {onEdit ? (
-          <button type="button" onClick={() => onEdit(t)} className="flex min-w-0 flex-1 items-center gap-3 text-left">
+          <button type="button" onClick={() => onEdit(t)} className="flex min-h-14 min-w-0 flex-1 items-center gap-3 py-3 text-left">
             {body}
           </button>
         ) : (
-          <div className="flex min-w-0 flex-1 items-center gap-3">
+          <div className="flex min-h-14 min-w-0 flex-1 items-center gap-3 py-3">
             {body}
           </div>
         )}
@@ -102,7 +102,7 @@ export function TransactionRow({ transaction: t, accounts, categories, onDelete,
           aria-label="Удалить операцию"
           onPointerDown={(e) => e.stopPropagation()}
           onClick={() => onDelete(t)}
-          className="grid size-9 shrink-0 place-items-center rounded-lg text-fg-muted hover:text-red-400"
+          className="-mr-1 grid size-11 shrink-0 place-items-center rounded-lg text-fg-muted hover:text-red-400"
         >
           <Trash2 className="size-4" aria-hidden />
         </button>
