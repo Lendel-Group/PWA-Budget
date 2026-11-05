@@ -1,5 +1,7 @@
+import { PeriodSwitcher } from '../ui/PeriodSwitcher'
+import { canStepMonth, earliestMonth, monthBounds } from '../../domain/period'
 import { useRef, useState } from 'react'
-import { ChevronLeft, ChevronRight, Flame } from 'lucide-react'
+import { Flame } from 'lucide-react'
 import { monthLabel, nextMonth, previousMonth } from '../../domain/budget'
 import { addDays, daysInMonth, formatDayHeading, monthStart, parseDate } from '../../domain/dates'
 import { buildCalendar, isCalendarDayInteractive, nextCalendarDate, type DayState } from '../../domain/planning'
@@ -34,6 +36,8 @@ export function NoSpendTab() {
   const { dates, firstTracked, currentStreak, cleanDaysThisMonth } = stats
   const weeks = buildCalendar(year, month, today, dates, firstTracked)
   const isCurrent = year === current.year && month === current.month
+  // Календарь «без трат» не уходит раньше начала учёта и не заглядывает в будущее
+  const bounds = monthBounds(current, earliestMonth([firstTracked]), 0)
   const monthClean = weeks.flat().filter((c) => c?.state === 'clean').length
   // Клавиатура: открыть можно только дни с данными; в Tab-порядке один день (roving tabindex)
   const interactive = new Set(weeks.flat().filter((c) => c !== null && isCalendarDayInteractive(c.state)).map((c) => c!.date))
@@ -58,12 +62,19 @@ export function NoSpendTab() {
       </div>
 
       <div className="rounded-2xl bg-zinc-900 p-3">
-        <div className="mb-3 flex items-center justify-between">
-          <button type="button" aria-label="Предыдущий месяц" className="grid size-11 place-items-center rounded-lg bg-zinc-800"
-            onClick={() => setPeriod(previousMonth(year, month))}><ChevronLeft className="size-4" aria-hidden /></button>
-          <h2 className="font-medium" data-testid="calendar-title">{monthLabel(year, month)}</h2>
-          <button type="button" aria-label="Следующий месяц" className="grid size-11 place-items-center rounded-lg bg-zinc-800"
-            onClick={() => setPeriod(nextMonth(year, month))}><ChevronRight className="size-4" aria-hidden /></button>
+        <div className="mb-3">
+          <PeriodSwitcher
+            compact
+            title={monthLabel(year, month)}
+            titleTestId="calendar-title"
+            unit="месяц"
+            canPrev={canStepMonth({ year, month }, -1, bounds)}
+            canNext={canStepMonth({ year, month }, 1, bounds)}
+            onPrev={() => setPeriod(previousMonth(year, month))}
+            onNext={() => setPeriod(nextMonth(year, month))}
+            isCurrent={isCurrent}
+            onToday={() => setPeriod(null)}
+          />
         </div>
         <div
           ref={grid}

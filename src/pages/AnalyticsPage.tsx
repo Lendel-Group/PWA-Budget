@@ -1,3 +1,6 @@
+import { PeriodSwitcher } from '../components/ui/PeriodSwitcher'
+import { yearBounds } from '../domain/period'
+import { useEarliestMonth } from '../lib/useEarliestMonth'
 import { ScreenSkeleton } from '../components/ui/Skeleton'
 import { useRef, useState, type PointerEvent } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
@@ -141,6 +144,8 @@ function YearOverview() {
   // Выбранный месяц привязан к году: при смене года выбор сбрасывается к текущему месяцу (в текущем году) или пустому
   const [picked, setPicked] = useState<{ year: number; month: number } | null>(null)
   const selected = picked?.year === y ? picked.month : y === current.year ? current.month : undefined
+  const earliest = useEarliestMonth(false)
+  const bounds = yearBounds(current.year, earliest ?? null)
   const { rates } = useRates()
   const accounts = useLiveQuery(() => db.accounts.toArray(), [])
   const categories = useLiveQuery(() => db.categories.toArray(), [])
@@ -154,15 +159,17 @@ function YearOverview() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <button type="button" aria-label="Предыдущий год" onClick={() => setYear(y - 1)} className="grid size-11 place-items-center rounded-xl bg-zinc-900">
-          <ChevronLeft className="size-5" aria-hidden />
-        </button>
-        <h2 className="text-lg font-semibold" data-testid="year">{y}</h2>
-        <button type="button" aria-label="Следующий год" onClick={() => setYear(y + 1)} className="grid size-11 place-items-center rounded-xl bg-zinc-900">
-          <ChevronRight className="size-5" aria-hidden />
-        </button>
-      </div>
+      <PeriodSwitcher
+        title={String(y)}
+        titleTestId="year"
+        unit="год"
+        canPrev={y > bounds.min}
+        canNext={y < bounds.max}
+        onPrev={() => setYear(y - 1)}
+        onNext={() => setYear(y + 1)}
+        isCurrent={y === current.year}
+        onToday={() => setYear(null)}
+      />
 
       <div className="rounded-2xl bg-zinc-900 p-3">
         <p className="mb-1 flex items-baseline justify-between gap-2 px-1 text-sm text-fg-muted">
