@@ -1,3 +1,4 @@
+import { ScreenSkeleton } from '../components/ui/Skeleton'
 import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { AlertCircle, Check, ChevronLeft, ChevronRight, Copy, MoreHorizontal } from 'lucide-react'
@@ -118,7 +119,7 @@ export default function BudgetPage() {
     [prevMonthKey.year, prevMonthKey.month],
   )
 
-  if (!categories || !accounts || !limits || !txs) return null
+  if (!categories || !accounts || !limits || !txs) return <ScreenSkeleton blocks={['h-11', 'h-32', 'h-24', 'h-24', 'h-24', 'h-24', 'h-24', 'h-24', 'h-24']} />
 
   const plannedById = new Map(limits.map((l) => [l.categoryId, l.plannedAmount]))
   const totals = calculateCategoryTotalsKzt(txs, accounts, rates)
