@@ -93,6 +93,14 @@ export function AboutSection() {
         Единственный внешний запрос — загрузка курсов валют (копия официальных курсов Нацбанка РК на al-writer.github.io/nbk-rates).
       </p>
       <a
+        href={`${import.meta.env.BASE_URL}docs/`}
+        target="_blank"
+        rel="noopener"
+        className="flex min-h-11 items-center gap-1.5 text-xs text-accent-fg underline"
+      >
+        Инструкция: все экраны и действия <ExternalLink className="size-3" aria-hidden />
+      </a>
+      <a
         href={APP_INFO.repoUrl}
         target="_blank"
         rel="noreferrer noopener"
