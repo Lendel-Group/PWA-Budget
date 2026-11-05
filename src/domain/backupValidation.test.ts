@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { BACKUP_APP_ID, BACKUP_SCHEMA_VERSION, BackupValidationError, parseBackup } from './backupValidation'
+import { BACKUP_APP_ID, BACKUP_SCHEMA_VERSION, BackupValidationError, describeBackup, parseBackup } from './backupValidation'
 
 const valid = () => ({
   app: BACKUP_APP_ID,
@@ -82,5 +82,11 @@ describe('parseBackup', () => {
   it('checks referential integrity of accounts', () => {
     expect(() => parse((b) => { b.data.transactions[0].accountId = 'zz' })).toThrow(/несуществующий/)
     expect(() => parse((b) => { b.data.transactions[1].toAccountId = 'zz' })).toThrow(/несуществующий/)
+  })
+})
+
+describe('describeBackup', () => {
+  it('перечисляет число счетов, операций, долгов и целей', () => {
+    expect(describeBackup(parse().data)).toBe('счетов: 2, операций: 2, долгов: 1, целей: 1')
   })
 })

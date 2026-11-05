@@ -135,3 +135,8 @@ export function parseBackup(jsonString: string): BackupFile {
 
   return raw as unknown as BackupFile
 }
+
+/** Краткое описание содержимого копии для подтверждения восстановления: «счетов: 3, операций: 120, …». */
+export function describeBackup(data: BackupData): string {
+  return `счетов: ${data.accounts.length}, операций: ${data.transactions.length}, долгов: ${data.debts.length}, целей: ${data.goals.length}`
+}
