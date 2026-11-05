@@ -1,65 +1,63 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ChevronLeft, ChevronRight, Copy } from 'lucide-react'
+import { AlertCircle, Check, ChevronLeft, ChevronRight, Copy } from 'lucide-react'
 import { db, type BudgetLimit, type Category } from '../db/schema'
 import { DEFAULT_CATEGORY_IDS } from '../db/seed'
 import { sortByDefaultOrder } from '../domain/categories'
 import {
-  calculateCategoryTotalsKzt, calculateUncategorizedKzt, limitId, monthLabel, nextMonth, parsePlanInput, planCopy, previousMonth,
+  calculateCategoryTotalsKzt, calculateUncategorizedKzt, monthLabel, nextMonth, planCopy, previousMonth,
 } from '../domain/budget'
 import { addDays, daysInMonth, parseDate } from '../domain/dates'
 import { calculateExpensesKzt, sumPlannedLimits } from '../domain/finance'
 import { cn } from '../lib/cn'
 import { formatMoney } from '../lib/format'
 import { CategoryIcon } from '../lib/icons'
+import { usePlanLimit, type LimitStatus } from '../lib/usePlanLimit'
 import { useRates } from '../lib/useRates'
 import { useToday } from '../lib/useToday'
 
 const pad = (n: number) => String(n).padStart(2, '0')
 
-async function savePlan(year: number, month: number, categoryId: string, amount: number) {
-  const id = limitId(year, month, categoryId)
-  if (amount > 0) await db.budgetLimits.put({ id, year, month, categoryId, plannedAmount: amount })
-  else await db.budgetLimits.delete(id)
+/** Текст проблемы с лимитом для нижней строки карточки (там же он озвучивается); `undefined` — всё в порядке. */
+const LIMIT_PROBLEMS: Partial<Record<LimitStatus, string>> = {
+  invalid: 'Введите сумму числом',
+  'save-error': 'Не удалось сохранить лимит',
 }
 
-/** Поле лимита с инлайн-автосохранением (debounce 500 мс и при потере фокуса). */
-function PlanInput({ stored, year, month, categoryId, name }: {
-  stored: number; year: number; month: number; categoryId: string; name: string
-}) {
-  const [draft, setDraft] = useState<string | null>(null)
-  const parsed = draft === null ? null : parsePlanInput(draft)
-  const invalid = draft !== null && parsed === null
-
-  useEffect(() => {
-    if (parsed === null || parsed === stored) return
-    const id = setTimeout(() => void savePlan(year, month, categoryId, parsed), 500)
-    return () => clearTimeout(id)
-  }, [parsed, stored, year, month, categoryId])
-
+/** Поле лимита: отметка состояния — внутри поля слева, поэтому ни появление, ни исчезновение вёрстку не сдвигают. */
+function PlanInput({ limit, name, describedBy }: { limit: ReturnType<typeof usePlanLimit>; name: string; describedBy?: string }) {
+  const { status } = limit
+  const bad = status === 'invalid' || status === 'save-error'
   return (
-    <input
-      inputMode="decimal"
-      aria-label={`Лимит: ${name}`}
-      aria-invalid={invalid}
-      placeholder="0"
-      value={draft ?? (stored > 0 ? String(stored) : '')}
-      onChange={(e) => setDraft(e.target.value)}
-      onBlur={() => {
-        if (parsed !== null && parsed !== stored) void savePlan(year, month, categoryId, parsed)
-        setDraft(null)
-      }}
-      className={cn(
-        'min-h-11 w-28 min-w-0 shrink rounded-lg bg-zinc-800 px-2 py-1.5 text-right text-sm tabular-nums outline-none focus:ring-2 focus:ring-accent',
-        invalid && 'ring-2 ring-danger',
-      )}
-    />
+    <span className="relative w-28 min-w-0 shrink">
+      <span aria-hidden className="pointer-events-none absolute inset-y-0 left-2 grid place-items-center">
+        {status === 'saved' && <Check className="size-4 text-success" data-testid="limit-saved" />}
+        {bad && <AlertCircle className="size-4 text-danger" data-testid="limit-problem" />}
+      </span>
+      <input
+        inputMode="decimal"
+        aria-label={`Лимит: ${name}`}
+        aria-invalid={bad}
+        aria-describedby={bad ? describedBy : undefined}
+        placeholder="0"
+        value={limit.value}
+        onChange={(e) => limit.onChange(e.target.value)}
+        onBlur={limit.onBlur}
+        className={cn(
+          'min-h-11 w-full min-w-0 rounded-lg bg-zinc-800 py-1.5 pl-7 pr-2 text-right text-sm tabular-nums outline-none focus:ring-2 focus:ring-accent',
+          bad && 'ring-2 ring-danger focus:ring-danger',
+        )}
+      />
+    </span>
   )
 }
 
 function CategoryRow({ category, planned, actual, year, month }: {
   category: Category; planned: number; actual: number; year: number; month: number
 }) {
+  const limit = usePlanLimit(planned, year, month, category.id)
+  const problem = LIMIT_PROBLEMS[limit.status]
+  const problemId = `limit-problem-${category.id}`
   const over = planned > 0 ? actual > planned : actual > 0
   const pct = planned > 0 ? Math.min(100, (actual / planned) * 100) : actual > 0 ? 100 : 0
   return (
@@ -69,7 +67,7 @@ function CategoryRow({ category, planned, actual, year, month }: {
           <CategoryIcon name={category.icon} className="size-5" />
         </span>
         <span className="min-w-0 flex-1 truncate text-sm">{category.name}</span>
-        <PlanInput stored={planned} year={year} month={month} categoryId={category.id} name={category.name} />
+        <PlanInput limit={limit} name={category.name} describedBy={problemId} />
       </div>
       <div
         className="mt-3 h-2 overflow-hidden rounded-full bg-zinc-800"
@@ -85,10 +83,13 @@ function CategoryRow({ category, planned, actual, year, month }: {
         <span className={cn('tabular-nums', over ? 'text-danger' : 'text-zinc-400')} data-testid={`actual-${category.id}`}>
           Факт: {formatMoney(actual)}
         </span>
-        <span className={cn('tabular-nums', over ? 'text-danger' : 'text-fg-muted')}>
-          {planned > 0
+        <span className={cn('tabular-nums', over || problem ? 'text-danger' : 'text-fg-muted')}>
+          {/* Состояние лимита озвучивается: ошибки — `alert`, «Сохранено» — вежливый `status`; обе области всегда в разметке */}
+          <span id={problemId} role="alert">{problem}</span>
+          <span role="status" className="sr-only">{limit.status === 'saved' ? 'Лимит сохранён' : ''}</span>
+          {!problem && (planned > 0
             ? actual > planned ? `Перерасход ${formatMoney(actual - planned)}` : `Осталось ${formatMoney(planned - actual)}`
-            : actual > 0 ? 'Нет лимита' : ''}
+            : actual > 0 ? 'Нет лимита' : '')}
         </span>
       </div>
     </li>
