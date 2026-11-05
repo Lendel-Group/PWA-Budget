@@ -45,6 +45,10 @@ npm run preview    # проверка production-сборки (в т.ч. офл�
 Деплой запускается автоматически при каждом push в `main` (`.github/workflows/deploy.yml`:
 lint → test → build → публикация). Адрес: `https://<owner>.github.io/<repo>/`.
 
+На корне сайта — лендинг (`index.html`, код в `src/landing/`), само приложение — в подкаталоге `app/`
+(`app/index.html`, адрес `https://<owner>.github.io/<repo>/app/`). Сервис-воркер и манифест ограничены `app/`,
+лендинг в офлайн-кэш не попадает. Локально: `npm run dev` → `http://localhost:5173/app/`.
+
 Один раз в репозитории: **Settings → Pages → Build and deployment → Source: GitHub Actions**.
 
 Подпуть задаётся переменной `BASE_PATH` (в workflow — `/<repo>/`, локально — `/`):

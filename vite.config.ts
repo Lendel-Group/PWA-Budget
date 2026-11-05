@@ -1,5 +1,6 @@
 import { execSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
@@ -18,9 +19,19 @@ function commitHash(): string {
 
 // BASE_PATH задаёт подпуть хостинга (GitHub Pages: /<repo>/); локально — '/'.
 const base = process.env.BASE_PATH ?? '/'
+// На корне сайта — лендинг (index.html), само приложение — в подкаталоге app/ (app/index.html).
+const appBase = `${base}app/`
 
 export default defineConfig({
   base,
+  build: {
+    rollupOptions: {
+      input: {
+        landing: resolve(import.meta.dirname, 'index.html'),
+        app: resolve(import.meta.dirname, 'app/index.html'),
+      },
+    },
+  },
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
     __BUILD_DATE__: JSON.stringify(new Date().toISOString()),
@@ -31,6 +42,8 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'prompt',
+      // Сервис-воркер обслуживает только приложение: лендинг на корне открывается из сети как обычный сайт
+      scope: appBase,
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
         name: 'My Budget 2026',
@@ -39,8 +52,10 @@ export default defineConfig({
         display: 'standalone',
         theme_color: '#09090b',
         background_color: '#09090b',
-        start_url: base,
-        scope: base,
+        // id — прежний start_url: уже установленное приложение остаётся тем же, а не дублируется
+        id: base,
+        start_url: appBase,
+        scope: appBase,
         lang: 'ru',
         icons: [
           { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
@@ -50,7 +65,9 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
-        navigateFallback: 'index.html',
+        globIgnores: ['index.html', 'assets/landing-*'], // лендинг не кэшируется офлайн-копией приложения
+        navigateFallback: 'app/index.html',
+        navigateFallbackAllowlist: [new RegExp(`^${appBase}`)],
         runtimeCaching: [
           {
             urlPattern: ({ request }) =>
