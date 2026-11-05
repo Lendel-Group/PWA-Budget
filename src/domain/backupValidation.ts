@@ -17,10 +17,18 @@ export interface BackupData {
   config: AppConfig[]
 }
 
+/** Где создан файл. Необязательное поле: в старых файлах его нет, незнакомое значение не отклоняется. */
+export type BackupPlatform = 'pwa' | 'android'
+export const BACKUP_PLATFORM: BackupPlatform = 'pwa'
+
 export interface BackupFile {
   app: typeof BACKUP_APP_ID
   schemaVersion: number
   exportedAt: string
+  /** Где создан файл (`pwa` | `android`); нет в файлах до PWA 1.23.0. */
+  platform?: BackupPlatform | string
+  /** Версия приложения, создавшего файл. */
+  appVersion?: string
   data: BackupData
 }
 
