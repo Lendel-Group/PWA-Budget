@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { AlertTriangle, ChevronDown, ChevronRight, Flame } from 'lucide-react'
 import { OnboardingChecklist } from '../components/onboarding/OnboardingChecklist'
+import { InstallCard } from '../components/pwa/InstallCard'
 import { TransactionRow } from '../components/transactions/TransactionRow'
 import { db, type Transaction } from '../db/schema'
 import { addDays, daysInMonth, daysLeftInMonth, monthStart, parseDate } from '../domain/dates'
@@ -139,6 +140,8 @@ export default function DashboardPage({ onEdit, onAdd }: { onEdit: (t: Transacti
           </p>
         )}
       </div>
+
+      <InstallCard />
 
       {noSpend && (
         <a href="#/nospend" data-testid="streak-widget" className="flex min-h-11 flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-2xl bg-zinc-900 px-4 py-2 active:bg-zinc-800">

@@ -1,40 +1,34 @@
-import { useCallback, useEffect, useState } from 'react'
-import { getAutoBackupPermission, resumeAutoBackup } from '../../services/backupService'
+import { useEffect } from 'react'
+import { refreshAutoBackupStatus, useAutoBackupNeedsResume } from '../../lib/autoBackupStatus'
+import { resumeAutoBackup } from '../../services/backupService'
 
-/** После перезапуска браузера право записи в файл нужно подтвердить жестом пользователя. */
+/**
+ * После перезапуска браузера право записи в файл нужно подтвердить жестом пользователя.
+ * Одна компактная строка над шапкой (≈44 px); пока она показана, предложение установки на главной скрыто.
+ */
 export function AutoBackupBanner() {
-  const [needsResume, setNeedsResume] = useState(false)
-
-  const check = useCallback(
-    () => getAutoBackupPermission().then((p) => setNeedsResume(p === 'prompt')),
-    [],
-  )
+  const needsResume = useAutoBackupNeedsResume()
 
   useEffect(() => {
-    let alive = true
-    const run = () => getAutoBackupPermission().then((p) => alive && setNeedsResume(p === 'prompt'))
-    void run()
-    const onVisible = () => document.visibilityState === 'visible' && void run()
+    void refreshAutoBackupStatus()
+    const onVisible = () => document.visibilityState === 'visible' && void refreshAutoBackupStatus()
     document.addEventListener('visibilitychange', onVisible)
-    return () => {
-      alive = false
-      document.removeEventListener('visibilitychange', onVisible)
-    }
+    return () => document.removeEventListener('visibilitychange', onVisible)
   }, [])
 
   if (!needsResume) return null
   return (
-    <div className="flex items-center justify-between gap-3 bg-amber-500/15 px-4 py-2 text-sm text-amber-200">
-      <span>Автобэкап приостановлен</span>
+    <div role="region" aria-label="Автобэкап" className="flex flex-wrap items-center justify-between gap-x-3 bg-warning/15 px-4 text-sm text-warning">
+      <span className="py-1">Автобэкап приостановлен</span>
       <button
         type="button"
-        className="min-h-11 rounded-lg bg-amber-500 px-3 font-medium text-zinc-950"
+        className="min-h-11 px-1 font-semibold underline"
         onClick={async () => {
           await resumeAutoBackup()
-          await check()
+          await refreshAutoBackupStatus()
         }}
       >
-        Возобновить автобэкап
+        Возобновить
       </button>
     </div>
   )

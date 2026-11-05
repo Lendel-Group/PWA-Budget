@@ -5,7 +5,6 @@ import { cn } from '../../lib/cn'
 import type { Route } from '../../lib/useHashRoute'
 import { useRouteAnnounce } from '../../lib/useRouteAnnounce'
 import { installViewportNudge } from '../../lib/viewport'
-import { InstallBanner } from '../pwa/InstallBanner'
 import { AutoBackupBanner } from './AutoBackupBanner'
 
 /** Заголовок страницы (h1) — один на экран, у «Планов» он общий для всех подразделов. */
@@ -69,7 +68,6 @@ export function AppLayout({ route, onNavigate, onAdd, children }: Props) {
     <div className="mx-auto min-h-dvh max-w-md bg-zinc-950 pt-[env(safe-area-inset-top)] pb-[calc(5.5rem+var(--safe-bottom))] text-zinc-100">
       {/* Закрывает область под статус-баром (iOS black-translucent), чтобы контент не просвечивал */}
       <div aria-hidden className="fixed inset-x-0 top-0 z-40 h-[env(safe-area-inset-top)] bg-zinc-950" />
-      <InstallBanner />
       <AutoBackupBanner />
       <header className="sticky top-[env(safe-area-inset-top)] z-30 flex h-14 items-center justify-between bg-zinc-950/95 px-4 backdrop-blur">
         <h1 ref={heading} tabIndex={-1} className="truncate text-2xl font-bold tracking-tight text-zinc-50 outline-none">{SCREEN_TITLES[screen]}</h1>
