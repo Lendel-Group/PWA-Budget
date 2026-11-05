@@ -1,7 +1,10 @@
+import { PeriodSwitcher } from '../components/ui/PeriodSwitcher'
+import { canStepMonth, monthBounds, sameMonth } from '../domain/period'
+import { useEarliestMonth } from '../lib/useEarliestMonth'
 import { ScreenSkeleton } from '../components/ui/Skeleton'
 import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { AlertCircle, Check, ChevronLeft, ChevronRight, Copy, MoreHorizontal } from 'lucide-react'
+import { AlertCircle, Check, Copy, MoreHorizontal } from 'lucide-react'
 import { db, type BudgetLimit, type Category } from '../db/schema'
 import { DEFAULT_CATEGORY_IDS } from '../db/seed'
 import { sortByDefaultOrder } from '../domain/categories'
@@ -104,6 +107,8 @@ export default function BudgetPage() {
   const { year, month } = period ?? { year: current.year, month: current.month }
   const start = `${year}-${pad(month)}-01`
   const nextStart = addDays(start, daysInMonth(year, month))
+  const earliest = useEarliestMonth(true)
+  const bounds = monthBounds(current, earliest ?? null, 12)
   const [notice, setNotice] = useState<string>()
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -152,15 +157,17 @@ export default function BudgetPage() {
 
   return (
     <section className="space-y-4 p-4">
-      <div className="flex items-center justify-between">
-        <button type="button" aria-label="Предыдущий месяц" onClick={() => go(prev)} className="grid size-11 place-items-center rounded-xl bg-zinc-900">
-          <ChevronLeft className="size-5" aria-hidden />
-        </button>
-        <h2 className="text-lg font-semibold" data-testid="period">{monthLabel(year, month)}</h2>
-        <button type="button" aria-label="Следующий месяц" onClick={() => go(nextMonth(year, month))} className="grid size-11 place-items-center rounded-xl bg-zinc-900">
-          <ChevronRight className="size-5" aria-hidden />
-        </button>
-      </div>
+      <PeriodSwitcher
+        title={monthLabel(year, month)}
+        titleTestId="period"
+        unit="месяц"
+        canPrev={canStepMonth({ year, month }, -1, bounds)}
+        canNext={canStepMonth({ year, month }, 1, bounds)}
+        onPrev={() => go(prev)}
+        onNext={() => go(nextMonth(year, month))}
+        isCurrent={sameMonth({ year, month }, current)}
+        onToday={() => go(current)}
+      />
 
       <div data-selectable className="rounded-2xl bg-zinc-900 p-4" data-testid="totals">
         <div className="-mt-2 mb-1 flex items-center justify-between gap-3">
