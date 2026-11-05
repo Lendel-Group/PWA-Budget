@@ -176,7 +176,7 @@ function QuickAddForm({ editing, onClose }: { editing?: Transaction; onClose: ()
     <Dialog
       label={editing ? 'Редактирование операции' : 'Новая операция'}
       onClose={onClose}
-      panelClassName="flex h-[calc(100dvh-env(safe-area-inset-top)-0.5rem)] w-full max-w-md flex-col gap-2.5 rounded-t-3xl [@media(max-height:700px)]:gap-2 bg-zinc-950 p-4 pb-[max(1rem,var(--safe-bottom))]"
+      panelClassName="flex h-[calc(var(--vvh,100dvh)-env(safe-area-inset-top)-0.5rem)] w-full max-w-md flex-col gap-2.5 rounded-t-3xl [@media(max-height:700px)]:gap-2 bg-zinc-950 p-4 pb-[max(1rem,var(--safe-bottom))]"
     >
       {/* Прокручивается всё, кроме «Сохранить»: при крупном шрифте форма не помещается в экран, а кнопка остаётся на виду */}
       <div className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto [@media(max-height:700px)]:gap-2">

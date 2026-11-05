@@ -1,5 +1,6 @@
-import { useEffect, useRef, type ReactNode } from 'react'
+import { useEffect, useRef, type CSSProperties, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
+import { useKeyboardInset } from '../../lib/keyboardInset'
 
 const FOCUSABLE =
   'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])'
@@ -34,7 +35,9 @@ interface Props {
  * — при открытии фокус уходит на первое поле (`[data-autofocus]`), иначе на заголовок (`[data-autofocus-fallback]`) или на саму панель;
  * — Tab / Shift+Tab ходят по кругу внутри панели, Esc закрывает;
  * — при закрытии фокус возвращается на элемент, открывший окно;
- * — подложка скрыта от скринридера и не фокусируется: в дереве остаётся одна кнопка «Закрыть» (в содержимом).
+ * — подложка скрыта от скринридера и не фокусируется: в дереве остаётся одна кнопка «Закрыть» (в содержимом);
+ * — при открытой экранной клавиатуре панель поднимается над ней, а её высота ограничивается видимой областью
+ *   (переменная `--vvh`; в классах панели — `var(--vvh,100dvh)` вместо `100dvh`), поле в фокусе остаётся на виду.
  */
 export function Dialog({ label, onClose, panelClassName, children }: Props) {
   const panel = useRef<HTMLDivElement>(null)
@@ -43,6 +46,16 @@ export function Dialog({ label, onClose, panelClassName, children }: Props) {
   // Кто открыл окно (его фокус вернём при закрытии); запоминается один раз и переживает повторный запуск эффекта в StrictMode
   const initiatorRef = useRef<HTMLElement | null>(null)
   useEffect(() => { closeRef.current = onClose })
+  const keyboard = useKeyboardInset()
+
+  // Клавиатура открылась или поменяла высоту — возвращаем поле в фокусе в видимую часть панели
+  useEffect(() => {
+    if (keyboard.inset === 0) return
+    const active = document.activeElement
+    if (active instanceof HTMLElement && panel.current?.contains(active) && active.matches('input,textarea,select')) {
+      requestAnimationFrame(() => active.scrollIntoView({ block: 'nearest' }))
+    }
+  }, [keyboard.inset, keyboard.visibleHeight])
 
   useEffect(() => {
     const el = panel.current!
@@ -92,7 +105,10 @@ export function Dialog({ label, onClose, panelClassName, children }: Props) {
   }, [])
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-end justify-center">
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center"
+      style={keyboard.inset > 0 ? ({ paddingBottom: keyboard.inset, '--vvh': `${keyboard.visibleHeight}px` } as CSSProperties) : undefined}
+    >
       <div aria-hidden className="absolute inset-0 bg-black/60" onClick={() => closeRef.current()} />
       <div
         ref={panel}

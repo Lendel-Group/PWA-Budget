@@ -8,7 +8,7 @@ export function Sheet({ title, onClose, children }: { title: string; onClose: ()
     <Dialog
       label={title}
       onClose={onClose}
-      panelClassName="max-h-[calc(100dvh-env(safe-area-inset-top)-0.5rem)] w-full max-w-md space-y-3 overflow-y-auto rounded-t-3xl bg-zinc-950 p-4 pb-[max(1rem,var(--safe-bottom))]"
+      panelClassName="max-h-[calc(var(--vvh,100dvh)-env(safe-area-inset-top)-0.5rem)] w-full max-w-md space-y-3 overflow-y-auto rounded-t-3xl bg-zinc-950 p-4 pb-[max(1rem,var(--safe-bottom))]"
     >
       <div className="flex items-center justify-between">
         <h2 data-autofocus-fallback tabIndex={-1} className="text-lg font-semibold outline-none">{title}</h2>
