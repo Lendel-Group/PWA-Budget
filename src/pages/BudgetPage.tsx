@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { AlertCircle, Check, ChevronLeft, ChevronRight, Copy } from 'lucide-react'
+import { AlertCircle, Check, ChevronLeft, ChevronRight, Copy, MoreHorizontal } from 'lucide-react'
 import { db, type BudgetLimit, type Category } from '../db/schema'
 import { DEFAULT_CATEGORY_IDS } from '../db/seed'
 import { sortByDefaultOrder } from '../domain/categories'
 import {
-  calculateCategoryTotalsKzt, calculateUncategorizedKzt, monthLabel, nextMonth, planCopy, previousMonth,
+  calculateCategoryTotalsKzt, calculateUncategorizedKzt, monthBalance, monthLabel, nextMonth, planCopy, previousMonth,
 } from '../domain/budget'
 import { addDays, daysInMonth, parseDate } from '../domain/dates'
 import { calculateExpensesKzt, sumPlannedLimits } from '../domain/finance'
@@ -104,12 +104,19 @@ export default function BudgetPage() {
   const start = `${year}-${pad(month)}-01`
   const nextStart = addDays(start, daysInMonth(year, month))
   const [notice, setNotice] = useState<string>()
+  const [menuOpen, setMenuOpen] = useState(false)
 
   const { rates } = useRates()
   const categories = useLiveQuery(() => db.categories.where('type').equals('expense').toArray(), [])
   const accounts = useLiveQuery(() => db.accounts.toArray(), [])
   const limits = useLiveQuery(() => db.budgetLimits.where('[year+month]').equals([year, month]).toArray(), [year, month])
   const txs = useLiveQuery(() => db.transactions.where('date').between(start, nextStart, true, false).toArray(), [start, nextStart])
+  // Есть ли что копировать из прошлого месяца (для подсказки и меню)
+  const prevMonthKey = previousMonth(year, month)
+  const prevLimitsCount = useLiveQuery(
+    () => db.budgetLimits.where('[year+month]').equals([prevMonthKey.year, prevMonthKey.month]).count(),
+    [prevMonthKey.year, prevMonthKey.month],
+  )
 
   if (!categories || !accounts || !limits || !txs) return null
 
@@ -120,9 +127,12 @@ export default function BudgetPage() {
   const uncategorized = calculateUncategorizedKzt(txs, accounts, rates)
   const totalPlanned = sumPlannedLimits(limits)
   const totalSpent = calculateExpensesKzt(txs, accounts, rates)
-  const prev = previousMonth(year, month)
+  const prev = prevMonthKey
+  const balance = monthBalance(totalPlanned, totalSpent)
+  const monthIsEmpty = limits.length === 0
+  const canCopy = (prevLimitsCount ?? 0) > 0
 
-  const go = (p: { year: number; month: number }) => { setPeriod(p); setNotice(undefined) }
+  const go = (p: { year: number; month: number }) => { setPeriod(p); setNotice(undefined); setMenuOpen(false) }
 
   async function copyFromPrevious() {
     const previousLimits = await db.budgetLimits.where('[year+month]').equals([prev.year, prev.month]).toArray()
@@ -137,6 +147,8 @@ export default function BudgetPage() {
     setNotice(`Скопировано лимитов: ${toAdd.length}`)
   }
 
+  const copyAndClose = () => { setMenuOpen(false); void copyFromPrevious() }
+
   return (
     <section className="space-y-4 p-4">
       <div className="flex items-center justify-between">
@@ -150,6 +162,34 @@ export default function BudgetPage() {
       </div>
 
       <div data-selectable className="rounded-2xl bg-zinc-900 p-4" data-testid="totals">
+        <div className="-mt-2 mb-1 flex items-center justify-between gap-3">
+          <h3 className="text-xs font-medium uppercase tracking-wide text-fg-muted">Итоги месяца</h3>
+          {/* Копирование плана — в меню «Ещё»: когда лимиты уже заданы, оно нужно редко */}
+          {!monthIsEmpty && canCopy && (
+            <button
+              type="button"
+              aria-label="Ещё"
+              aria-expanded={menuOpen}
+              aria-controls="budget-more"
+              onClick={() => setMenuOpen((v) => !v)}
+              className="-mr-2 grid size-11 shrink-0 place-items-center rounded-xl text-fg-muted active:bg-zinc-800"
+            >
+              <MoreHorizontal className="size-5" aria-hidden />
+            </button>
+          )}
+        </div>
+        {menuOpen && (
+          <div id="budget-more" className="mb-3">
+            <button
+              type="button"
+              onClick={copyAndClose}
+              className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-zinc-700 px-3 text-sm active:bg-zinc-800"
+            >
+              <Copy className="size-4 shrink-0" aria-hidden />
+              Добавить недостающие лимиты из месяца «{monthLabel(prev.year, prev.month)}»
+            </button>
+          </div>
+        )}
         <div className="flex justify-between gap-3 text-sm">
           <span className="text-fg-muted">Запланировано</span>
           <span className="min-w-0 text-right tabular-nums [overflow-wrap:anywhere]" data-testid="total-planned">{formatMoney(totalPlanned)}</span>
@@ -158,19 +198,36 @@ export default function BudgetPage() {
           <span className="text-fg-muted">Фактические траты</span>
           <span className={cn('min-w-0 text-right tabular-nums [overflow-wrap:anywhere]', totalSpent > totalPlanned && totalPlanned > 0 && 'text-danger')} data-testid="total-spent">{formatMoney(totalSpent)}</span>
         </div>
+        {balance && (
+          <div className="mt-1 flex justify-between gap-3 border-t border-zinc-800 pt-1 text-sm font-medium">
+            <span className={balance.over ? 'text-danger' : 'text-fg-muted'}>{balance.over ? 'Перерасход' : 'Осталось'}</span>
+            <span className={cn('min-w-0 text-right tabular-nums [overflow-wrap:anywhere]', balance.over && 'text-danger')} data-testid="total-remaining">{formatMoney(balance.amount)}</span>
+          </div>
+        )}
       </div>
 
-      <div>
-        <button
-          type="button"
-          onClick={copyFromPrevious}
-          className="flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-700 py-3 text-sm active:bg-zinc-900"
-        >
-          <Copy className="size-4" aria-hidden />
-          Скопировать план из прошлого месяца
-        </button>
-        {notice && <p role="status" className="mt-2 text-center text-xs text-zinc-400">{notice}</p>}
-      </div>
+      {notice && <p role="status" className="text-center text-xs text-zinc-400">{notice}</p>}
+
+      {monthIsEmpty && (
+        <section aria-labelledby="empty-month-h" className="rounded-2xl border border-accent/40 bg-accent/10 p-4" data-testid="empty-month">
+          <h3 id="empty-month-h" className="font-medium">Задайте лимиты на {monthLabel(year, month)}</h3>
+          <p className="mt-1 text-sm text-fg-muted">
+            {canCopy
+              ? `Впишите суммы по категориям ниже или скопируйте план из месяца «${monthLabel(prev.year, prev.month)}».`
+              : 'Впишите суммы по категориям ниже: из них считается «Лимит на сегодня».'}
+          </p>
+          {canCopy && (
+            <button
+              type="button"
+              onClick={copyAndClose}
+              className="mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-accent px-3 text-sm font-medium text-zinc-950 active:brightness-95"
+            >
+              <Copy className="size-4 shrink-0" aria-hidden />
+              Скопировать из прошлого месяца
+            </button>
+          )}
+        </section>
+      )}
 
       <ul className="space-y-2" aria-label="Категории расходов">
         {rows.map((c) => (
