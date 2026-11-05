@@ -5,6 +5,9 @@ import { useKeyboardInset } from '../../lib/keyboardInset'
 const FOCUSABLE =
   'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])'
 
+/** Поля, для которых нужна экранная клавиатура. */
+const TEXT_ENTRY = 'textarea,select,input:not([type=checkbox]):not([type=radio]):not([type=button]):not([type=submit])'
+
 /** Сколько диалогов сейчас держат приложение недоступным (их может быть больше одного). */
 let locks = 0
 
@@ -57,6 +60,17 @@ export function Dialog({ label, onClose, panelClassName, children }: Props) {
     }
   }, [keyboard.inset, keyboard.visibleHeight])
 
+  /**
+   * Пока открыта клавиатура, касание кнопки, флажка или подложки не снимает фокус с поля. Иначе на Android клавиатура
+   * прячется уже на касании, окно опускается под пальцем, и Chrome отменяет нажатие: крестик, «Сохранить» или
+   * подложка не срабатывают. Нажатие (click) при этом приходит как обычно; клавиатура исчезает, когда окно закроется.
+   */
+  const keepKeyboard = (e: PointerEvent | MouseEvent) => {
+    if (keyboard.inset === 0 || !(e.target instanceof Element)) return
+    if (e.target.closest(TEXT_ENTRY)) return // в другое поле фокус переходит как обычно
+    if (document.activeElement instanceof Element && document.activeElement.matches(TEXT_ENTRY)) e.preventDefault()
+  }
+
   useEffect(() => {
     const el = panel.current!
     if (document.activeElement instanceof HTMLElement && !el.contains(document.activeElement)) initiatorRef.current = document.activeElement
@@ -108,6 +122,8 @@ export function Dialog({ label, onClose, panelClassName, children }: Props) {
     <div
       className="fixed inset-0 z-50 flex items-end justify-center"
       style={keyboard.inset > 0 ? ({ paddingBottom: keyboard.inset, '--vvh': `${keyboard.visibleHeight}px` } as CSSProperties) : undefined}
+      onPointerDown={(e) => keepKeyboard(e.nativeEvent)}
+      onMouseDown={(e) => keepKeyboard(e.nativeEvent)}
     >
       <div aria-hidden className="absolute inset-0 bg-black/60" onClick={() => closeRef.current()} />
       <div
