@@ -81,3 +81,19 @@ export function calculateCategoryTotalsKzt(
   }
   return totals
 }
+
+export interface MonthBalance {
+  /** Сколько осталось (если не превышен) или на сколько превышен план — всегда неотрицательное. */
+  amount: number
+  over: boolean
+}
+
+/**
+ * Итог месяца относительно плана: остаток или перерасход. Без плана (0) сравнивать не с чем — `undefined`,
+ * иначе любые траты выглядели бы перерасходом.
+ */
+export function monthBalance(planned: number, spent: number): MonthBalance | undefined {
+  if (!(planned > 0)) return undefined
+  const diff = round2(planned - spent)
+  return { amount: Math.abs(diff), over: diff < 0 }
+}

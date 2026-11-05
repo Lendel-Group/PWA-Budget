@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Account, BudgetLimit, Transaction } from '../db/schema'
 import {
-  calculateCategoryTotalsKzt, calculateUncategorizedKzt, limitId, monthLabel, nextMonth, parsePlanInput, planCopy, previousMonth,
+  calculateCategoryTotalsKzt, calculateUncategorizedKzt, limitId, monthBalance, monthLabel, nextMonth, parsePlanInput, planCopy, previousMonth,
 } from './budget'
 
 const lim = (categoryId: string, plannedAmount: number, year = 2026, month = 10): BudgetLimit => ({
@@ -76,5 +76,24 @@ describe('calculateUncategorizedKzt', () => {
     ]
     expect(calculateUncategorizedKzt(txs, accounts, { USD: 450 })).toBe(1005)
     expect(calculateUncategorizedKzt(txs, accounts)).toBe(105)
+  })
+})
+
+describe('monthBalance', () => {
+  it('остаток: план больше трат', () => {
+    expect(monthBalance(50000, 12000)).toEqual({ amount: 38000, over: false })
+  })
+  it('ровно по плану — остаток 0, не перерасход', () => {
+    expect(monthBalance(1000, 1000)).toEqual({ amount: 0, over: false })
+  })
+  it('перерасход: сумма превышения положительная', () => {
+    expect(monthBalance(1000, 1500.5)).toEqual({ amount: 500.5, over: true })
+  })
+  it('копейки не дрейфуют', () => {
+    expect(monthBalance(0.3, 0.1 + 0.2)).toEqual({ amount: 0, over: false })
+  })
+  it('без плана сравнивать не с чем', () => {
+    expect(monthBalance(0, 500)).toBeUndefined()
+    expect(monthBalance(NaN, 500)).toBeUndefined()
   })
 })
