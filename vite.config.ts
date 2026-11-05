@@ -29,6 +29,7 @@ export default defineConfig({
       input: {
         landing: resolve(import.meta.dirname, 'index.html'),
         app: resolve(import.meta.dirname, 'app/index.html'),
+        docs: resolve(import.meta.dirname, 'docs/index.html'),
       },
     },
   },
@@ -65,7 +66,8 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
-        globIgnores: ['index.html', 'assets/landing-*'], // лендинг не кэшируется офлайн-копией приложения
+        // Лендинг и инструкция — обычные страницы сайта, в офлайн-кэш приложения не попадают
+        globIgnores: ['index.html', 'assets/landing-*', 'docs/**', 'assets/docs-*'],
         navigateFallback: 'app/index.html',
         navigateFallbackAllowlist: [new RegExp(`^${appBase}`)],
         runtimeCaching: [

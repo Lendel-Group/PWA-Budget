@@ -5,7 +5,7 @@ import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 
 const base = process.argv[2] ?? 'origin/main'
-const APP_PATHS = ['src/', 'public/', 'index.html', 'app/', 'vite.config.ts']
+const APP_PATHS = ['src/', 'public/', 'index.html', 'app/', 'docs/', 'vite.config.ts']
 
 const git = (...args) => execFileSync('git', args, { encoding: 'utf8' }).trim()
 

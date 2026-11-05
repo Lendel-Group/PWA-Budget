@@ -49,6 +49,12 @@ lint → test → build → публикация). Адрес: `https://<owner>.
 (`app/index.html`, адрес `https://<owner>.github.io/<repo>/app/`). Сервис-воркер и манифест ограничены `app/`,
 лендинг в офлайн-кэш не попадает. Локально: `npm run dev` → `http://localhost:5173/app/`.
 
+Инструкция — `docs/index.html` (код в `src/docs/`), адрес `…/<repo>/docs/`. Скриншоты для неё
+лежат в `public/docs/img/` и пересоздаются на демо-данных (нужен Playwright с Chromium):
+```bash
+node scripts/docs-screenshots.cjs
+```
+
 Один раз в репозитории: **Settings → Pages → Build and deployment → Source: GitHub Actions**.
 
 Подпуть задаётся переменной `BASE_PATH` (в workflow — `/<repo>/`, локально — `/`):
