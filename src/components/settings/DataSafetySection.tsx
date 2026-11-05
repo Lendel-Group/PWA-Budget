@@ -1,25 +1,23 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { Download, FileUp, HardDriveDownload, ShieldAlert, ShieldCheck } from 'lucide-react'
+import { Download, HardDriveDownload, ShieldAlert, ShieldCheck } from 'lucide-react'
 import { db } from '../../db/schema'
-import { BackupValidationError, parseBackup } from '../../domain/backupValidation'
 import {
-  downloadBackupFile, getAutoBackupPermission, importDatabaseFromJson, isFileSystemAccessSupported,
+  downloadBackupFile, getAutoBackupPermission, isFileSystemAccessSupported,
   resumeAutoBackup, setupAutoBackupHandle, type AutoBackupPermission,
 } from '../../services/backupService'
-import { resetApplication } from '../../services/resetService'
 import { requestPersistentStorage, type PersistenceStatus } from '../../services/storageService'
 
 const mb = (n?: number) => (n === undefined ? '?' : `${(n / 1024 / 1024).toFixed(1)} МБ`)
 const btn = 'flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-zinc-800 text-sm active:bg-zinc-700 disabled:opacity-50'
 
-export function DataSafetySection() {
+/** `refreshKey` меняется, когда данные заменены (сброс, восстановление): статус автобэкапа перечитывается. */
+export function DataSafetySection({ refreshKey = 0 }: { refreshKey?: number }) {
   const persisted = useLiveQuery(async () => (await db.config.get('storage_persisted'))?.value as boolean | undefined, [])
   const lastBackup = useLiveQuery(async () => (await db.config.get('last_backup_date'))?.value as string | undefined, [])
   const [storage, setStorage] = useState<PersistenceStatus>()
   const [permission, setPermission] = useState<AutoBackupPermission>('none')
   const [message, setMessage] = useState<{ ok: boolean; text: string }>()
-  const fileInput = useRef<HTMLInputElement>(null)
   const supported = isFileSystemAccessSupported()
 
   const refreshPermission = useCallback(() => getAutoBackupPermission().then(setPermission), [])
@@ -29,32 +27,10 @@ export function DataSafetySection() {
     void navigator.storage?.estimate?.().then((e) => alive && setStorage({ isPersisted: false, quota: e.quota, usage: e.usage }))
     void getAutoBackupPermission().then((p) => alive && setPermission(p))
     return () => { alive = false }
-  }, [])
+  }, [refreshKey])
 
   const ok = (text: string) => setMessage({ ok: true, text })
   const fail = (e: unknown) => setMessage({ ok: false, text: e instanceof Error ? e.message : 'Что-то пошло не так' })
-
-  async function restore(file: File) {
-    try {
-      const { data } = parseBackup(await file.text())
-      const summary = `счетов: ${data.accounts.length}, операций: ${data.transactions.length}, долгов: ${data.debts.length}, целей: ${data.goals.length}`
-      if (!window.confirm(`Заменить ВСЕ текущие данные данными из файла (${summary})? Это действие нельзя отменить.`)) return
-      await importDatabaseFromJson(await file.text())
-      ok(`Данные восстановлены (${summary})`)
-    } catch (e) {
-      setMessage({ ok: false, text: e instanceof BackupValidationError ? `Файл не подходит: ${e.message}` : 'Не удалось прочитать файл' })
-    }
-  }
-
-  async function reset() {
-    if (!window.confirm('Удалить ВСЕ данные приложения? Рекомендуем сначала скачать резервную копию.')) return
-    if (!window.confirm('Точно сбросить приложение? Счета, операции, бюджеты, долги и цели будут удалены.')) return
-    try {
-      await resetApplication()
-      await refreshPermission()
-      ok('Приложение сброшено')
-    } catch (e) { fail(e) }
-  }
 
   return (
     <section aria-labelledby="safety-h" className="space-y-3 rounded-2xl bg-zinc-900 p-4">
@@ -100,16 +76,6 @@ export function DataSafetySection() {
         )}
         <button type="button" className={btn} onClick={async () => { try { await downloadBackupFile(); ok('Резервная копия скачана') } catch (e) { fail(e) } }}>
           <Download className="size-4" aria-hidden /> Скачать резервную копию JSON
-        </button>
-        <button type="button" className={btn} onClick={() => fileInput.current?.click()}>
-          <FileUp className="size-4" aria-hidden /> Восстановить из файла
-        </button>
-        <input
-          ref={fileInput} type="file" accept="application/json,.json" hidden data-testid="restore-input"
-          onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) void restore(f) }}
-        />
-        <button type="button" onClick={reset} className="flex h-11 w-full items-center justify-center rounded-xl bg-danger/15 text-sm font-medium text-danger active:bg-danger/25">
-          Полный сброс приложения
         </button>
       </div>
       {message && <p role="status" className={message.ok ? 'text-xs text-success' : 'text-xs text-danger'}>{message.text}</p>}
