@@ -6,6 +6,7 @@ import {
   downloadBackupFile, getAutoBackupPermission, isFileSystemAccessSupported,
   resumeAutoBackup, setupAutoBackupHandle, type AutoBackupPermission,
 } from '../../services/backupService'
+import { refreshAutoBackupStatus } from '../../lib/autoBackupStatus'
 import { requestPersistentStorage, type PersistenceStatus } from '../../services/storageService'
 
 const mb = (n?: number) => (n === undefined ? '?' : `${(n / 1024 / 1024).toFixed(1)} МБ`)
@@ -20,7 +21,11 @@ export function DataSafetySection({ refreshKey = 0 }: { refreshKey?: number }) {
   const [message, setMessage] = useState<{ ok: boolean; text: string }>()
   const supported = isFileSystemAccessSupported()
 
-  const refreshPermission = useCallback(() => getAutoBackupPermission().then(setPermission), [])
+  // Баннер «Автобэкап приостановлен» живёт в шапке: после любого изменения права обновляем и его
+  const refreshPermission = useCallback(async () => {
+    setPermission(await getAutoBackupPermission())
+    await refreshAutoBackupStatus()
+  }, [])
 
   useEffect(() => {
     let alive = true
