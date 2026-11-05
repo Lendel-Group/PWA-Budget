@@ -1,3 +1,4 @@
+import { ScreenSkeleton } from '../components/ui/Skeleton'
 import { useRef, useState, type PointerEvent } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
@@ -144,7 +145,7 @@ function YearOverview() {
   const accounts = useLiveQuery(() => db.accounts.toArray(), [])
   const categories = useLiveQuery(() => db.categories.toArray(), [])
   const txs = useLiveQuery(() => db.transactions.where('date').between(`${y}-01-01`, `${y}-12-31`, true, true).toArray(), [y])
-  if (!accounts || !categories || !txs) return null
+  if (!accounts || !categories || !txs) return <ScreenSkeleton className="p-0" blocks={['h-11', 'h-72', 'h-64', 'h-48']} />
 
   const rows = calculateYearSummary(txs, accounts, rates, y)
   const total = sumYear(rows)

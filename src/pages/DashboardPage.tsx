@@ -1,3 +1,4 @@
+import { ScreenSkeleton } from '../components/ui/Skeleton'
 import { useEffect, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { AlertTriangle, ChevronDown, ChevronRight, Flame } from 'lucide-react'
@@ -61,7 +62,7 @@ export default function DashboardPage({ onEdit, onAdd }: { onEdit: (t: Transacti
   const [expanded, setExpanded] = useState(false)
   const { remove, error: deleteError } = useDeleteTransaction()
 
-  if (!accounts || !categories || !limits || !monthTxs || !recent) return null
+  if (!accounts || !categories || !limits || !monthTxs || !recent) return <ScreenSkeleton blocks={['h-36', 'h-24', 'h-16', 'h-44', 'h-56']} />
 
   const netWorth = calculateNetWorth(accounts, rates)
   const missing = accountsMissingRates(accounts, rates)
