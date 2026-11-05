@@ -2,7 +2,7 @@ import 'fake-indexeddb/auto'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { db } from '../db/schema'
 import { seedIfEmpty } from '../db/seed'
-import { BackupValidationError } from '../domain/backupValidation'
+import { BackupValidationError, parseBackup } from '../domain/backupValidation'
 import { addTransaction } from './transactionService'
 import {
   _setHandleStoreForTests, backupFileName, downloadBackupFile, exportDatabaseToJson,
@@ -66,6 +66,13 @@ describe('export / import', () => {
     await importDatabaseFromJson(json)
     expect(await db.categories.get('cat-user')).toMatchObject({ name: 'Спорт', icon: 'Dumbbell', isDefault: false, order: 2 })
     expect(await db.categories.get('cat-hidden')).toMatchObject({ isArchived: true, order: 3 })
+  })
+
+  it('пишет, где и какой версией создан файл', async () => {
+    const file = JSON.parse(await exportDatabaseToJson())
+    expect(file.platform).toBe('pwa')
+    expect(typeof file.appVersion).toBe('string')
+    expect(parseBackup(JSON.stringify(file)).platform).toBe('pwa')
   })
 
   it('does not export local config (handle, persisted)', async () => {

@@ -1,10 +1,11 @@
 import Dexie from 'dexie'
 import { db, type AppConfig, type ConfigKey } from '../db/schema'
 import {
-  BACKUP_APP_ID, BACKUP_SCHEMA_VERSION, EXPORTED_CONFIG_KEYS, parseBackup, type BackupFile,
+  BACKUP_APP_ID, BACKUP_PLATFORM, BACKUP_SCHEMA_VERSION, EXPORTED_CONFIG_KEYS, parseBackup, type BackupFile,
 } from '../domain/backupValidation'
 import { createDebounced } from '../domain/debounce'
 import { toLocalDateString } from '../domain/dates'
+import { APP_INFO } from '../lib/appInfo'
 
 export const AUTO_BACKUP_DEBOUNCE_MS = 1500
 
@@ -33,6 +34,8 @@ export async function buildBackup(): Promise<BackupFile> {
       app: BACKUP_APP_ID,
       schemaVersion: BACKUP_SCHEMA_VERSION,
       exportedAt: new Date().toISOString(),
+      platform: BACKUP_PLATFORM,
+      appVersion: APP_INFO.version,
       data: {
         accounts: await db.accounts.toArray(),
         categories: await db.categories.toArray(),
