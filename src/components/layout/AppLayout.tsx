@@ -15,6 +15,7 @@ const SCREEN_TITLES: Record<Screen, string> = {
   plans: 'Планы',
   transactions: 'Операции',
   settings: 'Настройки',
+  categories: 'Категории',
 }
 
 /** Заголовок вкладки браузера уточняет подраздел «Планов» и «Аналитики». */

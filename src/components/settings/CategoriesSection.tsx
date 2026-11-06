@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { Plus } from 'lucide-react'
+import { ChevronRight, Plus } from 'lucide-react'
 import { ColorPicker } from '../ui/ColorPicker'
 import { IconPicker } from '../ui/IconPicker'
 import { SegmentedControl } from '../ui/SegmentedControl'
@@ -9,7 +9,7 @@ import { Sheet } from '../ui/Sheet'
 import { inputClass } from '../ui/form'
 import { db, type Category } from '../../db/schema'
 import { DEFAULT_CATEGORY_IDS } from '../../db/seed'
-import { CATEGORY_NAME_MAX, categoryFieldErrors, sortByDefaultOrder, type CategoryField } from '../../domain/categories'
+import { CATEGORY_NAME_MAX, categoriesOfType, categoriesSummary, categoryFieldErrors, type CategoryField } from '../../domain/categories'
 import { cn } from '../../lib/cn'
 import { CategoryIcon } from '../../lib/icons'
 import { COLOR_CHOICES } from '../../lib/palette'
@@ -24,8 +24,15 @@ const TYPES: { value: Category['type']; label: string }[] = [
 const CATEGORY_FIELD_LABELS: Record<CategoryField, string> = { name: 'название', icon: 'иконка', color: 'цвет' }
 
 /** Добавление (`category` не задана) и редактирование категории. */
-function CategorySheet({ category, onClose }: { category?: Category; onClose: () => void }) {
-  const [type, setType] = useState<Category['type']>(category?.type ?? 'expense')
+function CategorySheet({ category, initialType = 'expense', onClose, onSaved }: {
+  category?: Category
+  /** Тип новой категории — вкладка, с которой её добавляют (spec/05). */
+  initialType?: Category['type']
+  onClose: () => void
+  /** После создания: тип новой категории — экран открывает её вкладку. */
+  onSaved?: (type: Category['type']) => void
+}) {
+  const [type, setType] = useState<Category['type']>(category?.type ?? initialType)
   const [name, setName] = useState(category?.name ?? '')
   const [icon, setIcon] = useState(category?.icon ?? 'ShoppingBag')
   const [color, setColor] = useState<string>(category?.color ?? COLOR_CHOICES[0].value)
@@ -71,7 +78,11 @@ function CategorySheet({ category, onClose }: { category?: Category; onClose: ()
       {error && <p role="alert" className="text-sm text-danger">{error}</p>}
       <SubmitButton
         missing={v.invalid.map((k) => CATEGORY_FIELD_LABELS[k])}
-        onClick={() => run(() => (category ? updateCategory(category.id, { name, icon, color, isExcludedFromNoSpend: exempt }) : createCategory({ name, type, icon, color, isExcludedFromNoSpend: exempt })))}
+        onClick={() => run(async () => {
+          if (category) return updateCategory(category.id, { name, icon, color, isExcludedFromNoSpend: exempt })
+          await createCategory({ name, type, icon, color, isExcludedFromNoSpend: exempt })
+          onSaved?.(type)
+        })}
       >
         {category ? 'Сохранить' : 'Добавить категорию'}
       </SubmitButton>
@@ -95,15 +106,13 @@ function CategorySheet({ category, onClose }: { category?: Category; onClose: ()
           )}
         </div>
       )}
-      {category && <p className="text-xs text-fg-muted">Скрытая категория не предлагается при добавлении операции, но остаётся в истории и бюджете.</p>}
     </Sheet>
   )
 }
 
-function CategoryList({ title, items, onEdit }: { title: string; items: Category[]; onEdit: (c: Category) => void }) {
+function CategoryList({ items, onEdit }: { items: Category[]; onEdit: (c: Category) => void }) {
   return (
     <div>
-      <h3 className="mb-1 text-xs font-medium uppercase tracking-wide text-fg-muted">{title}</h3>
       <ul className="divide-y divide-zinc-800">
         {items.map((c) => (
           <li key={c.id}>
@@ -129,26 +138,53 @@ function CategoryList({ title, items, onEdit }: { title: string; items: Category
   )
 }
 
-export function CategoriesSection() {
+const TABS: { value: Category['type']; label: string }[] = [
+  { value: 'expense', label: 'Расходы' },
+  { value: 'income', label: 'Доходы' },
+]
+
+/** «Категории» в «Настройках» (spec/05): одна строка с числом категорий, нажатие — экран «Категории». */
+export function CategoriesRow({ onOpen }: { onOpen: () => void }) {
   const categories = useLiveQuery(() => db.categories.toArray(), [])
+  return (
+    <button type="button" onClick={onOpen} className="flex min-h-16 w-full items-center gap-3 rounded-2xl bg-zinc-900 px-4 py-3 text-left">
+      <span className="min-w-0 flex-1">
+        <span className="block font-medium">Категории</span>
+        <span className="block text-xs text-fg-muted">{categories ? categoriesSummary(categories) : '\u00a0'}</span>
+      </span>
+      <ChevronRight className="size-5 shrink-0 text-fg-muted" aria-hidden />
+    </button>
+  )
+}
+
+/** Экран «Категории» (spec/05): вкладки «Расходы | Доходы», список открытой вкладки, «+ Добавить категорию». */
+export function CategoriesScreen() {
+  const categories = useLiveQuery(() => db.categories.toArray(), [])
+  const [tab, setTab] = useState<Category['type']>('expense')
   const [sheet, setSheet] = useState<{ category?: Category } | null>(null)
   if (!categories) return null
-  const sorted = sortByDefaultOrder(categories, DEFAULT_CATEGORY_IDS)
-  // Скрытые — в конце своего списка
-  const byType = (type: Category['type']) => {
-    const list = sorted.filter((c) => c.type === type)
-    return [...list.filter((c) => !c.isArchived), ...list.filter((c) => c.isArchived)]
-  }
+  const items = categoriesOfType(categories, tab, DEFAULT_CATEGORY_IDS)
 
   return (
-    <section aria-labelledby="categories-h" className="space-y-3 rounded-2xl bg-zinc-900 p-4">
-      <h2 id="categories-h" className="font-medium">Категории</h2>
-      <CategoryList title="Расходы" items={byType('expense')} onEdit={(category) => setSheet({ category })} />
-      <CategoryList title="Доходы" items={byType('income')} onEdit={(category) => setSheet({ category })} />
+    <div className="space-y-4">
+      <SegmentedControl label="Тип категорий" options={TABS} value={tab} onChange={setTab} className="p-1" itemClassName="text-sm" />
+      {/* Без заголовка «Расходы» / «Доходы» над списком: тип уже показан выбранной вкладкой */}
+      <section aria-label={TABS.find((t) => t.value === tab)?.label} className="rounded-2xl bg-zinc-900 px-4 py-2">
+        <CategoryList items={items} onEdit={(category) => setSheet({ category })} />
+      </section>
       <button type="button" onClick={() => setSheet({})} className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-dashed border-zinc-700 text-sm text-zinc-300">
         <Plus className="size-4" aria-hidden /> Добавить категорию
       </button>
-      {sheet && <CategorySheet key={sheet.category?.id ?? 'new'} category={sheet.category} onClose={() => setSheet(null)} />}
-    </section>
+      <p className="text-xs text-fg-muted">Скрытая категория не предлагается при добавлении операции, но остаётся в истории и бюджете.</p>
+      {sheet && (
+        <CategorySheet
+          key={sheet.category?.id ?? `new-${tab}`}
+          category={sheet.category}
+          initialType={tab}
+          onClose={() => setSheet(null)}
+          onSaved={setTab}
+        />
+      )}
+    </div>
   )
 }

@@ -6,6 +6,7 @@ describe('parseRoute', () => {
     expect(parseRoute('#/budget')).toBe('budget')
     expect(parseRoute('#budget')).toBe('budget')
     expect(parseRoute('#/transactions')).toBe('transactions')
+    expect(parseRoute('#/categories')).toBe('categories')
   })
 
   it('подразделы «Планов» адресуются своими маршрутами, старый #/goals жив', () => {
@@ -48,7 +49,7 @@ describe('screenOf / isPlansRoute / isAnalyticsRoute', () => {
 describe('defaultRoute', () => {
   it('«Планы» открываются на целях, остальные экраны — на своём маршруте', () => {
     expect(defaultRoute('plans')).toBe('goals')
-    const screens: Screen[] = ['home', 'budget', 'analytics', 'transactions', 'settings']
+    const screens: Screen[] = ['home', 'budget', 'analytics', 'transactions', 'settings', 'categories']
     for (const s of screens) expect(defaultRoute(s)).toBe(s)
   })
 })
