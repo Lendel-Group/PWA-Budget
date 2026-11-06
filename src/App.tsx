@@ -11,6 +11,7 @@ import CategoriesPage from './pages/CategoriesPage'
 import DashboardPage from './pages/DashboardPage'
 import PlansPage from './pages/PlansPage'
 import SettingsPage from './pages/SettingsPage'
+import SettingsSubPage from './pages/SettingsSubPage'
 import TransactionsPage from './pages/TransactionsPage'
 
 function renderPage(route: Route, onNavigate: (r: Route) => void, onEdit: (t: Transaction) => void, onAdd: () => void) {
@@ -24,6 +25,11 @@ function renderPage(route: Route, onNavigate: (r: Route) => void, onEdit: (t: Tr
     case 'transactions': return <TransactionsPage onEdit={onEdit} />
     case 'settings': return <SettingsPage onNavigate={onNavigate} />
     case 'categories': return <CategoriesPage onNavigate={onNavigate} />
+    case 'accounts':
+    case 'rates':
+    case 'appearance':
+    case 'backup':
+    case 'about': return <SettingsSubPage page={route} onNavigate={onNavigate} />
   }
 }
 

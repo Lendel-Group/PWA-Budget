@@ -12,7 +12,10 @@ import { requestPersistentStorage, type PersistenceStatus } from '../../services
 const mb = (n?: number) => (n === undefined ? '?' : `${(n / 1024 / 1024).toFixed(1)} МБ`)
 const btn = 'flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-zinc-800 text-sm active:bg-zinc-700 disabled:opacity-50'
 
-/** `refreshKey` меняется, когда данные заменены (сброс, восстановление): статус автобэкапа перечитывается. */
+/**
+ * «Резервные копии»: автобэкап, скачать копию, защита хранилища (только PWA). `refreshKey` меняется, когда данные
+ * заменены (восстановление): статус автобэкапа перечитывается.
+ */
 export function DataSafetySection({ refreshKey = 0 }: { refreshKey?: number }) {
   const persisted = useLiveQuery(async () => (await db.config.get('storage_persisted'))?.value as boolean | undefined, [])
   const lastBackup = useLiveQuery(async () => (await db.config.get('last_backup_date'))?.value as string | undefined, [])
@@ -37,11 +40,45 @@ export function DataSafetySection({ refreshKey = 0 }: { refreshKey?: number }) {
   const ok = (text: string) => setMessage({ ok: true, text })
   const fail = (e: unknown) => setMessage({ ok: false, text: e instanceof Error ? e.message : 'Что-то пошло не так' })
 
+  const lastText = `Последняя копия: ${lastBackup ? new Date(lastBackup).toLocaleString('ru-RU') : 'ещё не создавалась'}`
   return (
-    <section aria-labelledby="safety-h" className="space-y-3 rounded-2xl bg-zinc-900 p-4">
-      <h2 id="safety-h" className="font-medium">Сохранность данных</h2>
+    <>
+      <section aria-labelledby="auto-h" className="space-y-2 rounded-2xl bg-zinc-900 p-4">
+        <h2 id="auto-h" className="font-medium">Автобэкап</h2>
+        {supported ? (
+          <>
+            <p className="text-xs text-fg-muted" data-testid="autobackup-status">
+              {permission === 'none' && 'Автобэкап не настроен.'}
+              {permission === 'granted' && 'Автобэкап активен: каждое изменение сохраняется в файл.'}
+              {permission === 'prompt' && 'Автобэкап приостановлен — нужно подтвердить доступ к файлу.'}
+              {permission === 'denied' && 'Доступ к файлу запрещён — выберите файл заново.'}
+            </p>
+            <button type="button" className={btn} onClick={async () => { try { if (await setupAutoBackupHandle()) ok('Автобэкап включён'); await refreshPermission() } catch (e) { fail(e) } }}>
+              <HardDriveDownload className="size-4" aria-hidden /> {permission === 'none' ? 'Привязать файл автобэкапа' : 'Выбрать другой файл автобэкапа'}
+            </button>
+            {permission === 'prompt' && (
+              <button type="button" className={btn} onClick={async () => { try { await resumeAutoBackup(); await refreshPermission() } catch (e) { fail(e) } }}>
+                Возобновить автобэкап
+              </button>
+            )}
+          </>
+        ) : (
+          <p className="text-xs text-fg-muted">
+            Автобэкап в файл недоступен в этом браузере (например, iOS Safari). Скачивайте резервную копию вручную.
+          </p>
+        )}
+      </section>
 
-      <div className="flex items-start gap-3 rounded-xl bg-zinc-800/60 p-3" data-testid="persist-status">
+      <section aria-labelledby="manual-h" className="space-y-2 rounded-2xl bg-zinc-900 p-4">
+        <h2 id="manual-h" className="font-medium">Вручную</h2>
+        <button type="button" className={btn} onClick={async () => { try { await downloadBackupFile(); ok('Резервная копия скачана') } catch (e) { fail(e) } }}>
+          <Download className="size-4" aria-hidden /> Скачать резервную копию JSON
+        </button>
+        <p className="text-xs text-fg-muted" data-testid="last-backup">{lastText}</p>
+        {message && <p role="status" className={message.ok ? 'text-xs text-success' : 'text-xs text-danger'}>{message.text}</p>}
+      </section>
+
+      <div className="flex items-start gap-3 rounded-2xl bg-zinc-900 p-4" data-testid="persist-status">
         {persisted ? <ShieldCheck className="mt-0.5 size-5 shrink-0 text-success" aria-hidden /> : <ShieldAlert className="mt-0.5 size-5 shrink-0 text-warning" aria-hidden />}
         <div className="text-sm">
           <p>{persisted ? 'Хранилище защищено от очистки' : 'Хранилище может быть очищено браузером'}</p>
@@ -53,37 +90,6 @@ export function DataSafetySection({ refreshKey = 0 }: { refreshKey?: number }) {
           )}
         </div>
       </div>
-
-      <div className="space-y-2">
-        {supported ? (
-          <>
-            <button type="button" className={btn} onClick={async () => { try { if (await setupAutoBackupHandle()) ok('Автобэкап включён'); await refreshPermission() } catch (e) { fail(e) } }}>
-              <HardDriveDownload className="size-4" aria-hidden /> {permission === 'none' ? 'Привязать файл автобэкапа' : 'Выбрать другой файл автобэкапа'}
-            </button>
-            {permission === 'prompt' && (
-              <button type="button" className={btn} onClick={async () => { try { await resumeAutoBackup(); await refreshPermission() } catch (e) { fail(e) } }}>
-                Возобновить автобэкап
-              </button>
-            )}
-            <p className="text-xs text-fg-muted" data-testid="autobackup-status">
-              {permission === 'none' && 'Автобэкап не настроен.'}
-              {permission === 'granted' && 'Автобэкап активен: каждое изменение сохраняется в файл.'}
-              {permission === 'prompt' && 'Автобэкап приостановлен — нужно подтвердить доступ к файлу.'}
-              {permission === 'denied' && 'Доступ к файлу запрещён — выберите файл заново.'}
-              {' '}Последняя копия: {lastBackup ? new Date(lastBackup).toLocaleString('ru-RU') : 'ещё не создавалась'}
-            </p>
-          </>
-        ) : (
-          <p className="text-xs text-fg-muted">
-            Автобэкап в файл недоступен в этом браузере (например, iOS Safari). Скачивайте резервную копию вручную.
-            Последняя копия: {lastBackup ? new Date(lastBackup).toLocaleString('ru-RU') : 'ещё не создавалась'}
-          </p>
-        )}
-        <button type="button" className={btn} onClick={async () => { try { await downloadBackupFile(); ok('Резервная копия скачана') } catch (e) { fail(e) } }}>
-          <Download className="size-4" aria-hidden /> Скачать резервную копию JSON
-        </button>
-      </div>
-      {message && <p role="status" className={message.ok ? 'text-xs text-success' : 'text-xs text-danger'}>{message.text}</p>}
-    </section>
+    </>
   )
 }

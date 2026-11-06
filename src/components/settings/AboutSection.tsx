@@ -57,10 +57,9 @@ export function AboutSection() {
   ]
 
   return (
-    <section aria-labelledby="about-h" className="space-y-3 rounded-2xl bg-zinc-900 p-4">
+    <section aria-label="О приложении" className="space-y-3 rounded-2xl bg-zinc-900 p-4">
       <div>
-        <h2 id="about-h" className="font-medium">О приложении</h2>
-        <p className="text-xs text-fg-muted">{APP_INFO.name} — офлайн-учёт личных финансов</p>
+        <p className="text-sm text-fg-muted">{APP_INFO.name} — офлайн-учёт личных финансов</p>
       </div>
       <dl className="divide-y divide-zinc-800 text-sm" data-testid="about">
         {rows.map(([k, v]) => (

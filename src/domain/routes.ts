@@ -2,12 +2,20 @@
  * Маршруты приложения (`#/<route>`). Подразделы адресуются отдельными маршрутами: «Планы» — `goals`, `debts`;
  * «Аналитика» — `analytics` (обзор по годам), `nospend` (дни без трат).
  */
-export type Route = 'home' | 'budget' | 'analytics' | 'goals' | 'debts' | 'nospend' | 'transactions' | 'settings' | 'categories'
+export type Route =
+  | 'home' | 'budget' | 'analytics' | 'goals' | 'debts' | 'nospend' | 'transactions' | 'settings'
+  | SettingsPageRoute
 
-export const ROUTES: readonly Route[] = ['home', 'budget', 'analytics', 'goals', 'debts', 'nospend', 'transactions', 'settings', 'categories']
+/** Экраны «Настроек» (spec/05): открываются из «Настроек», «Назад» — в «Настройки». */
+export const SETTINGS_PAGES = ['accounts', 'categories', 'rates', 'appearance', 'backup', 'about'] as const
+export type SettingsPageRoute = (typeof SETTINGS_PAGES)[number]
+
+export const ROUTES: readonly Route[] = ['home', 'budget', 'analytics', 'goals', 'debts', 'nospend', 'transactions', 'settings', ...SETTINGS_PAGES]
 
 /** Экран — то, что видно как страница с заголовком; у «Планов» несколько маршрутов-подразделов. */
-export type Screen = 'home' | 'budget' | 'analytics' | 'plans' | 'transactions' | 'settings' | 'categories'
+export type Screen = 'home' | 'budget' | 'analytics' | 'plans' | 'transactions' | 'settings' | SettingsPageRoute
+
+export const isSettingsPage = (route: Route): route is SettingsPageRoute => (SETTINGS_PAGES as readonly Route[]).includes(route)
 
 export const PLANS_ROUTES = ['goals', 'debts'] as const satisfies readonly Route[]
 export type PlansRoute = (typeof PLANS_ROUTES)[number]

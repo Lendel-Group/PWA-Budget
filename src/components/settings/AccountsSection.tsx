@@ -65,8 +65,7 @@ export function AccountsSection() {
   const sorted = [...accounts].sort((a, b) => Number(a.isArchived) - Number(b.isArchived) || a.createdAt.localeCompare(b.createdAt))
 
   return (
-    <section aria-labelledby="accounts-h" className="space-y-3 rounded-2xl bg-zinc-900 p-4">
-      <h2 id="accounts-h" className="font-medium">Счета</h2>
+    <section aria-label="Счета" className="space-y-3 rounded-2xl bg-zinc-900 p-4">
       <ul className="divide-y divide-zinc-800">
         {sorted.map((a) => (
           <li key={a.id} className={cn('flex items-center justify-between gap-3 py-2.5', a.isArchived && 'opacity-50')}>
