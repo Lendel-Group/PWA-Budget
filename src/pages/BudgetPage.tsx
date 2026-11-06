@@ -228,7 +228,7 @@ export default function BudgetPage() {
             <button
               type="button"
               onClick={copyAndClose}
-              className="mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-accent px-3 text-sm font-medium text-zinc-950 active:brightness-95"
+              className="mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-accent px-3 text-sm font-medium text-on-accent active:brightness-95"
             >
               <Copy className="size-4 shrink-0" aria-hidden />
               Скопировать из прошлого месяца

@@ -95,7 +95,7 @@ export function AppLayout({ route, onNavigate, onAdd, children }: Props) {
             type="button"
             onClick={onAdd}
             aria-label="Добавить операцию"
-            className="-mt-6 grid size-14 place-items-center rounded-full bg-accent text-zinc-950 shadow-lg shadow-accent/30 active:scale-95"
+            className="-mt-6 grid size-14 place-items-center rounded-full bg-accent text-on-accent shadow-lg shadow-accent/30 active:scale-95"
           >
             <Plus className="size-7" aria-hidden />
           </button>

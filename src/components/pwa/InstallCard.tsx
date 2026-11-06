@@ -48,7 +48,7 @@ export function InstallCard() {
           <button
             type="button"
             onClick={async () => { if (!(await promptInstall())) dismiss() }}
-            className="flex min-h-11 items-center gap-1.5 rounded-xl bg-accent px-4 font-medium text-zinc-950"
+            className="flex min-h-11 items-center gap-1.5 rounded-xl bg-accent px-4 font-medium text-on-accent"
           >
             <Download className="size-4" aria-hidden /> Установить
           </button>

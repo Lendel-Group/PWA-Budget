@@ -70,7 +70,7 @@ export function SegmentedControl<T extends string>({
             onClick={() => onChange(o.value)}
             className={cn(
               'min-h-11 flex-1 rounded-lg font-medium focus-visible:outline-2 focus-visible:outline-accent',
-              selected ? 'bg-zinc-700 text-white' : 'text-zinc-400',
+              selected ? 'bg-zinc-700 text-fg' : 'text-zinc-400',
               itemClassName,
             )}
           >

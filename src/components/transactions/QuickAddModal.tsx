@@ -335,7 +335,7 @@ function QuickAddForm({ editing, onClose }: { editing?: Transaction; onClose: ()
           type="button"
           onClick={save}
           disabled={!canSave}
-          className="h-12 w-full rounded-2xl bg-accent text-lg font-semibold text-zinc-950 disabled:opacity-40"
+          className="h-12 w-full rounded-2xl bg-accent text-lg font-semibold text-on-accent disabled:opacity-40"
         >
           {editing ? 'Сохранить изменения' : 'Сохранить'}
         </button>
