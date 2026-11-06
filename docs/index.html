@@ -424,10 +424,10 @@
         <!-- Счета и категории -->
         <section id="accounts" class="scroll-mt-12 lg:scroll-mt-4">
           <h2>Счета и категории</h2>
-          <p class="lead">Всё в <span class="ui">Настройки</span> — значок шестерёнки вверху справа.</p>
+          <p class="lead">Всё в <span class="ui">Настройки</span> — значок шестерёнки вверху справа. Там короткий список строк по группам: <b>Учёт</b> (Счета, Категории, Курсы валют), <b>Приложение</b> (Оформление), <b>Данные</b> (Резервные копии), затем <b>О приложении</b> и <b>Полный сброс приложения</b>. Под каждой строкой видно текущее состояние, нажатие открывает свой экран; <span class="ui">‹ Настройки</span> — назад.</p>
           <h3>Счета</h3>
           <ol class="steps">
-            <li>Нажмите <span class="ui">+ Добавить счёт</span>.</li>
+            <li>Откройте <span class="ui">Настройки → Счета</span> и нажмите <span class="ui">+ Добавить счёт</span>.</li>
             <li>Введите название, тип (карта, наличные, депозит), валюту (KZT, USD, EUR, RUB) и текущий остаток.</li>
             <li>Нажмите <span class="ui">Создать счёт</span>.</li>
           </ol>
@@ -442,8 +442,12 @@
           </ul>
           <div class="shots">
             <figure class="shot">
-              <button type="button"><img src="/docs/img/settings.jpg" alt="Настройки: счета и строка «Категории»" width="390" height="664" loading="lazy" /></button>
-              <figcaption>Счета в настройках</figcaption>
+              <button type="button"><img src="/docs/img/settings.jpg" alt="Настройки: строки «Счета», «Категории», «Курсы валют», «Оформление», «Резервные копии» со сводкой" width="390" height="664" loading="lazy" /></button>
+              <figcaption>Настройки</figcaption>
+            </figure>
+            <figure class="shot">
+              <button type="button"><img src="/docs/img/accounts.jpg" alt="Экран «Счета»: список счетов и кнопка добавления" width="390" height="664" loading="lazy" /></button>
+              <figcaption>Счета</figcaption>
             </figure>
             <figure class="shot">
               <button type="button"><img src="/docs/img/account-add.jpg" alt="Форма нового счёта: название, тип, валюта, остаток" width="390" height="664" loading="lazy" /></button>
@@ -468,7 +472,7 @@
             <li>При запуске приложение само загружает официальные курсы Национального банка РК (раз в день). Это единственный запрос в интернет.</li>
             <li><span class="ui">Обновить курсы</span> — загрузить свежие прямо сейчас.</li>
             <li>Можно вписать курсы вручную и нажать <span class="ui">Сохранить</span> — например, курс вашего банка.</li>
-            <li>Под заголовком видно источник и дату: «Нацбанк РК» или «Вручную».</li>
+            <li>Экран <span class="ui">Настройки → Курсы валют</span>. Вверху видно источник и дату: «Нацбанк РК» или «Вручную».</li>
           </ul>
           <div class="callout warn">
             <span class="icon" aria-hidden="true">⚠️</span>
@@ -476,7 +480,7 @@
           </div>
           <div class="shots">
             <figure class="shot">
-              <button type="button"><img src="/docs/img/settings-rates.jpg" alt="Блок курсов валют: USD, EUR, RUB к тенге" width="390" height="664" loading="lazy" /></button>
+              <button type="button"><img src="/docs/img/settings-rates.jpg" alt="Экран «Курсы валют»: USD, EUR, RUB к тенге" width="390" height="664" loading="lazy" /></button>
               <figcaption>Курсы к тенге</figcaption>
             </figure>
           </div>
@@ -485,7 +489,7 @@
         <!-- Резервные копии -->
         <section id="backup" class="scroll-mt-12 lg:scroll-mt-4">
           <h2>Резервные копии</h2>
-          <p class="lead">Данные хранятся только на устройстве. Чтобы не потерять их вместе с телефоном, делайте копии — блок <span class="ui">Настройки → Сохранность данных</span>.</p>
+          <p class="lead">Данные хранятся только на устройстве. Чтобы не потерять их вместе с телефоном, делайте копии — экран <span class="ui">Настройки → Резервные копии</span>.</p>
           <h3>Три уровня защиты</h3>
           <ol class="steps">
             <li><b>Защита хранилища.</b> Приложение просит браузер не удалять данные при нехватке места. Если браузер отказал, будет пометка и кнопка <span class="ui">Запросить защиту</span>.</li>
@@ -500,21 +504,21 @@
           <h3>Перенос на новое устройство</h3>
           <ol class="steps">
             <li>На старом устройстве скачайте резервную копию JSON.</li>
-            <li>На новом откройте приложение → <span class="ui">Настройки → Опасная зона → Восстановить из файла</span>.</li>
+            <li>На новом откройте приложение → <span class="ui">Настройки → Резервные копии → Восстановить из файла</span>.</li>
             <li>Выберите файл. Приложение проверит его и покажет, что внутри (сколько счетов, операций, долгов, целей).</li>
             <li>Введите слово <span class="ui">ЗАМЕНИТЬ</span> и подтвердите.</li>
           </ol>
 
           <h3>Полный сброс</h3>
-          <p><span class="ui">Опасная зона → Полный сброс приложения</span> удаляет все данные. В окне подтверждения можно <span class="ui">Сначала скачать резервную копию</span>; затем введите слово <span class="ui">СБРОС</span>. Регистр не важен. Esc или крестик закрывают окно без последствий.</p>
+          <p>Строка <span class="ui">Полный сброс приложения</span> в самом низу <span class="ui">Настроек</span> удаляет все данные. В окне подтверждения можно <span class="ui">Сначала скачать резервную копию</span>; затем введите слово <span class="ui">СБРОС</span>. Регистр не важен. Esc или крестик закрывают окно без последствий.</p>
           <div class="callout warn">
             <span class="icon" aria-hidden="true">⚠️</span>
             <p>Восстановление из файла и сброс нельзя отменить: текущие данные будут заменены или удалены.</p>
           </div>
           <div class="shots">
             <figure class="shot">
-              <button type="button"><img src="/docs/img/settings-backup.jpg" alt="Блок «Сохранность данных»: статус хранилища, автобэкап и скачивание копии" width="390" height="664" loading="lazy" /></button>
-              <figcaption>Сохранность данных</figcaption>
+              <button type="button"><img src="/docs/img/settings-backup.jpg" alt="Экран «Резервные копии»: автобэкап, скачивание копии, защита хранилища и восстановление" width="390" height="664" loading="lazy" /></button>
+              <figcaption>Резервные копии</figcaption>
             </figure>
             <figure class="shot">
               <button type="button"><img src="/docs/img/danger-reset.jpg" alt="Подтверждение сброса: кнопка скачать копию и ввод слова СБРОС" width="390" height="664" loading="lazy" /></button>
