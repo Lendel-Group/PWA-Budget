@@ -10,6 +10,19 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#09090b" />
+    <script>
+      // Тема до первого кадра (spec/06 «Тема»): без вспышки тёмной темы у светлой и наоборот.
+      // Повторяет resolveTheme из src/lib/theme.ts.
+      (function () {
+        var mode = null
+        try { mode = localStorage.getItem('theme') } catch (e) {}
+        var dark = mode === 'dark' || (mode !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches)
+        var root = document.documentElement
+        root.dataset.theme = dark ? 'dark' : 'light'
+        root.style.colorScheme = dark ? 'dark' : 'light'
+        document.querySelector('meta[name="theme-color"]').setAttribute('content', dark ? '#09090b' : '#f4f4f5')
+      })()
+    </script>
     <title>My Budget 2026</title>
   </head>
   <body>
