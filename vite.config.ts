@@ -47,8 +47,8 @@ export default defineConfig({
       scope: appBase,
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
-        name: 'My Budget 2026',
-        short_name: 'Budget',
+        name: 'MBT: My Budget Tracker',
+        short_name: 'MBT',
         description: 'Офлайн-приложение для учёта личных финансов',
         display: 'standalone',
         theme_color: '#09090b',
