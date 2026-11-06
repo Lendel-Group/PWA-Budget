@@ -167,7 +167,7 @@ async function main() {
   const browser = await chromium.launch({ args: ['--lang=ru-RU'], env: { ...process.env, LANG: 'ru_RU.UTF-8', LANGUAGE: 'ru' } })
   const newPage = async () => {
     // Масштаб 2× вместо 3× у iPhone: в инструкции скриншоты не шире ~300 px, так файлы вдвое легче
-    const ctx = await browser.newContext({ ...devices['iPhone 13'], deviceScaleFactor: 2, locale: 'ru-RU', timezoneId: 'Asia/Almaty' })
+    const ctx = await browser.newContext({ ...devices['iPhone 13'], deviceScaleFactor: 2, locale: 'ru-RU', timezoneId: 'Asia/Almaty', colorScheme: 'dark' }) // тема «как в системе» → тёмная, как прежние скриншоты
     // Курсы не запрашиваем из сети, карточку установки не показываем
     await ctx.route('**/latest.json', (r) => r.abort())
     await ctx.addInitScript(() => localStorage.setItem('install-dismissed-at', String(Date.now())))
@@ -295,9 +295,6 @@ async function main() {
   await page.getByLabel('Начальный остаток').fill('125000')
   await shot(page, 'account-add')
   await page.keyboard.press('Escape')
-  await page.getByRole('button', { name: /Жильё и коммуналка/ }).click()
-  await shot(page, 'category-edit')
-  await page.keyboard.press('Escape')
   await scrollTo(page, '#rates-h')
   await shot(page, 'settings-rates')
   await scrollTo(page, '#safety-h')
@@ -306,6 +303,13 @@ async function main() {
   await page.getByRole('button', { name: 'Полный сброс приложения' }).click()
   await page.getByRole('textbox').last().fill('СБРОС')
   await shot(page, 'danger-reset')
+  await page.keyboard.press('Escape')
+
+  // Категории — отдельный экран из «Настроек»
+  await go(page, 'categories')
+  await shot(page, 'categories')
+  await page.getByRole('button', { name: /Жильё и коммуналка/ }).click()
+  await shot(page, 'category-edit')
 
   await browser.close()
   await server.close()

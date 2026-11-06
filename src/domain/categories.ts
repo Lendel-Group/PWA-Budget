@@ -94,3 +94,19 @@ export function resolveExcludedFromNoSpend(
 ): boolean {
   return override ?? !!category?.isExcludedFromNoSpend
 }
+
+/** Строка «Категории» в «Настройках»: «Расходы: N · Доходы: M», вместе со скрытыми (spec/05). */
+export function categoriesSummary(categories: readonly { type: 'expense' | 'income' }[]): string {
+  const count = (type: 'expense' | 'income') => categories.filter((c) => c.type === type).length
+  return `Расходы: ${count('expense')} · Доходы: ${count('income')}`
+}
+
+/** Список вкладки экрана «Категории»: категории одного типа в порядке по умолчанию, скрытые — в конце. */
+export function categoriesOfType<C extends { id: string; type: 'expense' | 'income'; order?: number; isArchived?: boolean }>(
+  categories: readonly C[],
+  type: C['type'],
+  defaultIds: readonly string[],
+): C[] {
+  const list = sortByDefaultOrder(categories, defaultIds).filter((c) => c.type === type)
+  return [...list.filter((c) => !c.isArchived), ...list.filter((c) => c.isArchived)]
+}

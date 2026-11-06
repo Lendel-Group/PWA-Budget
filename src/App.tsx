@@ -7,6 +7,7 @@ import type { Transaction } from './db/schema'
 import { useHashRoute, type Route } from './lib/useHashRoute'
 import AnalyticsPage from './pages/AnalyticsPage'
 import BudgetPage from './pages/BudgetPage'
+import CategoriesPage from './pages/CategoriesPage'
 import DashboardPage from './pages/DashboardPage'
 import PlansPage from './pages/PlansPage'
 import SettingsPage from './pages/SettingsPage'
@@ -21,7 +22,8 @@ function renderPage(route: Route, onNavigate: (r: Route) => void, onEdit: (t: Tr
     case 'analytics':
     case 'nospend': return <AnalyticsPage route={route} onNavigate={onNavigate} />
     case 'transactions': return <TransactionsPage onEdit={onEdit} />
-    case 'settings': return <SettingsPage />
+    case 'settings': return <SettingsPage onNavigate={onNavigate} />
+    case 'categories': return <CategoriesPage onNavigate={onNavigate} />
   }
 }
 

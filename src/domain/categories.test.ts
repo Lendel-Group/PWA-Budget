@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { CATEGORY_NAME_MAX, categoryFieldErrors, resolveExcludedFromNoSpend, sortByDefaultOrder, sortCategoriesByUsage, validateCategoryInput } from './categories'
+import { categoriesOfType, categoriesSummary, CATEGORY_NAME_MAX, categoryFieldErrors, resolveExcludedFromNoSpend, sortByDefaultOrder, sortCategoriesByUsage, validateCategoryInput } from './categories'
 
 const cats = ['a', 'b', 'c', 'd'].map((id) => ({ id }))
 const ids = (list: { id: string }[]) => list.map((c) => c.id)
@@ -117,5 +117,25 @@ describe('categoryFieldErrors', () => {
   it('название, иконка и цвет проверяются независимо', () => {
     expect(Object.keys(categoryFieldErrors({ ...input, name: '', icon: '', color: 'red' }, existing))).toEqual(['name', 'icon', 'color'])
     expect(Object.keys(categoryFieldErrors({ ...input, name: 'продукты' }, existing))).toEqual(['name'])
+  })
+})
+
+describe('экран «Категории» (spec/05)', () => {
+  const cats = [
+    { id: 'cat-food', type: 'expense' as const },
+    { id: 'my-old', type: 'expense' as const, isArchived: true, order: 0 },
+    { id: 'my-new', type: 'expense' as const, order: 1 },
+    { id: 'cat-salary', type: 'income' as const },
+  ]
+  const defaults = ['cat-food', 'cat-salary']
+
+  it('строка в «Настройках»: число категорий по типам, вместе со скрытыми', () => {
+    expect(categoriesSummary(cats)).toBe('Расходы: 3 · Доходы: 1')
+    expect(categoriesSummary([])).toBe('Расходы: 0 · Доходы: 0')
+  })
+
+  it('вкладка: один тип, порядок по умолчанию, скрытые в конце', () => {
+    expect(categoriesOfType(cats, 'expense', defaults).map((c) => c.id)).toEqual(['cat-food', 'my-new', 'my-old'])
+    expect(categoriesOfType(cats, 'income', defaults).map((c) => c.id)).toEqual(['cat-salary'])
   })
 })
