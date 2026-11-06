@@ -74,7 +74,7 @@ export function AboutSection() {
         <button
           type="button"
           onClick={() => void promptInstall()}
-          className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-accent text-sm font-medium text-zinc-950"
+          className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-accent text-sm font-medium text-on-accent"
         >
           <Download className="size-4" aria-hidden /> Установить приложение
         </button>

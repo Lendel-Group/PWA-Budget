@@ -75,7 +75,7 @@ export function ConfirmDangerSheet({ title, children, word, actionLabel, onConfi
         type="button"
         disabled={!confirmed || busy}
         onClick={confirm}
-        className="h-12 w-full rounded-2xl bg-danger font-semibold text-zinc-950 disabled:opacity-40"
+        className="h-12 w-full rounded-2xl bg-danger font-semibold text-on-danger disabled:opacity-40"
       >
         {actionLabel}
       </button>

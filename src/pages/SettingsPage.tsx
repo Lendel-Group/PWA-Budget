@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { AboutSection } from '../components/settings/AboutSection'
 import { AccountsSection } from '../components/settings/AccountsSection'
+import { AppearanceSection } from '../components/settings/AppearanceSection'
 import { CategoriesSection } from '../components/settings/CategoriesSection'
 import { DangerZoneSection } from '../components/settings/DangerZoneSection'
 import { DataSafetySection } from '../components/settings/DataSafetySection'
@@ -14,6 +15,7 @@ export default function SettingsPage() {
       <AccountsSection />
       <CategoriesSection />
       <RatesSection />
+      <AppearanceSection />
       <DataSafetySection refreshKey={dataVersion} />
       <AboutSection />
       <DangerZoneSection onDataReplaced={() => setDataVersion((v) => v + 1)} />

@@ -23,7 +23,7 @@ export function IconPicker({ value, onChange, color }: Props) {
             aria-checked={selected}
             aria-label={i.label}
             onClick={() => onChange(i.name)}
-            className={cn('grid size-11 place-items-center rounded-xl', selected ? 'ring-2 ring-white' : 'bg-zinc-900 text-zinc-300')}
+            className={cn('grid size-11 place-items-center rounded-xl', selected ? 'ring-2 ring-fg' : 'bg-zinc-900 text-zinc-300')}
             style={selected ? { background: `${color}33`, color } : undefined}
           >
             <CategoryIcon name={i.name} className="size-5" />
