@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import { useRegisterSW } from 'virtual:pwa-register/react'
+import { applyUpdate } from '../../lib/applyUpdate'
 
 const HOUR = 60 * 60 * 1000
 /** Не чаще одной проверки в 5 минут при возвратах в приложение. */
@@ -13,7 +15,6 @@ export function UpdatePrompt() {
   const {
     needRefresh: [needRefresh, setNeedRefresh],
     offlineReady: [offlineReady, setOfflineReady],
-    updateServiceWorker,
   } = useRegisterSW({
     onRegisteredSW(_url, registration) {
       if (!registration) return
@@ -33,6 +34,8 @@ export function UpdatePrompt() {
     },
   })
 
+  const [applying, setApplying] = useState(false)
+
   if (!needRefresh && !offlineReady) return null
   return (
     <div
@@ -43,8 +46,13 @@ export function UpdatePrompt() {
       <span>{needRefresh ? 'Доступна новая версия приложения' : 'Приложение готово к работе офлайн'}</span>
       <span className="flex shrink-0 gap-2">
         {needRefresh && (
-          <button type="button" onClick={() => void updateServiceWorker(true)} className="min-h-11 rounded-lg bg-accent px-3 font-medium text-on-accent">
-            Обновить
+          <button
+            type="button"
+            disabled={applying}
+            onClick={() => { setApplying(true); void applyUpdate(navigator.serviceWorker, () => window.location.reload()) }}
+            className="min-h-11 rounded-lg bg-accent px-3 font-medium text-on-accent disabled:opacity-70"
+          >
+            {applying ? 'Обновление…' : 'Обновить'}
           </button>
         )}
         <button
