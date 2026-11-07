@@ -1,6 +1,5 @@
 import { execSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
@@ -17,22 +16,12 @@ function commitHash(): string {
   }
 }
 
-// BASE_PATH задаёт подпуть хостинга (GitHub Pages: /<repo>/); локально — '/'.
+// BASE_PATH задаёт подпуть хостинга: на сайте MBT — /mbt/pwa/ (https://lendel.app/mbt/pwa/); локально — '/'.
+// Лендинг и инструкция — страницы сайта MBT (Lendel-Group/mbt), в этой сборке только приложение.
 const base = process.env.BASE_PATH ?? '/'
-// На корне сайта — лендинг (index.html), само приложение — в подкаталоге app/ (app/index.html).
-const appBase = `${base}app/`
 
 export default defineConfig({
   base,
-  build: {
-    rollupOptions: {
-      input: {
-        landing: resolve(import.meta.dirname, 'index.html'),
-        app: resolve(import.meta.dirname, 'app/index.html'),
-        docs: resolve(import.meta.dirname, 'docs/index.html'),
-      },
-    },
-  },
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
     __BUILD_DATE__: JSON.stringify(new Date().toISOString()),
@@ -43,8 +32,8 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'prompt',
-      // Сервис-воркер обслуживает только приложение: лендинг на корне открывается из сети как обычный сайт
-      scope: appBase,
+      // Сервис-воркер обслуживает только приложение: остальной сайт MBT открывается из сети как обычный сайт
+      scope: base,
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
         name: 'MBT: My Budget Tracker',
@@ -53,10 +42,9 @@ export default defineConfig({
         display: 'standalone',
         theme_color: '#09090b',
         background_color: '#09090b',
-        // id — прежний start_url: уже установленное приложение остаётся тем же, а не дублируется
         id: base,
-        start_url: appBase,
-        scope: appBase,
+        start_url: base,
+        scope: base,
         lang: 'ru',
         icons: [
           { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
@@ -66,10 +54,8 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
-        // Лендинг и инструкция — обычные страницы сайта, в офлайн-кэш приложения не попадают
-        globIgnores: ['index.html', 'assets/landing-*', 'docs/**', 'assets/docs-*'],
-        navigateFallback: 'app/index.html',
-        navigateFallbackAllowlist: [new RegExp(`^${appBase}`)],
+        navigateFallback: 'index.html',
+        navigateFallbackAllowlist: [new RegExp(`^${base}`)],
         runtimeCaching: [
           {
             urlPattern: ({ request }) =>

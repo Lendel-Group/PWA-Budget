@@ -1,16 +1,16 @@
-// Скриншоты экранов приложения для раздела «Инструкция» (docs/index.html).
+// Скриншоты экранов приложения для «Инструкции» на сайте MBT (Lendel-Group/mbt, src/pages/docs).
 // Поднимает Vite dev-сервер, заполняет IndexedDB демо-данными и снимает экраны в размере iPhone 13.
 // Дата в приложении зафиксирована (FIXED_NOW), поэтому картинки воспроизводимы.
 //
-//   node scripts/docs-screenshots.cjs
+//   node scripts/docs-screenshots.cjs [папка]   (по умолчанию ../mbt/public/docs/img — клон сайта рядом)
 //
-// Нужен Playwright с Chromium (npx playwright install chromium). Результат — public/docs/img/*.jpg.
+// Нужен Playwright с Chromium (npx playwright install chromium). Результат — <папка>/*.jpg.
 const path = require('node:path')
 const fs = require('node:fs')
 const { chromium, devices } = require('playwright')
 
 const ROOT = path.resolve(__dirname, '..')
-const OUT = path.join(ROOT, 'public/docs/img')
+const OUT = path.resolve(process.argv[2] ?? path.join(ROOT, '../mbt/public/docs/img'))
 const FIXED_NOW = new Date('2026-11-18T14:20:00')
 const TODAY = '2026-11-18'
 
@@ -161,7 +161,7 @@ async function main() {
   const { createServer } = await import('vite')
   const server = await createServer({ root: ROOT, server: { port: 5199, strictPort: true }, logLevel: 'error' })
   await server.listen()
-  const APP = 'http://localhost:5199/app/'
+  const APP = 'http://localhost:5199/'
 
   // Русская локаль и для системных полей (дата показывается как 01.03.2027)
   const browser = await chromium.launch({ args: ['--lang=ru-RU'], env: { ...process.env, LANG: 'ru_RU.UTF-8', LANGUAGE: 'ru' } })
