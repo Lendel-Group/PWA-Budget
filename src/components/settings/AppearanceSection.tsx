@@ -13,8 +13,7 @@ export function AppearanceSection() {
   }
 
   return (
-    <section aria-labelledby="appearance-h" className="space-y-2 rounded-2xl bg-zinc-900 p-4">
-      <h2 id="appearance-h" className="font-medium">Оформление</h2>
+    <section aria-label="Оформление" className="space-y-2 rounded-2xl bg-zinc-900 p-4">
       {/* Строки, а не сегменты: «Как в системе» не обрезается при крупном шрифте (spec/05, «Доступность») */}
       <div role="radiogroup" aria-labelledby="theme-label">
         <p id="theme-label" className="text-xs text-fg-muted">Тема</p>

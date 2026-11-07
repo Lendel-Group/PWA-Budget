@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ChevronRight, Plus } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { ColorPicker } from '../ui/ColorPicker'
 import { IconPicker } from '../ui/IconPicker'
 import { SegmentedControl } from '../ui/SegmentedControl'
@@ -9,7 +9,7 @@ import { Sheet } from '../ui/Sheet'
 import { inputClass } from '../ui/form'
 import { db, type Category } from '../../db/schema'
 import { DEFAULT_CATEGORY_IDS } from '../../db/seed'
-import { CATEGORY_NAME_MAX, categoriesOfType, categoriesSummary, categoryFieldErrors, type CategoryField } from '../../domain/categories'
+import { CATEGORY_NAME_MAX, categoriesOfType, categoryFieldErrors, type CategoryField } from '../../domain/categories'
 import { cn } from '../../lib/cn'
 import { CategoryIcon } from '../../lib/icons'
 import { COLOR_CHOICES } from '../../lib/palette'
@@ -142,20 +142,6 @@ const TABS: { value: Category['type']; label: string }[] = [
   { value: 'expense', label: 'Расходы' },
   { value: 'income', label: 'Доходы' },
 ]
-
-/** «Категории» в «Настройках» (spec/05): одна строка с числом категорий, нажатие — экран «Категории». */
-export function CategoriesRow({ onOpen }: { onOpen: () => void }) {
-  const categories = useLiveQuery(() => db.categories.toArray(), [])
-  return (
-    <button type="button" onClick={onOpen} className="flex min-h-16 w-full items-center gap-3 rounded-2xl bg-zinc-900 px-4 py-3 text-left">
-      <span className="min-w-0 flex-1">
-        <span className="block font-medium">Категории</span>
-        <span className="block text-xs text-fg-muted">{categories ? categoriesSummary(categories) : '\u00a0'}</span>
-      </span>
-      <ChevronRight className="size-5 shrink-0 text-fg-muted" aria-hidden />
-    </button>
-  )
-}
 
 /** Экран «Категории» (spec/05): вкладки «Расходы | Доходы», список открытой вкладки, «+ Добавить категорию». */
 export function CategoriesScreen() {

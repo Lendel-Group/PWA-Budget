@@ -7,6 +7,7 @@ describe('parseRoute', () => {
     expect(parseRoute('#budget')).toBe('budget')
     expect(parseRoute('#/transactions')).toBe('transactions')
     expect(parseRoute('#/categories')).toBe('categories')
+    for (const r of ['accounts', 'rates', 'appearance', 'backup', 'about']) expect(parseRoute(`#/${r}`)).toBe(r)
   })
 
   it('подразделы «Планов» адресуются своими маршрутами, старый #/goals жив', () => {

@@ -41,10 +41,9 @@ export function RatesSection() {
   }
 
   return (
-    <section aria-labelledby="rates-h" className="space-y-3 rounded-2xl bg-zinc-900 p-4">
+    <section aria-label="Курсы валют к тенге" className="space-y-3 rounded-2xl bg-zinc-900 p-4">
       <div>
-        <h2 id="rates-h" className="font-medium">Курсы валют к тенге</h2>
-        <p className="text-xs text-fg-muted">
+        <p className="text-sm text-fg-muted">
           {stored ? `${stored.source === 'nbk' ? 'Нацбанк РК' : 'Вручную'} · ${stored.date}` : 'Курсы не заданы — счета в валюте не входят в капитал'}
         </p>
       </div>
