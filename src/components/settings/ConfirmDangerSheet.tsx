@@ -1,8 +1,11 @@
 import { useState, type ReactNode } from 'react'
-import { Download, Check } from 'lucide-react'
+import { useLiveQuery } from 'dexie-react-hooks'
+import { Download, Check, TriangleAlert } from 'lucide-react'
 import { Field, Sheet } from '../ui/Sheet'
 import { inputClass } from '../ui/form'
+import { db } from '../../db/schema'
 import { isConfirmationWord } from '../../domain/dangerConfirm'
+import { backupWarning } from '../../lib/backupWarning'
 import { downloadBackupFile } from '../../services/backupService'
 
 interface Props {
@@ -17,6 +20,7 @@ interface Props {
 }
 
 const SECONDARY = 'flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-zinc-800 text-sm active:bg-zinc-700 disabled:opacity-50'
+const PRIMARY = 'flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-accent text-sm font-medium text-on-accent disabled:opacity-50'
 
 /**
  * Подтверждение необратимого действия: описание последствий, предложение сначала скачать резервную копию
@@ -28,6 +32,10 @@ export function ConfirmDangerSheet({ title, children, word, actionLabel, onConfi
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string>()
   const confirmed = isConfirmationWord(typed, word)
+  // Копии нет или ей больше недели — предупреждение, скачивание становится главной кнопкой (spec/05)
+  const lastBackup = useLiveQuery(async () => (await db.config.get('last_backup_date'))?.value as string | undefined, [], null)
+  const [openedAt] = useState(() => new Date())
+  const warning = backedUp || lastBackup === null ? undefined : backupWarning(lastBackup, openedAt)
 
   async function backup() {
     setError(undefined)
@@ -54,7 +62,12 @@ export function ConfirmDangerSheet({ title, children, word, actionLabel, onConfi
   return (
     <Sheet title={title} onClose={onClose}>
       <div className="space-y-2 text-sm">{children}</div>
-      <button type="button" className={SECONDARY} onClick={backup}>
+      {warning && (
+        <p role="note" className="flex items-center gap-2 rounded-xl bg-warning/10 p-3 text-sm text-warning" data-testid="backup-warning">
+          <TriangleAlert className="size-4 shrink-0" aria-hidden /> {warning}
+        </p>
+      )}
+      <button type="button" className={warning ? PRIMARY : SECONDARY} onClick={backup}>
         {backedUp ? <Check className="size-4 text-success" aria-hidden /> : <Download className="size-4" aria-hidden />}
         {backedUp ? 'Копия скачана — скачать ещё раз' : 'Сначала скачать резервную копию'}
       </button>
