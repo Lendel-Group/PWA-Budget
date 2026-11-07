@@ -92,7 +92,7 @@ export function AboutSection() {
         Единственный внешний запрос — загрузка курсов валют (копия официальных курсов Нацбанка РК на al-writer.github.io/nbk-rates).
       </p>
       <a
-        href={`${import.meta.env.BASE_URL}docs/`}
+        href={APP_INFO.guideUrl}
         target="_blank"
         rel="noopener"
         className="flex min-h-11 items-center gap-1.5 text-xs text-accent-fg underline"
@@ -100,12 +100,12 @@ export function AboutSection() {
         Инструкция: все экраны и действия <ExternalLink className="size-3" aria-hidden />
       </a>
       <a
-        href={APP_INFO.repoUrl}
+        href={APP_INFO.siteUrl}
         target="_blank"
-        rel="noreferrer noopener"
+        rel="noopener"
         className="flex min-h-11 items-center gap-1.5 text-xs text-accent-fg underline"
       >
-        Исходный код на GitHub <ExternalLink className="size-3" aria-hidden />
+        Сайт MBT <ExternalLink className="size-3" aria-hidden />
       </a>
       <p className="text-xs text-fg-muted">© 2026</p>
     </section>

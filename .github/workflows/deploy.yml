@@ -1,4 +1,11 @@
-name: Deploy to GitHub Pages
+name: Deploy
+
+# Веб-версия живёт на сайте MBT: https://lendel.app/mbt/pwa/. Сайт (Lendel-Group/mbt) сам собирает её из main
+# этого репозитория (BASE_PATH=/mbt/pwa/) — здесь после проверок только просим его пересобраться.
+# Собственный GitHub Pages этого репозитория (lendel.app/PWA-Budget/) — перенаправления на сайт MBT (pages-redirect/).
+#
+# Секрет MBT_SITE_TOKEN — fine-grained PAT на Lendel-Group/mbt, Contents: read and write (тот же, что в
+# android-budget). Без него сайт подхватит новую версию при ежесуточной пересборке.
 
 on:
   push:
@@ -28,10 +35,10 @@ jobs:
       - run: npm test
       - run: npm run build
         env:
-          BASE_PATH: /${{ github.event.repository.name }}/
+          BASE_PATH: /mbt/pwa/
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: pages-redirect
 
   deploy:
     needs: build
@@ -42,3 +49,17 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  site:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Пересобрать сайт MBT
+        env:
+          GH_TOKEN: ${{ secrets.MBT_SITE_TOKEN }}
+        run: |
+          if [[ -z "$GH_TOKEN" ]]; then
+            echo "::warning::Нет секрета MBT_SITE_TOKEN — сайт MBT обновит веб-версию при ежесуточной пересборке."
+            exit 0
+          fi
+          gh api repos/Lendel-Group/mbt/dispatches -f event_type=pwa-updated

@@ -41,28 +41,30 @@ npm run preview    # проверка production-сборки (в т.ч. офл�
 - **Лимит на сегодня** = (план месяца − траты месяца) / оставшиеся дни, включая сегодня.
 - Даты — по локальному часовому поясу устройства.
 
-## Публикация (GitHub Pages)
-Деплой запускается автоматически при каждом push в `main` (`.github/workflows/deploy.yml`:
-lint → test → build → публикация). Адрес: `https://<owner>.github.io/<repo>/`.
+## Публикация
+Веб-версия открывается на сайте MBT: **https://lendel.app/mbt/pwa/**. Сайт (`Lendel-Group/mbt`) при каждой сборке
+берёт `main` этого репозитория и собирает приложение с `BASE_PATH=/mbt/pwa/` в свой подкаталог `pwa/`. Лендинг,
+инструкция, «Что нового» и политика конфиденциальности — страницы сайта MBT, здесь их нет.
 
-На корне сайта — лендинг (`index.html`, код в `src/landing/`), само приложение — в подкаталоге `app/`
-(`app/index.html`, адрес `https://<owner>.github.io/<repo>/app/`). Сервис-воркер и манифест ограничены `app/`,
-лендинг в офлайн-кэш не попадает. Локально: `npm run dev` → `http://localhost:5173/app/`.
+`.github/workflows/deploy.yml` при push в `main`: lint → test → build, затем просит сайт MBT пересобраться
+(`repository_dispatch`, секрет `MBT_SITE_TOKEN` — fine-grained PAT на `Lendel-Group/mbt`, Contents: read and write;
+без него сайт подхватит версию при ежесуточной пересборке). Собственный GitHub Pages репозитория
+(`lendel.app/PWA-Budget/`) публикует только `pages-redirect/` — перенаправления на `lendel.app/mbt/`
+(`app/` → `/mbt/pwa/`, `docs/` → `/mbt/docs/`) и `sw.js`, снимающий прежний сервис-воркер.
 
-Инструкция — `docs/index.html` (код в `src/docs/`), адрес `…/<repo>/docs/`. Скриншоты для неё
-лежат в `public/docs/img/` и пересоздаются на демо-данных (нужен Playwright с Chromium):
+Сервис-воркер и манифест ограничены подпутём приложения. Локально: `npm run dev` → `http://localhost:5173/`.
+Проверка сборки под сайт:
+```bash
+BASE_PATH=/mbt/pwa/ npm run build && BASE_PATH=/mbt/pwa/ npm run preview
+```
+Навигация на хэшах (`#/budget`), поэтому SPA-fallback не нужен. Данные привязаны к адресу сайта
+(origin `https://lendel.app`), поэтому при смене домена перенесите их через экспорт/импорт JSON.
+
+Скриншоты для инструкции сайта MBT пересоздаются на демо-данных (нужен Playwright с Chromium) — по умолчанию
+в `../mbt/public/docs/img` (клон `Lendel-Group/mbt` рядом с этим):
 ```bash
 node scripts/docs-screenshots.cjs
 ```
-
-Один раз в репозитории: **Settings → Pages → Build and deployment → Source: GitHub Actions**.
-
-Подпуть задаётся переменной `BASE_PATH` (в workflow — `/<repo>/`, локально — `/`):
-```bash
-BASE_PATH=/PWA-Budget/ npm run build && BASE_PATH=/PWA-Budget/ npm run preview
-```
-Навигация на хэшах (`#/budget`), поэтому SPA-fallback не нужен. Данные привязаны к адресу сайта
-(origin), поэтому при смене домена перенесите их через экспорт/импорт JSON.
 
 ## Git
 GitHub Flow: ветка на фазу (`feat/<subsystem>-<name>`), Conventional Commits, merge в `main` через PR
