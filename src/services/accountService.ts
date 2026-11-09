@@ -18,6 +18,21 @@ export async function createAccount(input: AccountInput): Promise<string> {
   return account.id
 }
 
+/**
+ * Начальный остаток можно задать заново, пока по счёту нет ни одной операции (в том числе входящих переводов):
+ * тогда `currentBalance = initialBalance` и инвариант баланса не нарушается.
+ */
+export async function setInitialBalance(id: string, initialBalance: number): Promise<void> {
+  await db.transaction('rw', db.accounts, db.transactions, async () => {
+    const account = await db.accounts.get(id)
+    if (!account) throw new Error('Счёт не найден')
+    if (!Number.isFinite(initialBalance)) throw new Error('Начальный остаток должен быть числом')
+    const used = await db.transactions.filter((t) => t.accountId === id || t.toAccountId === id).count()
+    if (used > 0) throw new Error('По счёту уже есть операции — остаток меняется только ими')
+    await db.accounts.update(id, { initialBalance, currentBalance: initialBalance })
+  })
+}
+
 /** Архивация скрывает счёт из ввода и капитала; история операций сохраняется. */
 export async function setAccountArchived(id: string, archived: boolean): Promise<void> {
   await db.transaction('rw', db.accounts, async () => {

@@ -1,15 +1,15 @@
 import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { Archive, ArchiveRestore, Plus } from 'lucide-react'
+import { Archive, ArchiveRestore, Pencil, Plus } from 'lucide-react'
 import { FormField, SubmitButton } from '../ui/FormField'
 import { Field, Sheet } from '../ui/Sheet'
 import { inputClass, toNumber } from '../ui/form'
 import { db, type Account } from '../../db/schema'
 import { ACCOUNT_TYPE_LABELS, accountFieldErrors, type AccountField } from '../../domain/accounts'
 import { cn } from '../../lib/cn'
-import { formatMoney } from '../../lib/format'
+import { currencySymbol, formatMoney } from '../../lib/format'
 import { useFormValidation } from '../../lib/useFormValidation'
-import { createAccount, setAccountArchived } from '../../services/accountService'
+import { createAccount, setAccountArchived, setInitialBalance } from '../../services/accountService'
 
 const ACCOUNT_FIELD_LABELS: Record<AccountField, string> = { name: 'название', initialBalance: 'остаток' }
 
@@ -57,11 +57,45 @@ function AddAccountSheet({ onClose }: { onClose: () => void }) {
   )
 }
 
+function InitialBalanceSheet({ account, onClose }: { account: Account; onClose: () => void }) {
+  const [balance, setBalance] = useState(account.initialBalance === 0 ? '' : String(account.initialBalance))
+  const [error, setError] = useState<string>()
+  const value = balance.trim() === '' ? 0 : toNumber(balance)
+  const v = useFormValidation<'initialBalance'>(Number.isFinite(value) ? {} : { initialBalance: 'Начальный остаток должен быть числом' })
+
+  async function submit() {
+    try {
+      await setInitialBalance(account.id, value)
+      onClose()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Не удалось сохранить')
+    }
+  }
+
+  return (
+    <Sheet title="Начальный остаток" onClose={onClose}>
+      <p className="text-sm text-fg-muted">{account.name} · операций по счёту ещё нет</p>
+      <FormField label={`Начальный остаток, ${currencySymbol(account.currency)}`} {...v.field('initialBalance')}>
+        {(a11y) => <input {...a11y} data-autofocus className={inputClass} inputMode="decimal" value={balance} onChange={(e) => setBalance(e.target.value)} placeholder="0" />}
+      </FormField>
+      {error && <p role="alert" className="text-sm text-danger">{error}</p>}
+      <SubmitButton missing={v.invalid.map(() => 'остаток')} onClick={submit}>Сохранить</SubmitButton>
+    </Sheet>
+  )
+}
+
 export function AccountsSection() {
   const accounts = useLiveQuery(() => db.accounts.toArray(), [])
+  /** Счета, на которые ссылается хоть одна операция: им начальный остаток уже не меняют. */
+  const used = useLiveQuery(async () => {
+    const ids = new Set<string>()
+    await db.transactions.each((t) => { ids.add(t.accountId); if (t.toAccountId) ids.add(t.toAccountId) })
+    return ids
+  }, [])
   const [adding, setAdding] = useState(false)
+  const [editing, setEditing] = useState<Account>()
   const [error, setError] = useState<string>()
-  if (!accounts) return null
+  if (!accounts || !used) return null
   const sorted = [...accounts].sort((a, b) => Number(a.isArchived) - Number(b.isArchived) || a.createdAt.localeCompare(b.createdAt))
 
   return (
@@ -73,6 +107,16 @@ export function AccountsSection() {
               <p className="truncate text-sm">{a.name}{a.isArchived && ' · в архиве'}</p>
               <p className="text-xs text-fg-muted">{ACCOUNT_TYPE_LABELS[a.type]} · {formatMoney(a.currentBalance, a.currency)}</p>
             </div>
+            {!used.has(a.id) && (
+              <button
+                type="button"
+                aria-label={`Изменить остаток счёта ${a.name}`}
+                className="ml-auto grid size-11 shrink-0 place-items-center rounded-lg bg-zinc-800 text-zinc-300"
+                onClick={() => { setError(undefined); setEditing(a) }}
+              >
+                <Pencil className="size-4" aria-hidden />
+              </button>
+            )}
             <button
               type="button"
               aria-label={a.isArchived ? `Вернуть счёт ${a.name}` : `Архивировать счёт ${a.name}`}
@@ -92,6 +136,7 @@ export function AccountsSection() {
         <Plus className="size-4" aria-hidden /> Добавить счёт
       </button>
       {adding && <AddAccountSheet onClose={() => setAdding(false)} />}
+      {editing && <InitialBalanceSheet account={editing} onClose={() => setEditing(undefined)} />}
     </section>
   )
 }
