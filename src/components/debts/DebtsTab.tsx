@@ -22,7 +22,7 @@ const DEBT_FIELD_LABELS: Record<DebtField, string> = {
   name: 'название', totalAmount: 'сумма долга', remainingAmount: 'остаток', monthlyPayment: 'платёж', dueDay: 'день платежа', interestRate: 'ставка',
 }
 
-function AddDebtSheet({ onClose }: { onClose: () => void }) {
+export function AddDebtSheet({ onClose }: { onClose: () => void }) {
   const [f, setF] = useState({ name: '', total: '', remaining: '', monthly: '', dueDay: '', rate: '' })
   const [error, setError] = useState<string>()
   const set = (k: keyof typeof f) => (e: { target: { value: string } }) => setF((p) => ({ ...p, [k]: e.target.value }))

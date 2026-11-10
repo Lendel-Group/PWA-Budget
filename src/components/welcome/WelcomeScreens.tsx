@@ -9,29 +9,32 @@ import { useToast } from '../../lib/toastContext'
 import { importDatabaseFromJson } from '../../services/backupService'
 import { finishWelcome } from '../../services/welcomeService'
 import { AddAccountSheet, InitialBalanceSheet } from '../settings/AccountsSection'
+import { AddDebtSheet } from '../debts/DebtsTab'
 import { Sheet } from '../ui/Sheet'
 import { primaryButton } from '../ui/form'
 
 const SECONDARY = 'h-12 w-full rounded-2xl bg-zinc-800 font-medium text-zinc-100 active:bg-zinc-700'
 const TEXT_BTN = 'flex min-h-11 items-center gap-1 rounded-xl px-3 text-sm text-fg-muted active:bg-zinc-900'
 
-/** Экраны первого запуска (spec/05, «Первый запуск»): знакомство → остатки счетов → Главная. */
+/** Экраны первого запуска (spec/05, «Первый запуск»): знакомство → остатки счетов → долги → Главная. */
 export function WelcomeScreens({ onDone }: { onDone: () => void }) {
-  const [step, setStep] = useState<1 | 2>(1)
+  const [step, setStep] = useState<1 | 2 | 3>(1)
   const finish = async () => { await finishWelcome(); onDone() }
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-md flex-col bg-zinc-950 px-4 pt-[env(safe-area-inset-top)] pb-[max(1rem,var(--safe-bottom))] text-zinc-100">
       <header className="grid h-14 grid-cols-[1fr_auto_1fr] items-center">
         <div>
-          {step === 2 && <button type="button" className={`${TEXT_BTN} -ml-3`} onClick={() => setStep(1)}><ChevronLeft className="size-4" aria-hidden />Назад</button>}
+          {step > 1 && <button type="button" className={`${TEXT_BTN} -ml-3`} onClick={() => setStep(step === 3 ? 2 : 1)}><ChevronLeft className="size-4" aria-hidden />Назад</button>}
         </div>
-        <span className="text-xs text-fg-muted">Шаг {step} из 2</span>
+        <span className="text-xs text-fg-muted">Шаг {step} из 3</span>
         <div className="flex justify-end">
           <button type="button" className={`${TEXT_BTN} -mr-3`} onClick={() => void finish()}>Пропустить</button>
         </div>
       </header>
-      {step === 1 ? <IntroStep onStart={() => setStep(2)} onRestored={onDone} /> : <BalancesStep onDone={() => void finish()} />}
+      {step === 1 && <IntroStep onStart={() => setStep(2)} onRestored={onDone} />}
+      {step === 2 && <BalancesStep onNext={() => setStep(3)} />}
+      {step === 3 && <DebtsStep onDone={() => void finish()} />}
     </div>
   )
 }
@@ -103,7 +106,7 @@ function RestoreSheet({ json, summary, onClose, onRestored }: { json: string; su
   )
 }
 
-function BalancesStep({ onDone }: { onDone: () => void }) {
+function BalancesStep({ onNext }: { onNext: () => void }) {
   const accounts = useLiveQuery(() => db.accounts.toArray(), [])
   const used = useLiveQuery(async () => {
     const ids = new Set<string>()
@@ -152,9 +155,41 @@ function BalancesStep({ onDone }: { onDone: () => void }) {
         </button>
         <p className="text-xs text-fg-muted">Остаток можно поменять и позже — в «Настройки → Счета», пока по счёту нет операций.</p>
       </div>
-      <button type="button" className={`${primaryButton} mt-4`} onClick={onDone}>Готово</button>
+      <button type="button" className={`${primaryButton} mt-4`} onClick={onNext}>Далее</button>
       {adding && <AddAccountSheet onClose={() => setAdding(false)} />}
       {editing && <InitialBalanceSheet account={editing} onClose={() => setEditing(undefined)} />}
+    </main>
+  )
+}
+
+function DebtsStep({ onDone }: { onDone: () => void }) {
+  const debts = useLiveQuery(() => db.debts.toArray(), [])
+  const [adding, setAdding] = useState(false)
+  if (!debts) return null
+  const open = debts.filter((d) => !d.isClosed).sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+
+  return (
+    <main className="flex flex-1 flex-col">
+      <div className="flex-1 space-y-4 pt-4">
+        <h1 tabIndex={-1} className="text-2xl font-bold tracking-tight text-zinc-50">Есть кредиты или рассрочки?</h1>
+        <p className="text-zinc-300">Добавьте их, чтобы видеть остаток долга и не пропускать платежи. Долгов нет — просто нажмите «Готово».</p>
+        {open.length > 0 && (
+          <ul className="divide-y divide-zinc-800 rounded-2xl bg-zinc-900 px-4">
+            {open.map((d) => (
+              <li key={d.id} className="py-3">
+                <p className="truncate text-sm">{d.name}</p>
+                <p className="text-xs text-fg-muted">Остаток {formatMoney(d.remainingAmount)} · {formatMoney(d.monthlyPayment)}/мес</p>
+              </li>
+            ))}
+          </ul>
+        )}
+        <button type="button" onClick={() => setAdding(true)} className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-dashed border-zinc-700 text-sm text-zinc-300">
+          <Plus className="size-4" aria-hidden /> Добавить долг
+        </button>
+        <p className="text-xs text-fg-muted">Долги можно добавить и позже — «Планы → Долги».</p>
+      </div>
+      <button type="button" className={`${primaryButton} mt-4`} onClick={onDone}>Готово</button>
+      {adding && <AddDebtSheet onClose={() => setAdding(false)} />}
     </main>
   )
 }
