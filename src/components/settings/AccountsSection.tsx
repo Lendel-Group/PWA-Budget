@@ -13,7 +13,7 @@ import { createAccount, setAccountArchived, setInitialBalance } from '../../serv
 
 const ACCOUNT_FIELD_LABELS: Record<AccountField, string> = { name: 'название', initialBalance: 'остаток' }
 
-function AddAccountSheet({ onClose }: { onClose: () => void }) {
+export function AddAccountSheet({ onClose }: { onClose: () => void }) {
   const [name, setName] = useState('')
   const [type, setType] = useState<Account['type']>('card')
   const [currency, setCurrency] = useState<Account['currency']>('KZT')
@@ -57,7 +57,7 @@ function AddAccountSheet({ onClose }: { onClose: () => void }) {
   )
 }
 
-function InitialBalanceSheet({ account, onClose }: { account: Account; onClose: () => void }) {
+export function InitialBalanceSheet({ account, onClose }: { account: Account; onClose: () => void }) {
   const [balance, setBalance] = useState(account.initialBalance === 0 ? '' : String(account.initialBalance))
   const [error, setError] = useState<string>()
   const value = balance.trim() === '' ? 0 : toNumber(balance)

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { UpdatePrompt } from './components/pwa/UpdatePrompt'
 import { AppLayout } from './components/layout/AppLayout'
 import { ToastProvider } from './components/ui/Toast'
@@ -13,6 +14,8 @@ import PlansPage from './pages/PlansPage'
 import SettingsPage from './pages/SettingsPage'
 import SettingsSubPage from './pages/SettingsSubPage'
 import TransactionsPage from './pages/TransactionsPage'
+import { WelcomeScreens } from './components/welcome/WelcomeScreens'
+import { getWelcomeState } from './services/welcomeService'
 
 function renderPage(route: Route, onNavigate: (r: Route) => void, onEdit: (t: Transaction) => void, onAdd: () => void) {
   switch (route) {
@@ -38,13 +41,25 @@ export default function App() {
   const [adding, setAdding] = useState(false)
   const [editing, setEditing] = useState<Transaction>()
   const closeForm = () => { setAdding(false); setEditing(undefined) }
+  // Обёртка отличает «ещё читается» (undefined) от «ключа нет» ({ state: undefined }): без неё мелькнула бы Главная
+  const welcome = useLiveQuery(async () => ({ state: await getWelcomeState() }), [])
+  const [welcomeClosed, setWelcomeClosed] = useState(false)
+  if (!welcome) return null
+  const showWelcome = welcome.state === 'active' && !welcomeClosed
   return (
     <ToastProvider>
-      <AppLayout route={route} onNavigate={navigate} onAdd={() => setAdding(true)}>
-        {renderPage(route, navigate, setEditing, () => setAdding(true))}
-      </AppLayout>
-      <QuickAddModal open={adding || !!editing} editing={editing} onClose={closeForm} />
-      <UpdatePrompt />
+      {showWelcome ? (
+        // Первый запуск (spec/05): вместо приложения, без нижней панели и баннера обновления
+        <WelcomeScreens onDone={() => { setWelcomeClosed(true); navigate('home') }} />
+      ) : (
+        <>
+          <AppLayout route={route} onNavigate={navigate} onAdd={() => setAdding(true)}>
+            {renderPage(route, navigate, setEditing, () => setAdding(true))}
+          </AppLayout>
+          <QuickAddModal open={adding || !!editing} editing={editing} onClose={closeForm} />
+          <UpdatePrompt />
+        </>
+      )}
     </ToastProvider>
   )
 }
