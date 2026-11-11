@@ -21,6 +21,17 @@ export function applyNumpadKey(current: string, key: NumpadKey): string {
   return current + key
 }
 
+/**
+ * Ввод суммы в текстовом поле с теми же ограничениями, что у клавиатуры (spec/05, «Сумма зачисления»): запятая → точка,
+ * только цифры и одна точка, до 10 цифр в целой части и до 2 после точки. Лишнее нажатие или вставка поле не меняет.
+ */
+export function applyAmountInput(current: string, raw: string): string {
+  const next = raw.replace(/,/g, '.').replace(/[^\d.]/g, '')
+  const [int, dec, ...rest] = next.split('.')
+  if (rest.length > 0 || int.length > MAX_INT_DIGITS || (dec !== undefined && dec.length > MAX_DECIMALS)) return current
+  return next
+}
+
 /** '' и '0.' → 0; иначе число. */
 export function parseAmount(input: string): number {
   const n = Number(input)

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Field } from '../ui/Sheet'
 import { inputClass, toNumber } from '../ui/form'
+import { MAX_RATE } from '../../domain/finance'
 import { useRates } from '../../lib/useRates'
 import { useToday } from '../../lib/useToday'
 import { refreshRates, setManualRates } from '../../services/ratesService'
@@ -22,7 +23,7 @@ export function RatesSection() {
       const raw = value(c).trim()
       if (raw === '') continue
       const n = toNumber(raw)
-      if (!Number.isFinite(n) || !(n > 0)) return setMessage({ ok: false, text: `Некорректный курс ${c}` })
+      if (!Number.isFinite(n) || !(n > 0) || n > MAX_RATE) return setMessage({ ok: false, text: `Некорректный курс ${c}` })
       next[c] = n
     }
     try {

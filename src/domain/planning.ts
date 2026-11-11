@@ -1,6 +1,6 @@
 import type { Account, FinancialGoal, Transaction } from '../db/schema'
 import { addDays, clampDueDay, daysInMonth, parseDate } from './dates'
-import { round2 } from './finance'
+import { MAX_AMOUNT, round2, TOO_LARGE_AMOUNT } from './finance'
 
 const pad = (n: number) => String(n).padStart(2, '0')
 
@@ -45,8 +45,11 @@ export function debtFieldErrors(d: DebtInput): Partial<Record<DebtField, string>
   const errors: Partial<Record<DebtField, string>> = {}
   if (!d.name.trim()) errors.name = 'Укажите название'
   if (!Number.isFinite(d.totalAmount) || !(d.totalAmount > 0)) errors.totalAmount = 'Сумма долга должна быть больше нуля'
+  else if (d.totalAmount > MAX_AMOUNT) errors.totalAmount = TOO_LARGE_AMOUNT
   if (!Number.isFinite(d.remainingAmount) || !(d.remainingAmount > 0) || d.remainingAmount > d.totalAmount) errors.remainingAmount = 'Остаток должен быть больше нуля и не больше суммы долга'
+  else if (d.remainingAmount > MAX_AMOUNT) errors.remainingAmount = TOO_LARGE_AMOUNT
   if (!Number.isFinite(d.monthlyPayment) || !(d.monthlyPayment > 0)) errors.monthlyPayment = 'Укажите обязательный платёж'
+  else if (d.monthlyPayment > MAX_AMOUNT) errors.monthlyPayment = TOO_LARGE_AMOUNT
   if (!Number.isInteger(d.dueDay) || d.dueDay < 1 || d.dueDay > 31) errors.dueDay = 'День платежа — от 1 до 31'
   if (d.interestRate !== undefined && (!Number.isFinite(d.interestRate) || !(d.interestRate >= 0))) errors.interestRate = 'Ставка не может быть отрицательной'
   return errors
@@ -60,6 +63,7 @@ export function goalFieldErrors(g: GoalInput, today: string): Partial<Record<Goa
   const errors: Partial<Record<GoalField, string>> = {}
   if (!g.title.trim()) errors.title = 'Укажите название'
   if (!Number.isFinite(g.targetAmount) || !(g.targetAmount > 0)) errors.targetAmount = 'Целевая сумма должна быть больше нуля'
+  else if (g.targetAmount > MAX_AMOUNT) errors.targetAmount = TOO_LARGE_AMOUNT
   if (!/^\d{4}-\d{2}-\d{2}$/.test(g.targetDate) || g.targetDate < today) errors.targetDate = 'Выберите дату не раньше сегодняшней'
   return errors
 }
@@ -69,6 +73,7 @@ export const validateGoalInput = (g: GoalInput, today: string): string | undefin
 /** Сумма пополнения или платежа: конечная, больше нуля, а для платежа по долгу — не больше остатка (`max`). */
 export function amountFieldError(amount: number, max?: number): string | undefined {
   if (!Number.isFinite(amount) || !(amount > 0)) return 'Сумма должна быть больше нуля'
+  if (amount > MAX_AMOUNT) return TOO_LARGE_AMOUNT
   if (max !== undefined && amount > max) return 'Платёж больше остатка долга'
   return undefined
 }

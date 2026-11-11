@@ -1,5 +1,5 @@
 import type { Account, BudgetLimit, Transaction } from '../db/schema'
-import { convertToKzt, round2, type Rates } from './finance'
+import { convertToKzt, MAX_AMOUNT, round2, type Rates } from './finance'
 
 const MONTHS = [
   'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
@@ -40,7 +40,7 @@ export function parsePlanInput(input: string): number | null {
   const trimmed = input.trim().replace(/\s/g, '').replace(',', '.')
   if (trimmed === '') return 0
   const n = Number(trimmed)
-  return Number.isFinite(n) && n >= 0 ? round2(n) : null
+  return Number.isFinite(n) && n >= 0 && n <= MAX_AMOUNT ? round2(n) : null
 }
 
 /**

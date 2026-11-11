@@ -33,6 +33,7 @@ describe('accountService', () => {
     await setInitialBalance(cash.id, 12500.5)
     expect(await db.accounts.get(cash.id)).toMatchObject({ initialBalance: 12500.5, currentBalance: 12500.5 })
     await setInitialBalance(cash.id, -300)
+    await expect(setInitialBalance(cash.id, 1e10)).rejects.toThrow('Слишком большая сумма')
     expect(await db.accounts.get(cash.id)).toMatchObject({ initialBalance: -300, currentBalance: -300 })
     await expect(setInitialBalance(cash.id, NaN)).rejects.toThrow('Начальный остаток должен быть числом')
     await expect(setInitialBalance('nope', 1)).rejects.toThrow('Счёт не найден')

@@ -1,5 +1,6 @@
 import { db, type Account } from '../db/schema'
 import { validateAccountInput, type AccountInput } from '../domain/accounts'
+import { MAX_AMOUNT, TOO_LARGE_AMOUNT } from '../domain/finance'
 
 export async function createAccount(input: AccountInput): Promise<string> {
   const error = validateAccountInput(input)
@@ -27,6 +28,7 @@ export async function setInitialBalance(id: string, initialBalance: number): Pro
     const account = await db.accounts.get(id)
     if (!account) throw new Error('Счёт не найден')
     if (!Number.isFinite(initialBalance)) throw new Error('Начальный остаток должен быть числом')
+    if (Math.abs(initialBalance) > MAX_AMOUNT) throw new Error(TOO_LARGE_AMOUNT)
     const used = await db.transactions.filter((t) => t.accountId === id || t.toAccountId === id).count()
     if (used > 0) throw new Error('По счёту уже есть операции — остаток меняется только ими')
     await db.accounts.update(id, { initialBalance, currentBalance: initialBalance })
