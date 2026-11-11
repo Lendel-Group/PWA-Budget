@@ -22,10 +22,14 @@ export function RatesSection() {
       const raw = value(c).trim()
       if (raw === '') continue
       const n = toNumber(raw)
-      if (!(n > 0)) return setMessage({ ok: false, text: `Некорректный курс ${c}` })
+      if (!Number.isFinite(n) || !(n > 0)) return setMessage({ ok: false, text: `Некорректный курс ${c}` })
       next[c] = n
     }
-    await setManualRates(next, today)
+    try {
+      await setManualRates(next, today)
+    } catch {
+      return setMessage({ ok: false, text: 'Не удалось сохранить' }) // spec/05, «Ошибки действий»
+    }
     setDraft({})
     setMessage({ ok: true, text: 'Курсы сохранены' })
   }

@@ -59,6 +59,8 @@ const LOCAL_CONFIG_KEYS: ConfigKey[] = ['auto_backup_handle', 'storage_persisted
 /**
  * Валидирует и атомарно заменяет данные. При невалидном файле бросает
  * BackupValidationError и не меняет БД. Возвращает true при успехе.
+ * Из config файла берутся только экспортируемые ключи (spec/04): `last_account_id`, `onboarding`, `welcome`
+ * и локальные ключи устройства из файла не восстанавливаются (spec/03, «Импорт»).
  */
 export async function importDatabaseFromJson(jsonString: string): Promise<boolean> {
   const { data } = parseBackup(jsonString)
@@ -74,7 +76,8 @@ export async function importDatabaseFromJson(jsonString: string): Promise<boolea
     await db.transactions.bulkAdd(data.transactions)
     await db.debts.bulkAdd(data.debts)
     await db.goals.bulkAdd(data.goals)
-    await db.config.bulkPut([...data.config, { key: 'seeded', value: true }])
+    const incoming = data.config.filter((c) => (EXPORTED_CONFIG_KEYS as readonly string[]).includes(c.key))
+    await db.config.bulkPut([...incoming, { key: 'seeded', value: true }])
   })
   return true
 }
