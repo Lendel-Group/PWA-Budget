@@ -88,6 +88,8 @@ export type ConfigKey =
   | 'last_account_id'
   /** Чек-лист первых шагов: 'active' | 'dismissed'; в бэкап не попадает. */
   | 'onboarding'
+  /** Экраны первого запуска: 'active' | 'done'; в бэкап не попадает. */
+  | 'welcome'
 
 export interface AppConfig {
   key: ConfigKey
