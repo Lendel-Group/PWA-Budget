@@ -169,6 +169,10 @@ describe('debtFieldErrors', () => {
   it('остаток больше суммы — ошибка у остатка, а не у суммы', () => {
     expect(Object.keys(debtFieldErrors({ ...ok, remainingAmount: 2000 }))).toEqual(['remainingAmount'])
   })
+  it('бесконечность — не число (spec/02)', () => {
+    const e = debtFieldErrors({ ...ok, totalAmount: Infinity, remainingAmount: Infinity, monthlyPayment: Infinity, interestRate: Infinity })
+    expect(Object.keys(e)).toEqual(['totalAmount', 'remainingAmount', 'monthlyPayment', 'interestRate'])
+  })
   it('validateDebtInput возвращает первую из них', () => {
     expect(validateDebtInput({ ...ok, name: '', dueDay: 99 })).toBe('Укажите название')
   })
@@ -181,6 +185,7 @@ describe('goalFieldErrors', () => {
     expect(Object.keys(goalFieldErrors({ title: ' ', targetAmount: 0, targetDate: '' }, '2026-11-04'))).toEqual(['title', 'targetAmount', 'targetDate'])
     expect(Object.keys(goalFieldErrors({ ...g, targetDate: '2026-11-03' }, '2026-11-04'))).toEqual(['targetDate'])
   })
+  it('бесконечная сумма — ошибка', () => expect(Object.keys(goalFieldErrors({ ...g, targetAmount: Infinity }, '2026-11-04'))).toEqual(['targetAmount']))
 })
 
 describe('amountFieldError', () => {
@@ -188,6 +193,8 @@ describe('amountFieldError', () => {
     expect(amountFieldError(0)).toMatch(/больше нуля/)
     expect(amountFieldError(NaN)).toMatch(/больше нуля/)
     expect(amountFieldError(-5)).toMatch(/больше нуля/)
+    expect(amountFieldError(Infinity)).toMatch(/больше нуля/)
+    expect(amountFieldError(-Infinity)).toMatch(/больше нуля/)
     expect(amountFieldError(1)).toBeUndefined()
   })
   it('платёж не больше остатка долга', () => {

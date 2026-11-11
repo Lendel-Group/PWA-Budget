@@ -99,6 +99,22 @@ describe('export / import', () => {
     expect((await db.config.get('auto_backup_handle'))?.value).toBe('h')
   })
 
+  it('import takes only exported config keys from the file', async () => {
+    await db.config.put({ key: 'auto_backup_handle', value: 'h' })
+    const file = JSON.parse(await exportDatabaseToJson())
+    file.data.config = [
+      { key: 'fx_rates', value: { rates: { USD: 500 }, date: '2026-11-05', source: 'manual' } },
+      { key: 'welcome', value: 'active' },
+      { key: 'onboarding', value: 'active' },
+      { key: 'last_account_id', value: 'x' },
+      { key: 'auto_backup_handle', value: 'from-file' },
+      { key: 'something_else', value: 1 },
+    ]
+    await importDatabaseFromJson(JSON.stringify(file))
+    expect((await db.config.toArray()).map((c) => c.key).sort()).toEqual(['auto_backup_handle', 'fx_rates', 'seeded'])
+    expect((await db.config.get('auto_backup_handle'))?.value).toBe('h')
+  })
+
   it('download creates a dated file and records the date', async () => {
     const click = vi.fn()
     const a = { href: '', download: '', click, remove: vi.fn() }
