@@ -6,6 +6,7 @@ import { Field, Sheet } from '../ui/Sheet'
 import { inputClass, toNumber } from '../ui/form'
 import { db, type Account } from '../../db/schema'
 import { ACCOUNT_TYPE_LABELS, accountFieldErrors, type AccountField } from '../../domain/accounts'
+import { MAX_AMOUNT, TOO_LARGE_AMOUNT } from '../../domain/finance'
 import { cn } from '../../lib/cn'
 import { currencySymbol, formatMoney } from '../../lib/format'
 import { useFormValidation } from '../../lib/useFormValidation'
@@ -61,7 +62,10 @@ export function InitialBalanceSheet({ account, onClose }: { account: Account; on
   const [balance, setBalance] = useState(account.initialBalance === 0 ? '' : String(account.initialBalance))
   const [error, setError] = useState<string>()
   const value = balance.trim() === '' ? 0 : toNumber(balance)
-  const v = useFormValidation<'initialBalance'>(Number.isFinite(value) ? {} : { initialBalance: 'Начальный остаток должен быть числом' })
+  const v = useFormValidation<'initialBalance'>(
+    !Number.isFinite(value) ? { initialBalance: 'Начальный остаток должен быть числом' }
+      : Math.abs(value) > MAX_AMOUNT ? { initialBalance: TOO_LARGE_AMOUNT } : {},
+  )
 
   async function submit() {
     try {
