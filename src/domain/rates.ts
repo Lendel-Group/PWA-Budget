@@ -1,5 +1,5 @@
 import type { Currency } from '../db/schema'
-import type { Rates } from './finance'
+import { MAX_RATE, type Rates } from './finance'
 
 const SUPPORTED: Exclude<Currency, 'KZT'>[] = ['USD', 'EUR', 'RUB']
 
@@ -23,7 +23,7 @@ export function parseRatesFile(data: unknown): RatesFile | null {
   const result: Rates = {}
   for (const code of SUPPORTED) {
     const value = (rates as Record<string, unknown>)[code]
-    if (typeof value === 'number' && Number.isFinite(value) && value > 0) result[code] = value
+    if (typeof value === 'number' && Number.isFinite(value) && value > 0 && value <= MAX_RATE) result[code] = value
   }
   return Object.keys(result).length === 0 ? null : { date, rates: result }
 }

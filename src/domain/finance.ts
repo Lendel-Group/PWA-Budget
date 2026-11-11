@@ -85,14 +85,22 @@ export function accountsMissingRates(accounts: Account[], rates: Rates = {}): Ac
   return accounts.filter((a) => !a.isArchived && a.currency !== 'KZT' && rates[a.currency] === undefined)
 }
 
+/** Предел суммы по модулю (budget-spec, spec/02 «Предельные значения»): 10 цифр в целой части, как у цифровой клавиатуры. */
+export const MAX_AMOUNT = 9_999_999_999.99
+/** Предел курса, тенге за единицу (spec/02 «Предельные значения»). */
+export const MAX_RATE = 1_000_000
+export const TOO_LARGE_AMOUNT = 'Слишком большая сумма'
+
 export function validateNewTransaction(tx: NewTransaction): void {
   if (!Number.isFinite(tx.amount) || tx.amount <= 0) throw new Error('Сумма должна быть больше нуля')
+  if (tx.amount > MAX_AMOUNT) throw new Error(TOO_LARGE_AMOUNT)
   if (tx.type === 'transfer') {
     if (!tx.toAccountId) throw new Error('Не выбран счёт зачисления')
     if (tx.toAccountId === tx.accountId) throw new Error('Счета перевода должны различаться')
     if (tx.toAmount !== undefined && (!Number.isFinite(tx.toAmount) || tx.toAmount <= 0)) {
       throw new Error('Сумма зачисления должна быть больше нуля')
     }
+    if (tx.toAmount !== undefined && tx.toAmount > MAX_AMOUNT) throw new Error(TOO_LARGE_AMOUNT)
   }
   if ((tx.debtId || tx.goalId) && tx.type !== 'expense') {
     throw new Error('Платёж по долгу или цели должен быть расходом')

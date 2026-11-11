@@ -1,4 +1,5 @@
 import type { Account } from '../db/schema'
+import { MAX_AMOUNT, TOO_LARGE_AMOUNT } from './finance'
 
 export interface AccountInput {
   name: string
@@ -14,6 +15,7 @@ export function accountFieldErrors(a: AccountInput): Partial<Record<AccountField
   const errors: Partial<Record<AccountField, string>> = {}
   if (!a.name.trim()) errors.name = 'Укажите название счёта'
   if (!Number.isFinite(a.initialBalance)) errors.initialBalance = 'Начальный остаток должен быть числом'
+  else if (Math.abs(a.initialBalance) > MAX_AMOUNT) errors.initialBalance = TOO_LARGE_AMOUNT
   return errors
 }
 

@@ -6,7 +6,7 @@ import { DEFAULT_CATEGORY_IDS } from '../../db/seed'
 import { resolveExcludedFromNoSpend, sortByDefaultOrder, sortCategoriesByUsage, USAGE_WINDOW_DAYS } from '../../domain/categories'
 import { pickAccount } from '../../domain/accounts'
 import { addDays, formatDateChip, toLocalDateString } from '../../domain/dates'
-import { applyNumpadKey, displayAmount, parseAmount, type NumpadKey } from '../../domain/numpad'
+import { applyAmountInput, applyNumpadKey, displayAmount, parseAmount, type NumpadKey } from '../../domain/numpad'
 import { cn } from '../../lib/cn'
 import { currencySymbol, formatMoney } from '../../lib/format'
 import { CategoryIcon } from '../../lib/icons'
@@ -251,7 +251,7 @@ function QuickAddForm({ editing, onClose }: { editing?: Transaction; onClose: ()
             <input
               inputMode="decimal"
               value={toAmount}
-              onChange={(e) => setToAmount(e.target.value.replace(',', '.').replace(/[^\d.]/g, ''))}
+              onChange={(e) => setToAmount((prev) => applyAmountInput(prev, e.target.value))}
               className="w-28 min-w-0 shrink rounded-lg bg-zinc-800 px-2 py-1 text-right"
             />
           </label>
